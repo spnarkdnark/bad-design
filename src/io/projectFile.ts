@@ -1,6 +1,6 @@
 import type { Project } from '../model/types';
 import { migrateProject } from '../model/migrate';
-import { downloadBlob, pickFile, safeFilename } from './download';
+import { safeFilename } from './download';
 
 export const PROJECT_EXT = '.bubbles.json';
 
@@ -12,13 +12,12 @@ export function parseProject(text: string): Project {
   return migrateProject(JSON.parse(text));
 }
 
-export function saveProjectFile(p: Project) {
-  downloadBlob(new Blob([serializeProject(p)], { type: 'application/json' }), safeFilename(p.meta.name) + PROJECT_EXT);
+export function projectBlob(p: Project): Blob {
+  return new Blob([serializeProject(p)], { type: 'application/json' });
 }
 
-/** Returns null when the user cancels; throws on invalid files. */
-export async function openProjectFile(): Promise<Project | null> {
-  const file = await pickFile('.json,application/json');
-  if (!file) return null;
-  return parseProject(await file.text());
-}
+/** Suggested file name for a drawing: "reading-room.bubbles.json". */
+export const projectFilename = (p: Project) => safeFilename(p.meta.name) + PROJECT_EXT;
+
+/** A file name without the project extension: "Reading Room.bubbles.json" → "Reading Room". */
+export const projectNameFromFile = (filename: string) => filename.replace(/(\.bubbles)?\.json$/i, '');

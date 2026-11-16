@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createConnection, createNode, createProject } from '../src/model/factory';
-import { parseProject, serializeProject } from '../src/io/projectFile';
+import { parseProject, projectFilename, projectNameFromFile, serializeProject } from '../src/io/projectFile';
 import { ProjectFormatError, migrateProject } from '../src/model/migrate';
 
 describe('project file', () => {
@@ -70,5 +70,16 @@ describe('v1 migration', () => {
     expect(p.nodes.a.style).toEqual({ strokeWeightPt: 2, labelSecondary: 'radius' });
     expect(p.nodes.b.style).toEqual({ fill: '#ff0000' });
     expect(p.overlaps).toEqual({});
+  });
+});
+
+describe('file names', () => {
+  it('suggests a file name from the drawing and reads a drawing name back', () => {
+    expect(projectFilename({ ...createProject(), meta: { ...createProject().meta, name: 'Reading Room' } })).toBe(
+      'reading-room.bubbles.json',
+    );
+    expect(projectNameFromFile('Smith House.bubbles.json')).toBe('Smith House');
+    expect(projectNameFromFile('plan.JSON')).toBe('plan');
+    expect(projectNameFromFile('notes')).toBe('notes');
   });
 });

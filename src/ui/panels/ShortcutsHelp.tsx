@@ -18,6 +18,7 @@ export function ShortcutsHelp() {
     ['Ctrl ⇧V', 'Paste style onto selection'],
     ['Ctrl D / A', 'Duplicate / Select all'],
     ['Ctrl Z / ⇧Z', 'Undo / Redo'],
+    ['Ctrl S / ⇧S', 'Save / Save As (choose where)'],
     ['F / Ctrl 0', 'Fit / 100% (true size)'],
     ['Del', 'Delete'],
   ];

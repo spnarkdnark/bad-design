@@ -8,6 +8,7 @@ import { isTextEntry } from '../ui/focus';
 
 export interface ShortcutHandlers {
   save?: () => void;
+  saveAs?: () => void;
   open?: () => void;
 }
 
@@ -42,7 +43,8 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}) {
       }
       if (mod && key === 's') {
         e.preventDefault();
-        handlers.save?.();
+        if (e.shiftKey) handlers.saveAs?.();
+        else handlers.save?.();
         return;
       }
       if (mod && key === 'o') {

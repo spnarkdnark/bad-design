@@ -5,7 +5,8 @@ import { useUi } from '../store/uiStore';
 import { buildSvg } from '../io/export/svg';
 import { clampDpi, svgToPng } from '../io/export/png';
 import { pageLayout, SHEETS, svgToPdf, type Orientation, type SheetId } from '../io/export/pdf';
-import { downloadBlob, safeFilename } from '../io/download';
+import { safeFilename } from '../io/download';
+import { chooseSaveTarget, writeTarget } from '../io/fileSystem';
 import { PT_PER_IN } from '../model/units';
 import { Checkbox, Field, SelectField } from './controls/Controls';
 
@@ -61,12 +62,18 @@ function ExportDialogBody() {
   const run = async () => {
     if (!svg) return;
     setBusy(true);
-    const base = safeFilename(doc.meta.name);
     try {
-      if (format === 'svg') downloadBlob(new Blob([svg.svg], { type: 'image/svg+xml' }), `${base}.svg`);
-      else if (format === 'png') downloadBlob(await svgToPng(svg, parseInt(dpi)), `${base}.png`);
-      else downloadBlob(await svgToPdf(svg, sheet, orientation), `${base}.pdf`);
-      useUi.getState().showToast(`Exported ${format.toUpperCase()}`);
+      // ask where first: the save dialog must open straight from the click, before the slow part
+      const target = await chooseSaveTarget(format, `${safeFilename(doc.meta.name)}.${format}`);
+      if (!target) return; // cancelled: stay in the dialog
+      const blob =
+        format === 'svg'
+          ? new Blob([svg.svg], { type: 'image/svg+xml' })
+          : format === 'png'
+            ? await svgToPng(svg, parseInt(dpi))
+            : await svgToPdf(svg, sheet, orientation);
+      await writeTarget(target, blob);
+      useUi.getState().showToast(`Exported “${target.name}”`);
       close();
     } catch (e) {
       useUi.getState().showToast(`Export failed: ${(e as Error).message}`);

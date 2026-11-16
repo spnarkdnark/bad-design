@@ -11,9 +11,9 @@ import { installSelectionPruning } from './store/actions';
 import { installAutosave } from './io/autosave';
 import { installClipboard } from './io/clipboardActions';
 import { installStandardsSync } from './store/workspaceStore';
-import { openProject, saveProject } from './io/fileActions';
+import { openProject, saveProject, saveProjectAs } from './io/fileActions';
 
-const shortcutHandlers = { save: saveProject, open: openProject };
+const shortcutHandlers = { save: saveProject, saveAs: saveProjectAs, open: openProject };
 
 export function App() {
   useEffect(() => installSelectionPruning(), []);

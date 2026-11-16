@@ -73,7 +73,8 @@ src/ui/       TabBar, Toolbar, FileMenu, ScaleBar, ExportDialog, Toast, focus.ts
               + SizeFields + CostFields + StyleFields, ConnectionProps, OverlapProps,
               DrawingPanel, CostPanel, GraphicPanel,
               OverlapSettingsPanel, ShortcutsHelp, CategoryPanel)
-src/io/       fileActions (New/Open/Save/Import CSV), projectFile (JSON),
+src/io/       fileActions (New/Open/Save/Save As/Import CSV), projectFile (JSON),
+              fileSystem (system save/open dialogs, download fallback),
               clipboard + clipboardActions, autosave, csvImport, autoLayout,
               download, export/ (svg.ts is the single exporter; png/pdf build on it)
 src/hooks/    useKeyboardShortcuts
@@ -216,7 +217,7 @@ Hand fonts are bundled via @fontsource; exports outline them with opentype.js
   circle by radius, diameter or area; a rectangle by width, height (unlocks rectangles)
   or area. Area is exact (unsnapped) and keeps proportions; multi-select applies to each.
 - Shortcuts: Del, ⌘/Ctrl+D, ⌘/Ctrl+A, arrows (1', Shift 10'), ⌘/Ctrl+Z / Shift+Z / Y,
-  ⌘/Ctrl+S save, F zoom to fit, ⌘/Ctrl+0 100% (true paper size). Keep
+  ⌘/Ctrl+S save (⌘/Ctrl+Shift+S save as), ⌘/Ctrl+O open, F zoom to fit, ⌘/Ctrl+0 100% (true paper size). Keep
   `ui/panels/ShortcutsHelp.tsx` in sync.
 
 ## CSV import
@@ -228,6 +229,19 @@ stripped; sets the element's own rate). Radius accepts `12.5`, `12'`, `12'-6"`; 
 Radius wins if both are given; otherwise radius = sqrt(area/π) (squares: side = sqrt(area)). Unknown categories are
 created with the next palette color. Imported bubbles go in a loose grid below existing
 content (`autoLayout.ts`). Sample: `examples/sample-program.csv`.
+
+## Saving files
+
+- `io/fileSystem.ts` uses the File System Access API (system Save As / Open dialogs;
+  Chrome, Edge, Brave, Opera desktop) and falls back to a download / file input
+  (Safari, Firefox). The save dialog only opens from a click or key press, so call
+  `chooseSaveTarget` BEFORE slow work (PDF build), then `writeTarget`. Cancel → null.
+- Exports (PDF/PNG/SVG) ask where every time. Drawings: Save As asks and remembers the
+  file per tab (`fileActions.tabFiles`, in memory, lost on reload); Save writes back to
+  it (asking permission again if needed), or falls through to Save As. Open remembers
+  the picked file. A file name the user typed becomes the drawing's name.
+- e2e: `helpers.fakeFileDialogs` stands in for the dialogs (writes land in
+  `window.__files`); `noFileDialogs` tests the download fallback.
 
 ## Export
 
@@ -273,10 +287,10 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 
 ## Testing notes
 
-- Unit tests (61): units, geometry, squares/rectangles, history, project file + v1 migration, CSV, styles,
+- Unit tests (62): units, geometry, squares/rectangles, history, project file + v1 migration, CSV, styles,
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs, render regression.
-- e2e (23, one file per area): bubbles (scale, drag/resize/wheel, selection + undo,
-  connect, sizing, names, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, tabs, io.
+- e2e (25, one file per area): bubbles (scale, drag/resize/wheel, selection + undo,
+  connect, sizing, names, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags
   continue outside the canvas.

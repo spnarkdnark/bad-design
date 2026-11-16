@@ -76,4 +76,61 @@ export async function importSampleCsv(page: Page) {
   await expect(page.locator('.toast')).toContainText('Imported 11');
 }
 
+/**
+ * Stand-in for the system save/open dialogs (File System Access API), which a
+ * test can't click. Files written land in `window.__files[name]`; set
+ * `__saveAs` to the name the user "types", `__cancelNext` to press Cancel,
+ * `__openName` for the file Open picks.
+ */
+export async function fakeFileDialogs(page: Page) {
+  await page.evaluate(() => {
+    const w = window as any;
+    w.__files = {};
+    w.__writes = 0;
+    const handle = (name: string) => ({
+      kind: 'file',
+      name,
+      async createWritable() {
+        const chunks: Blob[] = [];
+        return {
+          async write(b: Blob) {
+            chunks.push(b);
+          },
+          async close() {
+            const blob = new Blob(chunks);
+            w.__files[name] = { size: blob.size, text: await blob.text() };
+            w.__writes++;
+          },
+        };
+      },
+      async getFile() {
+        return new File([w.__files[name].text], name);
+      },
+      queryPermission: async () => 'granted',
+      requestPermission: async () => 'granted',
+    });
+    // like Chrome, refuse to run detached from window ("Illegal invocation")
+    w.showSaveFilePicker = async function (this: unknown, o: { suggestedName: string }) {
+      if (this !== window) throw new TypeError('Illegal invocation');
+      if (w.__cancelNext) {
+        w.__cancelNext = false;
+        throw new DOMException('The user aborted a request.', 'AbortError');
+      }
+      return handle(w.__saveAs ?? o.suggestedName);
+    };
+    w.showOpenFilePicker = async function (this: unknown) {
+      if (this !== window) throw new TypeError('Illegal invocation');
+      return [handle(w.__openName)];
+    };
+  });
+}
+
+/** Browsers without the dialogs (Safari, Firefox): saving falls back to downloads. */
+export async function noFileDialogs(page: Page) {
+  await page.evaluate(() => {
+    delete (window as any).showSaveFilePicker;
+    delete (window as any).showOpenFilePicker;
+  });
+}
+
 export { expect };
