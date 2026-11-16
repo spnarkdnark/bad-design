@@ -23,6 +23,7 @@ export function createProject(name = 'Untitled diagram'): Project {
     nodeOrder: [],
     connections: {},
     overlaps: {},
+    costRates: { categories: {} },
   };
 }
 
@@ -35,6 +36,7 @@ export function createNode(partial: Partial<Omit<BubbleNode, 'id'>> = {}): Bubbl
     shape: partial.shape ?? { kind: 'circle', radiusFt: DEFAULT_RADIUS_FT },
     categoryId: partial.categoryId ?? null,
     style: { ...partial.style },
+    ...(partial.costPerSf !== undefined && { costPerSf: partial.costPerSf }),
   };
 }
 

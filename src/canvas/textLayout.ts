@@ -3,7 +3,8 @@
  * they wrap identically. All values are in PAPER POINTS relative to the
  * bubble center. Uses a 2D canvas for text measurement (browser only).
  */
-import type { BubbleNode, Project } from '../model/types';
+import type { BubbleNode, LabelPart, Project } from '../model/types';
+import { costLabel } from '../model/costs';
 import { labelWidthFt } from '../model/geometry';
 import { resolveStyle, secondaryLabel, type ResolvedStyle } from '../model/selectors';
 import { ftToPt } from '../model/units';
@@ -13,7 +14,8 @@ export interface LabelLine {
   text: string;
   sizePt: number;
   weight: 400 | 600;
-  secondary: boolean;
+  /** which part of the label this line belongs to (name lines, size line, cost line) */
+  part: LabelPart;
   color: string;
   /** baseline-free: top of the line box relative to bubble center, pt */
   topPt: number;
@@ -105,25 +107,29 @@ export function layoutLabel(
       text: t,
       sizePt: size,
       weight,
-      secondary: false,
+      part: 'name',
       color: style.labelColor,
       heightPt: size * LINE_HEIGHT,
       wPt: measure(t, size, weight),
     });
-  const sec = secondaryLabel(node, project, style);
+  // smaller gray lines under the name: size, then cost
+  const extra: [LabelPart, string | null][] = [
+    ['size', secondaryLabel(node, project, style)],
+    ['cost', costLabel(node, project, style.labelCost)],
+  ];
   family = font.family;
-  if (sec) {
-    const s = size * SECONDARY_RATIO;
-    rows.push({
-      text: sec,
-      sizePt: s,
-      weight: 400,
-      secondary: true,
-      color: SECONDARY_LABEL_COLOR,
-      heightPt: s * LINE_HEIGHT,
-      wPt: measure(sec, s, 400),
-    });
-  }
+  const s = size * SECONDARY_RATIO;
+  for (const [part, text] of extra)
+    if (text)
+      rows.push({
+        text,
+        sizePt: s,
+        weight: 400,
+        part,
+        color: SECONDARY_LABEL_COLOR,
+        heightPt: s * LINE_HEIGHT,
+        wPt: measure(text, s, 400),
+      });
   const total = rows.reduce((a, r) => a + r.heightPt, 0);
   let y = -total / 2;
   const lines = rows.map((r) => {

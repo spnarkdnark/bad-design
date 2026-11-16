@@ -10,6 +10,11 @@ export class ProjectFormatError extends Error {}
 const STYLE_KEYS = Object.keys(DEFAULT_STYLE) as (keyof StyleProps)[];
 const OVERLAP_MODES: OverlapMode[] = ['none', 'merge', 'lens', 'lensFill', 'threshold'];
 
+/** A valid cost ($, finite, not negative) or undefined. */
+function money(v: any): number | undefined {
+  return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : undefined;
+}
+
 /** Keep only known style keys with values of the right type. */
 function cleanOverrides(raw: any): StyleOverrides {
   const out: StyleOverrides = {};
@@ -94,6 +99,7 @@ export function migrateProject(raw: unknown): Project {
     grid: { ...DEFAULT_SETTINGS.grid, ...s.grid },
     snap: { ...DEFAULT_SETTINGS.snap, ...s.snap },
     defaultStyle: fullStyle(s.defaultStyle),
+    defaultCostPerSf: money(s.defaultCostPerSf) ?? 0,
     graphic: { ...DEFAULT_GRAPHIC, ...s.graphic },
     overlap: { ...DEFAULT_OVERLAP, ...s.overlap },
   };
@@ -112,11 +118,13 @@ export function migrateProject(raw: unknown): Project {
       shape,
       categoryId: n.categoryId ?? null,
       style: cleanOverrides(n.style),
+      ...(money(n.costPerSf) !== undefined && { costPerSf: money(n.costPerSf) }),
     };
   }
   const categories: Project['categories'] = {};
   for (const [id, c] of Object.entries<any>(p.categories ?? {})) {
     categories[id] = { id, name: String(c?.name ?? 'Category'), style: fullStyle(c?.style) };
+    if (money(c?.costPerSf) !== undefined) categories[id].costPerSf = money(c.costPerSf);
   }
   for (const n of Object.values(nodes)) if (n.categoryId && !categories[n.categoryId]) n.categoryId = null;
   // blob anchors must point at existing circles
@@ -138,6 +146,11 @@ export function migrateProject(raw: unknown): Project {
     const [a, b] = key.split('|');
     if (nodes[a] && nodes[b] && OVERLAP_MODES.includes(o?.mode)) overlaps[key] = { mode: o.mode };
   }
+
+  const costRates: Project['costRates'] = { categories: {} };
+  for (const [id, v] of Object.entries<any>(p.costRates?.categories ?? {}))
+    if (categories[id] && money(v) !== undefined) costRates.categories[id] = money(v)!;
+  if (money(p.costRates?.uncategorized) !== undefined) costRates.uncategorized = money(p.costRates.uncategorized);
 
   const order: string[] = Array.isArray(p.nodeOrder) ? p.nodeOrder.filter((id: string) => nodes[id]) : [];
   for (const id of Object.keys(nodes)) if (!order.includes(id)) order.push(id);
@@ -161,5 +174,6 @@ export function migrateProject(raw: unknown): Project {
     nodeOrder: order,
     connections,
     overlaps,
+    costRates,
   };
 }

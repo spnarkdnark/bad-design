@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Id, Point, SizableKind } from '../model/types';
+import type { Id, LabelPart, Point, SizableKind } from '../model/types';
 import { SIZABLE_SHAPES } from '../model/defaults';
 
 /** Which canvas tool is active (implementations live in canvas/tools/). */
@@ -12,8 +12,6 @@ export interface Selection {
   overlaps: string[];
 }
 
-/** Which part of a label: the name lines, or the secondary size line. */
-export type LabelPart = 'name' | 'size';
 export interface EditingLabel {
   id: Id;
   part: LabelPart;

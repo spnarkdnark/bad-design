@@ -1,4 +1,4 @@
-import type { LabelSecondary, StrokeStyle, StyleKey, StyleProps } from '../../model/types';
+import type { LabelCost, LabelSecondary, StrokeStyle, StyleKey, StyleProps } from '../../model/types';
 import { formatPt, parsePt } from '../../model/units';
 import {
   Checkbox,
@@ -114,6 +114,21 @@ export function StyleFields({ src, compact }: { src: StyleSource; compact?: bool
               { value: 'area', label: 'Area' },
             ]}
             onChange={(v) => src.set('labelSecondary', v)}
+          />
+        </Field>
+        <Field
+          label="Show cost"
+          hint="Cost line under the label; hidden while the rate is $0"
+          override={o?.('labelCost')}
+        >
+          <SelectField<LabelCost>
+            value={src.get('labelCost')}
+            options={[
+              { value: 'none', label: 'Off' },
+              { value: 'rate', label: 'Cost / sf' },
+              { value: 'total', label: 'Total cost' },
+            ]}
+            onChange={(v) => src.set('labelCost', v)}
           />
         </Field>
       </Wrap>

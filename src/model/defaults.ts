@@ -34,6 +34,7 @@ export const DEFAULT_STYLE: StyleProps = {
   labelColor: '#2b2b2b',
   labelBold: true,
   labelSecondary: 'area',
+  labelCost: 'rate',
   sketchAmount: 1,
 };
 
@@ -100,6 +101,7 @@ export const DEFAULT_SETTINGS: DrawingSettings = {
   snap: { radiusIncrementFt: RADIUS_SNAP_FT },
   shapeGapFt: 2,
   defaultStyle: DEFAULT_STYLE,
+  defaultCostPerSf: 0,
   graphic: DEFAULT_GRAPHIC,
   overlap: DEFAULT_OVERLAP,
 };

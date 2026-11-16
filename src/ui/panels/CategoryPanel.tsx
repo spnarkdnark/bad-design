@@ -4,7 +4,8 @@ import { useDoc } from '../../store/documentStore';
 import * as A from '../../store/actions';
 import { darken } from '../../model/color';
 import { AUTO_STROKE_DARKEN } from '../../model/defaults';
-import { Section } from '../controls/Controls';
+import { Field, NumberField, Section } from '../controls/Controls';
+import { formatRate, parseMoney } from '../../model/units';
 import { StyleFields, type StyleSource } from './StyleFields';
 
 function sourceFor(id: Id | null, style: StyleProps): StyleSource {
@@ -13,6 +14,25 @@ function sourceFor(id: Id | null, style: StyleProps): StyleSource {
     set: (k, v) => A.setCategoryStyle(id, k, v),
     strokeColor: style.stroke ?? darken(style.fill, AUTO_STROKE_DARKEN),
   };
+}
+
+/** The firm default cost per sf (drawings can set their own under Costs). */
+function FirmRateField({ categoryId, value }: { categoryId: Id | null; value: number }) {
+  return (
+    <div className="compact-group">
+      <h4>Cost</h4>
+      <Field label="Default / sf" hint="Firm default for every drawing; a drawing can set its own rate under Costs">
+        <NumberField
+          value={value}
+          format={formatRate}
+          parse={parseMoney}
+          step={1}
+          min={0}
+          onCommit={(v) => A.setFirmRate(categoryId, v)}
+        />
+      </Field>
+    </div>
+  );
 }
 
 export function CategoryPanel() {
@@ -37,7 +57,7 @@ export function CategoryPanel() {
             onClick={() => {
               if (
                 window.confirm(
-                  'Reset categories, graphic style and overlap settings to the firm defaults in every tab? ' +
+                  'Reset categories (with their default costs), graphic style and overlap settings to the firm defaults in every tab? ' +
                     'Bubbles keep their categories by name. You can undo.',
                 )
               )
@@ -93,6 +113,7 @@ export function CategoryPanel() {
               </div>
               {open === id && (
                 <div className="category-style">
+                  <FirmRateField categoryId={id} value={c.costPerSf ?? 0} />
                   <StyleFields src={sourceFor(id, c.style)} compact />
                 </div>
               )}
@@ -127,6 +148,7 @@ export function CategoryPanel() {
           </div>
           {open === '__default' && (
             <div className="category-style">
+              <FirmRateField categoryId={null} value={doc.settings.defaultCostPerSf} />
               <StyleFields src={sourceFor(null, doc.settings.defaultStyle)} compact />
             </div>
           )}

@@ -4,7 +4,8 @@ import * as A from '../../store/actions';
 import { totalArea } from '../../model/selectors';
 import { isSizable } from '../../model/geometry';
 import { findOverlaps } from '../../model/overlaps';
-import { formatArea, formatFeetInches, parseLength } from '../../model/units';
+import { formatArea, formatFeetInches, formatMoney, parseLength } from '../../model/units';
+import { totalCost } from '../../model/costs';
 import { Field, NumberField, ReadOnly, Section, SelectField, TextField } from '../controls/Controls';
 
 const SNAP_OPTIONS = [
@@ -54,6 +55,9 @@ export function DrawingPanel() {
       </Field>
       <Field label="Total area">
         <ReadOnly value={formatArea(totalArea(doc))} />
+      </Field>
+      <Field label="Total cost" hint="Each element's area × its cost per sf, added up (breakdown under Costs)">
+        <ReadOnly value={formatMoney(totalCost(doc))} />
       </Field>
     </Section>
   );

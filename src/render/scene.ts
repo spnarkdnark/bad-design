@@ -6,7 +6,7 @@
  * Everything visual about an element (category style, overrides, sketch
  * character, overlap treatment) is decided here or in overlapScene.ts.
  */
-import type { BubbleNode, GraphicSettings, Id, Project } from '../model/types';
+import type { BubbleNode, GraphicSettings, Id, LabelPart, Project } from '../model/types';
 import { resolveStyle, type ResolvedStyle } from '../model/selectors';
 import { connectionSegment, nodeCenter, nodeOutline } from '../model/geometry';
 import { blobGeometry } from '../model/blob';
@@ -14,6 +14,7 @@ import { CONNECTION_COLOR, CONNECTION_STYLES, dashPatternPt, LABEL_FONT_FAMILY }
 import { darken } from '../model/color';
 import { ptToFt } from '../model/units';
 import { findOverlaps, type Overlap } from '../model/overlaps';
+import { nodeRate } from '../model/costs';
 import { layoutLabel, measureEpoch, type LabelLayout } from '../canvas/textLayout';
 import { isClean, sampleCircle, scaleParams, sketchClosedStroke, sketchFill, type SketchParams } from './sketch';
 import {
@@ -97,6 +98,7 @@ function nodeScene(
     g.seed,
     measureEpoch(),
     blob?.ctrl,
+    nodeRate(node, project), // the cost line can change without the node changing
   ]);
   const hit = nodeCache.get(node.id);
   if (hit && hit.key === key) return hit.scene;
@@ -198,14 +200,14 @@ export function buildScene(project: Project): Scene {
   return { connections, nodes, overlays, overlaps, ftPerPt };
 }
 
-/** World-space box (feet) around a label's name lines (or its secondary line); null when it has none. */
+/** World-space box (feet) around one part of a label (its name lines by default); null when absent. */
 export function labelRect(
   label: LabelPrim | null,
   ftPerPt: number,
-  secondary = false,
+  part: LabelPart = 'name',
 ): { minX: number; minY: number; maxX: number; maxY: number } | null {
   if (!label) return null;
-  const lines = label.layout.lines.filter((l) => l.secondary === secondary);
+  const lines = label.layout.lines.filter((l) => l.part === part);
   if (lines.length === 0) return null;
   const w = Math.max(...lines.map((l) => l.wPt), lines[0].sizePt * 2);
   const top = lines[0].topPt;

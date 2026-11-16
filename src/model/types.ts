@@ -20,6 +20,8 @@ export interface DrawingSettings {
   shapeGapFt: number;
   /** style for elements without a category */
   defaultStyle: StyleProps;
+  /** firm default cost per sf for elements without a category (shared standard, $) */
+  defaultCostPerSf: number;
   graphic: GraphicSettings;
   overlap: OverlapSettings;
 }
@@ -58,6 +60,8 @@ export interface Category {
   id: Id;
   name: string;
   style: StyleProps;
+  /** firm default cost per sf, $ (shared standard; drawings may set their own, see CostRates) */
+  costPerSf?: number;
 }
 
 /**
@@ -98,6 +102,10 @@ export interface BlobShape {
 
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
 export type LabelSecondary = 'none' | 'radius' | 'area';
+/** The cost line under a label: none, the rate ($/sf) or the element's cost (area × rate). */
+export type LabelCost = 'none' | 'rate' | 'total';
+/** Which line(s) of a label: the name, the size line (area/dimensions) or the cost line. */
+export type LabelPart = 'name' | 'size' | 'cost';
 
 /**
  * The complete visual style of an element. Categories (and the project's
@@ -115,6 +123,7 @@ export interface StyleProps {
   labelColor: string;
   labelBold: boolean;
   labelSecondary: LabelSecondary;
+  labelCost: LabelCost;
   /** multiplier on the global sketch character (1 = as set globally, 0 = clean) */
   sketchAmount: number;
 }
@@ -132,6 +141,8 @@ export interface BubbleNode {
   categoryId: Id | null;
   /** only the properties that differ from the category style */
   style: StyleOverrides;
+  /** this element's own cost per sf, $; undefined = the drawing's rate for its category */
+  costPerSf?: number;
   // Future: layerId?: Id; locked?: boolean;
 }
 
@@ -150,6 +161,15 @@ export interface ProjectMeta {
   modifiedAt: string;
 }
 
+/**
+ * This drawing's own cost per sf, $, overriding the firm defaults (Category.costPerSf,
+ * settings.defaultCostPerSf). Resolve with model/costs.ts.
+ */
+export interface CostRates {
+  categories: Record<Id, number>;
+  uncategorized?: number;
+}
+
 export const SCHEMA_VERSION = 2 as const;
 
 export interface Project {
@@ -164,6 +184,7 @@ export interface Project {
   connections: Record<Id, Connection>;
   /** per-overlap overrides keyed by overlapKey(a, b) */
   overlaps: Record<string, { mode: OverlapMode }>;
+  costRates: CostRates;
 }
 
 export interface Point {

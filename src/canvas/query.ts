@@ -46,9 +46,9 @@ export function hitAt(p: Point): Hit {
 }
 
 /**
- * Editable label line under `p` (topmost node first): its name, or the size line
- * (area/dimensions) of a circle or rectangle. Freeform shapes' areas follow their
- * outline, so they aren't editable.
+ * Editable label line under `p` (topmost node first): its name, the size line
+ * (area/dimensions) of a circle or rectangle, or the cost line. Freeform shapes'
+ * areas follow their outline, so their size line isn't editable.
  */
 export function labelAt(p: Point): EditingLabel | null {
   if (!latestScene) return null;
@@ -60,8 +60,9 @@ export function labelAt(p: Point): EditingLabel | null {
   for (let i = nodes.length - 1; i >= 0; i--) {
     const { id, label } = nodes[i];
     if (inside(labelRect(label, latestScene.ftPerPt))) return { id, part: 'name' };
-    if (doc.nodes[id] && isSizable(doc.nodes[id].shape) && inside(labelRect(label, latestScene.ftPerPt, true)))
+    if (doc.nodes[id] && isSizable(doc.nodes[id].shape) && inside(labelRect(label, latestScene.ftPerPt, 'size')))
       return { id, part: 'size' };
+    if (inside(labelRect(label, latestScene.ftPerPt, 'cost'))) return { id, part: 'cost' };
   }
   return null;
 }

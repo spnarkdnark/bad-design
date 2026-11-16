@@ -32,7 +32,7 @@ function drawScene(ctx: CanvasRenderingContext2D, scene: Scene, k: number, editi
   const labels = scene.nodes.flatMap((n) => {
     if (!n.label) return [];
     if (n.id !== editing?.id) return [n.label];
-    const lines = n.label.layout.lines.filter((l) => l.secondary !== (editing.part === 'size'));
+    const lines = n.label.layout.lines.filter((l) => l.part !== editing.part);
     return [{ ...n.label, layout: { ...n.label.layout, lines } }];
   });
   drawLabels(ctx, labels, k, scene.ftPerPt);
@@ -123,7 +123,7 @@ export function CanvasStage() {
       {editingLabel && editingNode && editingPrim && (
         <LabelEditor
           key={`${editingLabel.id}:${editingLabel.part}`}
-          value={editingLabel.part === 'size' ? A.sizeEditText(editingNode.id) : editingNode.name}
+          value={A.labelEditText(editingNode.id, editingLabel.part)}
           label={editingPrim}
           part={editingLabel.part}
           k={k}
@@ -131,8 +131,7 @@ export function CanvasStage() {
           panY={view.panY}
           ftPerPt={scene.ftPerPt}
           onCommit={(text) => {
-            if (editingLabel.part === 'size') A.setSizeFromText(editingNode.id, text);
-            else A.renameNode(editingNode.id, text);
+            A.commitLabelEdit(editingNode.id, editingLabel.part, text);
             closeEditor();
           }}
           onCancel={closeEditor}

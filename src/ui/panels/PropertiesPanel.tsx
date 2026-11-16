@@ -3,6 +3,7 @@ import { useUi } from '../../store/uiStore';
 import { BubbleProps } from './BubbleProps';
 import { CategoryPanel } from './CategoryPanel';
 import { ConnectionProps } from './ConnectionProps';
+import { CostPanel } from './CostPanel';
 import { DrawingPanel } from './DrawingPanel';
 import { GraphicPanel } from './GraphicPanel';
 import { NodeOverlaps, OverlapProps } from './OverlapProps';
@@ -25,6 +26,7 @@ export function PropertiesPanel() {
       ) : (
         <>
           <DrawingPanel />
+          <CostPanel />
           <GraphicPanel />
           <OverlapSettingsPanel />
           <ShortcutsHelp />

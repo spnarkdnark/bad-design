@@ -37,6 +37,7 @@ function readStandards(raw: unknown, active: Project | undefined): Standards | u
       categoryOrder: r.categoryOrder,
       settings: {
         defaultStyle: r.defaultStyle,
+        defaultCostPerSf: r.defaultCostPerSf ?? active?.settings.defaultCostPerSf,
         graphic: r.graphic ?? active?.settings.graphic,
         overlap: r.overlap ?? active?.settings.overlap,
       },

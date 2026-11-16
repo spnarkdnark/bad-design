@@ -51,5 +51,5 @@ it('scene output is unchanged', () => {
       out.push(JSON.stringify(buildScene(p)));
     }
   }
-  expect(createHash('sha1').update(out.join('|')).digest('hex')).toBe('317a9c49c847c90d012707d742ad1a2d381df93c');
+  expect(createHash('sha1').update(out.join('|')).digest('hex')).toBe('2d98e5ee8e3dd60b7927c56febf2d8e147edf379');
 });

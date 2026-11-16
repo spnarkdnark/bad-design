@@ -3,6 +3,7 @@
  * case-insensitive; radius OR area is required per row). Radius accepts
  * 12.5 / 12' / 12'-6"; area accepts 1200 / 1,200 sf. Radius wins when both.
  * Shape is circle (default) or square; a square's "radius" is half its side.
+ * Cost (cost, $/sf, rate…) sets that element's own cost per sf: 150 / $150 / $150/sf.
  */
 import Papa from 'papaparse';
 import type { BubbleNode, Category, Point, Project, SizableKind } from '../model/types';
@@ -10,7 +11,7 @@ import { createNode } from '../model/factory';
 import { categoryResolver } from '../model/categories';
 import { newShape, nodeBounds, radiusFromArea, unionBounds } from '../model/geometry';
 import { MIN_SIZE_FT } from '../model/defaults';
-import { parseArea, parseLength } from '../model/units';
+import { parseArea, parseLength, parseMoney } from '../model/units';
 import { gridLayout, gridSize } from './autoLayout';
 
 export interface CsvRow {
@@ -19,6 +20,8 @@ export interface CsvRow {
   radiusFt: number;
   category: string | null;
   kind: SizableKind;
+  /** the element's own cost per sf, $ */
+  costPerSf?: number;
 }
 
 export interface CsvParseResult {
@@ -32,6 +35,7 @@ const ALIASES: Record<string, string[]> = {
   category: ['category', 'type', 'group', 'zone'],
   area: ['area', 'sf', 'sqft', 'size', 'square feet'],
   shape: ['shape', 'form'],
+  cost: ['cost', 'costsf', 'cost per sf', 'cost per sqft', 'cost per square foot', 'rate', 'price', 'psf', 'costpsf'],
 };
 
 const SHAPE_NAMES: Record<string, SizableKind> = {
@@ -45,6 +49,8 @@ const SHAPE_NAMES: Record<string, SizableKind> = {
 };
 
 function canonicalHeader(h: string): string | null {
+  // "$/sf", "$ psf"…: decide before symbols are stripped ("$/sf" would read as "sf" = area)
+  if (h.includes('$')) return 'cost';
   const clean = h
     .toLowerCase()
     .replace(/\(.*?\)/g, '')
@@ -84,11 +90,18 @@ export function parseCsv(text: string): CsvParseResult {
       errors.push(`Line ${line}: no valid radius or area for “${name || '(unnamed)'}”.`);
       return;
     }
+    const costText = r.cost?.trim() ?? '';
+    const cost = costText ? parseMoney(costText) : null;
+    if (costText && cost === null)
+      errors.push(
+        `Line ${line}: cost “${costText}” isn't a number; “${name || '(unnamed)'}” uses its category's rate.`,
+      );
     rows.push({
       name: name || `Space ${rows.length + 1}`,
       radiusFt: Math.max(MIN_SIZE_FT, Math.round(radiusFt * 1000) / 1000),
       category: r.category?.trim() || null,
       kind,
+      ...(cost !== null && { costPerSf: cost }),
     });
   });
   return { rows, errors };
@@ -121,6 +134,7 @@ export function buildImport(
       y: pos[i].y,
       shape: newShape(r.kind, r.radiusFt),
       categoryId: r.category ? cats.resolve({ name: r.category }) : null,
+      costPerSf: r.costPerSf,
     }),
   );
   return { nodes, categories: cats.added };

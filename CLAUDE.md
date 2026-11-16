@@ -48,6 +48,7 @@ react-konva canvas, Zustand + Immer state. No UI framework; plain CSS with token
 ```
 src/model/    pure TS: types, units, geometry (all shape-kind switches), color,
               defaults, factory, selectors (resolveStyle…), migrate, overlaps,
+              costs (cost per sf: firm → drawing → element; totals, breakdown),
               standards (shared library + firm defaults), categories (matching by
               name: the one rule for files, paste, CSV, reset), polygon,
               blob/ (geometry.ts resolve+sample, build.ts from input, edit.ts points)
@@ -55,8 +56,8 @@ src/store/    history.ts (pure undo stack), documentStore (active tab's undoable
               Project), uiStore (selection/tool/view, NOT undoable), workspaceStore
               (tabs + standards sync), standardsStore, actions/ (all document ops,
               one file per area: nodes, size (circles/rectangles), blobs (freeform),
-              categories, styles, connections, overlaps, graphic, settings, view,
-              selection; index.ts re-exports: import * as A from 'store/actions')
+              costs, labels (in-place label edits), categories, styles,
+              connections, overlaps, graphic, settings, view, selection; index.ts re-exports: import * as A from 'store/actions')
 src/render/   scene.ts (Project -> primitives: nodes, labels, connections),
               overlapScene.ts (overlap treatments), primitives.ts (Prim types +
               helpers), drawCanvas.ts, sketch.ts (hand-drawn geometry + presets),
@@ -69,7 +70,8 @@ src/canvas/   CanvasStage (stage + layers only), OverlayLayer (selection, handle
               textLayout, LabelEditor, pointer, layers/GridLayer
 src/ui/       TabBar, Toolbar, FileMenu, ScaleBar, ExportDialog, Toast, focus.ts,
               controls/ (shared inputs), panels/ (PropertiesPanel composes: BubbleProps
-              + SizeFields + StyleFields, ConnectionProps, OverlapProps, DrawingPanel, GraphicPanel,
+              + SizeFields + CostFields + StyleFields, ConnectionProps, OverlapProps,
+              DrawingPanel, CostPanel, GraphicPanel,
               OverlapSettingsPanel, ShortcutsHelp, CategoryPanel)
 src/io/       fileActions (New/Open/Save/Import CSV), projectFile (JSON),
               clipboard + clipboardActions, autosave, csvImport, autoLayout,
@@ -111,6 +113,15 @@ Schema v2 (v1 files upgrade in `migrate.ts`).
   per-pair overrides stay per diagram).
 - `settings.graphic`: the drawing's sketch character (render/sketch.ts PRESETS), paper,
   lettering font and seed. Part of the shared standards (see below).
+- **Costs** (`model/costs.ts`): cost per sf at three levels, each falling back to the one
+  above: firm default (`Category.costPerSf`, `settings.defaultCostPerSf`; part of the
+  shared standards) → this drawing's rate (`project.costRates.categories[id]` /
+  `.uncategorized`; NOT a standard) → the element's own (`node.costPerSf`). Cost = area ×
+  rate; overlapping elements each count their full area. Always resolve with `nodeRate`.
+  An element losing its category keeps its rate (`keepRate`, like baked styles). Opening a
+  file keeps its costs: its rates become the drawing's rates (`adoptProject`); a blank
+  project follows the firm. `StyleProps.labelCost` (none | rate | total) shows the cost
+  line; it hides while the rate is $0. The scene cache key includes `nodeRate`.
 - `Connection { id, from, to, type: 'strong'|'near'|'visual' }`. Endpoints are never
   stored; `geometry.connectionSegment` computes edge-to-edge points.
 
@@ -179,13 +190,16 @@ Hand fonts are bundled via @fontsource; exports outline them with opentype.js
 - Selected shape: drag control points (snap to rings; Alt = no snap), double-click a
   point to delete it, the edge to insert one.
 - Overlaps: ◇ marker at each overlap of a selected bubble; click it to set its mode.
-- Names and areas: click the name (or the area line below it) of the already-selected
-  element, or double-click either, to edit it in place (`canvas/LabelEditor.tsx`,
-  `uiStore.editingLabel = {id, part: 'name'|'size'}`, `query.labelAt`). Enter saves,
+- Names, areas and costs: click the name (or the area or cost line below it) of the
+  already-selected element, or double-click any, to edit it in place
+  (`canvas/LabelEditor.tsx`, `uiStore.editingLabel = {id, part: LabelPart}`,
+  `query.labelAt`; what each part edits: `actions/labels.ts`). Label lines carry their
+  `part` ('name' | 'size' | 'cost'). Enter saves,
   Shift+Enter breaks a name's line, Esc cancels, blur saves. One undo step. The size line
   edits whatever the label shows: area, a circle's radius or a rectangle's `W × H`
   (`actions.setSizeFromText`); circles and rectangles only (a freeform shape's area
-  follows its outline).
+  follows its outline). The cost line edits the element's rate (or its total cost, when
+  the label shows that); typing the inherited rate clears the override.
 - Ctrl+C/X/V use native clipboard events (JSON text, works across tabs); paste goes
   to the cursor. Ctrl+Shift+V pastes the copied element's look onto the selection.
   Pasting tab/comma-separated rows with a header imports bubbles.
@@ -195,6 +209,9 @@ Hand fonts are bundled via @fontsource; exports outline them with opentype.js
 - Resize handle (circle: right edge; rectangle: bottom-right corner, proportional) snaps the
   half-extent to `settings.snap.radiusIncrementFt` (stored name kept for old files; the UI
   calls it "Size snap"); Shift = free. Minimum half-extent: `MIN_SIZE_FT`.
+- Costs: firm default per category in Category standards (expand a category); this
+  drawing's rates, the breakdown and the total in the Costs panel (nothing selected);
+  an element's own rate in its Cost section (dot = own; click to reset).
 - Sidebar (sizing actions in `store/actions/size.ts`): Shape (convert, keeps area); a
   circle by radius, diameter or area; a rectangle by width, height (unlocks rectangles)
   or area. Area is exact (unsnapped) and keeps proportions; multi-select applies to each.
@@ -205,7 +222,9 @@ Hand fonts are bundled via @fontsource; exports outline them with opentype.js
 ## CSV import
 
 Columns (case-insensitive, aliases in `csvImport.ts`): `name`, `radius`, `category`,
-optional `area` and `shape` (circle | square; a square's radius = half its side). Radius accepts `12.5`, `12'`, `12'-6"`; area accepts `1200`, `1,200 sf`.
+optional `area`, `shape` (circle | square; a square's radius = half its side) and `cost`
+(aliases incl. `$/sf`, `rate`; any header with `$` is cost, checked before symbols are
+stripped; sets the element's own rate). Radius accepts `12.5`, `12'`, `12'-6"`; area accepts `1200`, `1,200 sf`.
 Radius wins if both are given; otherwise radius = sqrt(area/π) (squares: side = sqrt(area)). Unknown categories are
 created with the next palette color. Imported bubbles go in a loose grid below existing
 content (`autoLayout.ts`). Sample: `examples/sample-program.csv`.
@@ -243,6 +262,9 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 - **New canvas tool**: implement `Tool` in `canvas/tools/<name>.ts` (return a `Gesture`
   from `down` for drags), register it in `tools/index.ts` and `ToolId` in uiStore, add a
   toolbar button and a shortcut.
+- **New per-element number that rolls up** (like cost): follow `model/costs.ts`: resolve
+  in one function, total/breakdown there, a `labelX` style property for the label line
+  (a `LabelPart` + a row in `actions/labels.ts` to edit it in place), sidebar fields.
 - **New document data** (anything saved in files): add to `types.ts`, `factory.ts`,
   `migrate.ts`; if old files can't be read as-is, bump `SCHEMA_VERSION` with an upgrade
   step. Copy/paste (`io/clipboard.ts`) and duplicate may need to carry it.
@@ -251,10 +273,10 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 
 ## Testing notes
 
-- Unit tests (53): units, geometry, squares/rectangles, history, project file + v1 migration, CSV, styles,
-  standards + category matching + firm defaults, clipboard, overlaps, sketch determinism, blobs, render regression.
-- e2e (21, one file per area): bubbles (scale, drag/resize/wheel, selection + undo,
-  connect, sizing, names, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), overlaps, shapes, tabs, io.
+- Unit tests (61): units, geometry, squares/rectangles, history, project file + v1 migration, CSV, styles,
+  standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs, render regression.
+- e2e (23, one file per area): bubbles (scale, drag/resize/wheel, selection + undo,
+  connect, sizing, names, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, tabs, io.
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags
   continue outside the canvas.

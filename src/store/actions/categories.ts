@@ -2,6 +2,7 @@
 import type { Id, StyleKey, StyleProps } from '../../model/types';
 import { createCategory, createProject, nextCategoryColor } from '../../model/factory';
 import { withFirmDefaults } from '../../model/standards';
+import { keepRate } from '../../model/costs';
 import { getDoc } from '../documentStore';
 import { commit } from './shared';
 
@@ -34,17 +35,20 @@ export function setCategoryStyle<K extends StyleKey>(id: Id | null, key: K, valu
   );
 }
 
-/** Deleting a category un-assigns its bubbles but keeps their look (style baked in as overrides). */
+/** Deleting a category un-assigns its bubbles but keeps their look and rate (baked in as overrides). */
 export function deleteCategory(id: Id) {
+  const doc = getDoc();
   commit((d) => {
     const cat = d.categories[id];
     if (!cat) return;
     for (const n of Object.values(d.nodes)) {
       if (n.categoryId === id) {
+        n.costPerSf = keepRate(doc.nodes[n.id], doc).costPerSf;
         n.categoryId = null;
         n.style = { ...cat.style, ...n.style };
       }
     }
+    delete d.costRates.categories[id];
     delete d.categories[id];
     d.categoryOrder = d.categoryOrder.filter((c) => c !== id);
   });

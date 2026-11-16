@@ -125,6 +125,33 @@ export function parseDimensions(input: string): { widthFt: number; heightFt: num
   return w !== null && h !== null && w > 0 && h > 0 ? { widthFt: w, heightFt: h } : null;
 }
 
+/** Whole dollars: $1,234,567. */
+export function formatMoney(dollars: number): string {
+  return `$${Math.round(dollars).toLocaleString('en-US')}`;
+}
+
+/** A cost per sf: $150/sf, or $12.50/sf when it has cents. */
+export function formatRate(dollarsPerSf: number): string {
+  const cents = Math.round(dollarsPerSf * 100);
+  const text =
+    cents % 100 === 0
+      ? (cents / 100).toLocaleString('en-US')
+      : (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `$${text}/sf`;
+}
+
+/** Parse money: 150, $150, $1,200.50, 150/sf, $150 / sf. Null when unparseable or negative. */
+export function parseMoney(input: string | number): number | null {
+  if (typeof input === 'number') return Number.isFinite(input) && input >= 0 ? input : null;
+  const s = input
+    .trim()
+    .toLowerCase()
+    .replace(/[$,\s]/g, '')
+    .replace(/\/(sf|sqft|ft2|ft²)$/, '');
+  if (!/^\d*\.?\d+$/.test(s)) return null;
+  return parseFloat(s);
+}
+
 const NICE_BAR_FT = [1, 2, 4, 5, 8, 10, 16, 20, 25, 32, 40, 50, 64, 100, 200, 250, 500, 1000];
 
 /** Largest "nice" scale-bar length (ft) whose drawn length stays within `maxUnits`. */

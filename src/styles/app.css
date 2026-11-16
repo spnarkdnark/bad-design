@@ -830,3 +830,59 @@ kbd {
 .shortcut-row {
   display: contents;
 }
+
+/* costs */
+.cost-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.cost-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 74px 72px;
+  align-items: center;
+  gap: 6px;
+}
+.cost-row.head {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.cost-row.total {
+  border-top: 1px solid var(--line);
+  padding-top: 6px;
+  font-weight: 600;
+}
+.cost-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.cost-label {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cost-area {
+  font-weight: 400;
+  color: var(--muted);
+  padding-left: 8px;
+}
+.cost-swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+.cost-name .override-dot {
+  flex: none;
+  margin-left: 0;
+  top: 0;
+}
+.cost-value {
+  text-align: right;
+}

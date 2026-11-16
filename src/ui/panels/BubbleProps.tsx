@@ -5,6 +5,7 @@ import { baseStyle, resolveStyle } from '../../model/selectors';
 import { formatLengthCompact } from '../../model/units';
 import { common, Field, Section, SelectField, TextField } from '../controls/Controls';
 import { SizeFields } from './SizeFields';
+import { CostFields } from './CostFields';
 import { StyleFields, type StyleSource } from './StyleFields';
 
 export function BubbleProps({ ids }: { ids: Id[] }) {
@@ -57,6 +58,7 @@ export function BubbleProps({ ids }: { ids: Id[] }) {
       </Section>
 
       <SizeFields doc={doc} nodes={nodes} />
+      <CostFields doc={doc} nodes={nodes} />
 
       <StyleFields src={src} />
 

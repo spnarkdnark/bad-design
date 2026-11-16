@@ -5,6 +5,8 @@ export interface OverrideMark {
   /** true = overridden on all, null = on some */
   on: boolean | null;
   reset: () => void;
+  /** tooltip; defaults to the category-style wording */
+  title?: string;
 }
 
 export function Field({
@@ -26,7 +28,7 @@ export function Field({
           <button
             type="button"
             className={`override-dot ${override.on === null ? 'partial' : ''}`}
-            title="Overrides the category style. Click to reset."
+            title={override.title ?? 'Overrides the category style. Click to reset.'}
             onClick={(e) => {
               e.preventDefault();
               override.reset();
