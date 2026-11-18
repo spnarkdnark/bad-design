@@ -97,10 +97,10 @@ export function bringToFront(ids: Id[]) {
   });
 }
 
-/** Rename from the on-canvas editor: one undo step; empty names are ignored. */
+/** Rename from the on-canvas editor: one undo step; an empty name leaves the element unlabeled. */
 export function renameNode(id: Id, name: string) {
   const n = getDoc().nodes[id];
-  const clean = name.replace(/\s+$/g, '');
-  if (!n || !clean.trim() || clean === n.name) return;
+  const clean = name.trim() ? name.replace(/\s+$/g, '') : '';
+  if (!n || clean === n.name) return;
   updateNodes([id], (d) => void (d.name = clean));
 }

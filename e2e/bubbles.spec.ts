@@ -105,6 +105,24 @@ test('names edit in place only on the selected bubble', async ({ page, canvas })
   expect((await nodes(page))[0].name).toBe('Reading Room');
 });
 
+test('a bubble can have no name; double-click it to name it again', async ({ page, canvas }) => {
+  await canvas.bubble(400, 300);
+  await canvas.dblclick(400, 297); // the name
+  await page.keyboard.press('Control+a');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Enter');
+  expect((await nodes(page))[0].name).toBe('');
+  await expect(page.locator('.label-editor')).toHaveCount(0);
+  // no name text to click: double-click anywhere on the bubble
+  await canvas.dblclick(400, 250);
+  await expect(page.locator('.label-editor[aria-label="Name"]')).toHaveValue('');
+  await page.keyboard.type('Lobby');
+  await page.keyboard.press('Enter');
+  expect((await nodes(page))[0].name).toBe('Lobby');
+  await page.keyboard.press('Control+z');
+  expect((await nodes(page))[0].name).toBe('');
+});
+
 test('area edits in place on the selected bubble', async ({ page, canvas }) => {
   await canvas.bubble(400, 300);
   await canvas.click(1000, 700);

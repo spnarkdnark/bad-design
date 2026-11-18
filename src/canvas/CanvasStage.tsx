@@ -6,7 +6,7 @@ import { pxPerFt } from '../model/units';
 import { getDoc, useDoc } from '../store/documentStore';
 import { useUi, type EditingLabel } from '../store/uiStore';
 import * as A from '../store/actions';
-import { buildScene, type Scene } from '../render/scene';
+import { buildScene, editorLabel, type Scene } from '../render/scene';
 import { drawLabels, drawPrims } from '../render/drawCanvas';
 import { loadWebFont } from '../render/fonts';
 import { PAPER_COLORS, paperTileUrl } from '../render/paper';
@@ -79,7 +79,7 @@ export function CanvasStage() {
   }, []);
 
   const editingNode = editingLabel ? doc.nodes[editingLabel.id] : undefined;
-  const editingPrim = editingLabel ? scene.nodes.find((n) => n.id === editingLabel.id)?.label : undefined;
+  const editingPrim = editingLabel && editingNode ? editorLabel(editingNode, doc, editingLabel.part) : null;
   const closeEditor = () => useUi.getState().setEditingLabel(null);
 
   return (

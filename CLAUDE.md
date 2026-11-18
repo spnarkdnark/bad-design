@@ -195,7 +195,9 @@ Hand fonts are bundled via @fontsource; exports outline them with opentype.js
   already-selected element, or double-click any, to edit it in place
   (`canvas/LabelEditor.tsx`, `uiStore.editingLabel = {id, part: LabelPart}`,
   `query.labelAt`; what each part edits: `actions/labels.ts`). Label lines carry their
-  `part` ('name' | 'size' | 'cost'). Enter saves,
+  `part` ('name' | 'size' | 'cost'). Names may be empty (the element draws unlabeled);
+  a nameless element has nothing to click, so double-clicking anywhere on it opens the
+  name editor, placed via `scene.editorLabel` (a stand-in name sizes the box). Enter saves,
   Shift+Enter breaks a name's line, Esc cancels, blur saves. One undo step. The size line
   edits whatever the label shows: area, a circle's radius or a rectangle's `W × H`
   (`actions.setSizeFromText`); circles and rectangles only (a freeform shape's area
@@ -289,8 +291,8 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 
 - Unit tests (62): units, geometry, squares/rectangles, history, project file + v1 migration, CSV, styles,
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs, render regression.
-- e2e (25, one file per area): bubbles (scale, drag/resize/wheel, selection + undo,
-  connect, sizing, names, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, tabs, io (exports + save dialogs + download fallback).
+- e2e (26, one file per area): bubbles (scale, drag/resize/wheel, selection + undo,
+  connect, sizing, names (+ nameless), in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags
   continue outside the canvas.

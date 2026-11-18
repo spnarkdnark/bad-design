@@ -170,6 +170,13 @@ export const selectTool: Tool = {
       ui.setEditingLabel(label);
       return;
     }
+    // a nameless element has no name to click: double-click anywhere on it to name it
+    const hit = hitAt(e.world);
+    if (hit.kind === 'node' && !getDoc().nodes[hit.id].name.trim()) {
+      A.selectNodes([hit.id]);
+      ui.setEditingLabel({ id: hit.id, part: 'name' });
+      return;
+    }
     // on the edge of the selected shape: insert a point
     const target = pointEditTarget();
     if (!target) return;

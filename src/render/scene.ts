@@ -150,14 +150,7 @@ function nodeScene(
       : [];
   }
 
-  const font = LABEL_FONTS[g.labelFont] ?? LABEL_FONTS.clean;
-  const layout = layoutLabel(node, project, style, font);
-  const scene: NodeScene = {
-    id: node.id,
-    fill,
-    outline,
-    label: layout.lines.length ? { ...nodeCenter(node, project), layout, fontFamily: font.family } : null,
-  };
+  const scene: NodeScene = { id: node.id, fill, outline, label: labelPrim(node, project, style) };
   nodeCache.set(node.id, { key, scene });
   if (nodeCache.size > 5000) nodeCache.clear();
   return scene;
@@ -198,6 +191,23 @@ export function buildScene(project: Project): Scene {
   }
 
   return { connections, nodes, overlays, overlaps, ftPerPt };
+}
+
+/** A node's label (null when it has no lines: no name, size or cost line). */
+function labelPrim(node: BubbleNode, project: Project, style: ResolvedStyle): LabelPrim | null {
+  const font = LABEL_FONTS[project.settings.graphic.labelFont] ?? LABEL_FONTS.clean;
+  const layout = layoutLabel(node, project, style, font);
+  return layout.lines.length ? { ...nodeCenter(node, project), layout, fontFamily: font.family } : null;
+}
+
+/**
+ * The label the in-place editor sits on. A nameless element has no name line to
+ * cover, so for its name it lays out a stand-in name to place and size the box.
+ */
+export function editorLabel(node: BubbleNode, project: Project, part: LabelPart): LabelPrim | null {
+  const style = resolveStyle(node, project);
+  const stand = part === 'name' && !node.name.trim() ? { ...node, name: 'Name' } : node;
+  return labelPrim(stand, project, style);
 }
 
 /** World-space box (feet) around one part of a label (its name lines by default); null when absent. */
