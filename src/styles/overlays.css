@@ -12,7 +12,7 @@
   box-shadow: var(--shadow-menu);
   padding: 4px;
   min-width: 200px;
-  z-index: 20;
+  z-index: var(--z-menu);
 }
 .menu-item {
   display: flex;
@@ -45,7 +45,7 @@
   background: var(--backdrop);
   display: grid;
   place-items: center;
-  z-index: 30;
+  z-index: var(--z-dialog);
 }
 .dialog {
   background: var(--panel);
@@ -98,7 +98,7 @@
   padding: 9px 14px;
   border-radius: var(--radius);
   font-size: var(--text-sm);
-  z-index: 40;
+  z-index: var(--z-toast);
   box-shadow: var(--shadow-toast);
   max-width: 80vw;
 }

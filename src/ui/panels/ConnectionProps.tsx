@@ -2,7 +2,8 @@ import type { ConnectionType, Id } from '../../model/types';
 import { useDoc } from '../../store/documentStore';
 import * as A from '../../store/actions';
 import { CONNECTION_STYLES } from '../../model/defaults';
-import { common, Section } from '../controls/Controls';
+import { Section } from '../controls/Controls';
+import { common } from '../controls/mixed';
 
 const TYPES: ConnectionType[] = ['strong', 'near', 'visual'];
 

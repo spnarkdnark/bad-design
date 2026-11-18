@@ -65,7 +65,7 @@
 
 .label-editor {
   position: absolute;
-  z-index: 5;
+  z-index: var(--z-canvas-editor);
   text-align: center;
   resize: none;
   overflow: hidden;

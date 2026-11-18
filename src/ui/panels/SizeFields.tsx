@@ -9,7 +9,8 @@ import { totalArea } from '../../model/selectors';
 import { isSizable, nodeArea, shapeSize, sizableArea } from '../../model/geometry';
 import { MIN_SIZE_FT, SIZABLE_SHAPES } from '../../model/defaults';
 import { formatArea, formatFeetInches, parseArea, parseLength } from '../../model/units';
-import { common, Field, NumberField, ReadOnly, Section, SelectField } from '../controls/Controls';
+import { Field, NumberField, ReadOnly, Section, SelectField } from '../controls/Controls';
+import { common } from '../controls/mixed';
 
 /** A feet-and-inches input (12.5, 12'-6"). */
 function LengthField(props: { value: number | null; step: number; min: number; onCommit: (ft: number) => void }) {

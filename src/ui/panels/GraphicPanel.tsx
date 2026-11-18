@@ -1,15 +1,10 @@
 import type { FillStyle, LabelFont, Paper } from '../../model/types';
 import { useDoc } from '../../store/documentStore';
 import * as A from '../../store/actions';
-import { PRESETS } from '../../render/sketch';
 import { PAPER_LABELS } from '../../render/paper';
 import { LABEL_FONTS } from '../../render/scene';
 import { Field, Section, SelectField, Slider } from '../controls/Controls';
-
-export const PRESET_OPTIONS = [
-  ...PRESETS.map((p) => ({ value: p.id, label: p.label })),
-  { value: 'custom', label: 'Custom' },
-];
+import { PRESET_OPTIONS } from '../options';
 
 export function GraphicPanel() {
   const g = useDoc().settings.graphic;

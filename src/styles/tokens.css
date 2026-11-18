@@ -71,4 +71,10 @@
   --sidebar-w: 288px;
   --panel-pad-x: 16px;
   --field-label-w: 84px;
+
+  /* stacking, bottom to top */
+  --z-canvas-editor: 5;
+  --z-menu: 20;
+  --z-dialog: 30;
+  --z-toast: 40;
 }

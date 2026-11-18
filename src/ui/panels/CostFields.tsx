@@ -3,7 +3,8 @@ import type { BubbleNode, Project } from '../../model/types';
 import * as A from '../../store/actions';
 import { nodeRate, totalCost } from '../../model/costs';
 import { formatMoney, formatRate, parseMoney } from '../../model/units';
-import { common, Field, NumberField, ReadOnly, Section } from '../controls/Controls';
+import { Field, NumberField, ReadOnly, Section } from '../controls/Controls';
+import { common } from '../controls/mixed';
 
 export function CostFields({ doc, nodes }: { doc: Project; nodes: BubbleNode[] }) {
   const ids = nodes.map((n) => n.id);

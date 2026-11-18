@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { isHexColor } from '../../model/color';
+import { MIXED } from './mixed';
 
 export interface OverrideMark {
   /** true = overridden on all, null = on some */
@@ -44,8 +45,6 @@ export function Field({
 export function ReadOnly({ value }: { value: string }) {
   return <span className="readonly">{value}</span>;
 }
-
-export const MIXED = '—';
 
 /** Text input that commits on Enter/blur; Esc reverts; ↑/↓ step. `value === null` = mixed. */
 export function NumberField(props: {
@@ -231,11 +230,4 @@ export function Section({ title, children, actions }: { title: string; children:
       {children}
     </section>
   );
-}
-
-/** Returns the shared value of `fn` across items, or null if mixed/empty. */
-export function common<T, V>(items: T[], fn: (t: T) => V): V | null {
-  if (items.length === 0) return null;
-  const first = fn(items[0]);
-  return items.every((i) => fn(i) === first) ? first : null;
 }
