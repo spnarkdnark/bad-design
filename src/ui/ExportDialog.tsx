@@ -25,7 +25,7 @@ function ExportDialogBody() {
   const close = () => useUi.getState().setExportOpen(false);
   const [format, setFormat] = useState<Format>('pdf');
   const [includeGrid, setIncludeGrid] = useState(false);
-  const [includeScaleBar, setIncludeScaleBar] = useState(true);
+  const [includeScaleBar, setIncludeScaleBar] = useState(false);
   const [onlySelection, setOnlySelection] = useState(false);
   const [dpi, setDpi] = useState('300');
   const [sheet, setSheet] = useState<SheetId>('fit');
