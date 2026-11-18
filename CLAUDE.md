@@ -67,9 +67,12 @@ src/canvas/   CanvasStage (stage + layers only), OverlayLayer (selection, handle
               interface in tools/types.ts), input/useCanvasInput (pan, dispatch to the
               active tool, cursor) + input/wheel, query.ts (hit testing, snapping),
               overlayStore (marquee/stroke/snap hint), viewport.ts, hitTest,
-              textLayout, LabelEditor, pointer, layers/GridLayer
+              textLayout, LabelEditor, pointer, layers/GridLayer, theme.ts
+              (overlay/grid colors read from the CSS tokens)
 src/ui/       TabBar, Toolbar, FileMenu, ScaleBar, ExportDialog, Toast, focus.ts,
-              controls/ (shared inputs), panels/ (PropertiesPanel composes: BubbleProps
+              icons.tsx (icon set), options.ts (choice lists shared by several
+              controls), controls/ (Controls.tsx inputs; mixed.ts = common()/MIXED
+              for multi-selection), panels/ (PropertiesPanel composes: BubbleProps
               + SizeFields + CostFields + StyleFields, ConnectionProps, OverlapProps,
               DrawingPanel, CostPanel, GraphicPanel,
               OverlapSettingsPanel, ShortcutsHelp, CategoryPanel)
@@ -77,6 +80,10 @@ src/io/       fileActions (New/Open/Save/Save As/Import CSV), projectFile (JSON)
               fileSystem (system save/open dialogs, download fallback),
               clipboard + clipboardActions, autosave, csvImport, autoLayout,
               download, export/ (svg.ts is the single exporter; png/pdf build on it)
+src/styles/   index.css imports, in cascade order: tokens (ALL colors, sizes, type,
+              shadows, z-index), base (reset, shell, utilities), controls, chrome
+              (tabs + toolbar), canvas (overlays on the drawing), sidebar, overlays
+              (menus, dialogs, toast)
 src/hooks/    useKeyboardShortcuts
 tests/        Vitest unit tests (render-regression.test.ts guards scene output)
 e2e/          Playwright, one spec per feature area (helpers.ts: fixtures, readers,
@@ -284,6 +291,18 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 - **New document data** (anything saved in files): add to `types.ts`, `factory.ts`,
   `migrate.ts`; if old files can't be read as-is, bump `SCHEMA_VERSION` with an upgrade
   step. Copy/paste (`io/clipboard.ts`) and duplicate may need to carry it.
+- **UI / layout work**:
+  - Restyle via `styles/tokens.css`; component rules use tokens, never raw colors or
+    sizes (the canvas overlay picks them up through `canvas/theme.ts`).
+  - New rules go in the file for their area; keep one definition per selector.
+  - Layout regions: `App.tsx` (TabBar, Toolbar, workspace = canvas-wrap + sidebar);
+    sizes in tokens (`--sidebar-w`, `--toolbar-h`, `--tabbar-h`).
+  - Sidebar: each block is a `Section` component in `ui/panels/`; `PropertiesPanel`
+    decides which appear (selection vs. drawing). Moving a block = moving one line there.
+  - Inputs come from `ui/controls/Controls.tsx`; a choice list used in two places goes in
+    `ui/options.ts`; icons in `ui/icons.tsx`.
+  - e2e tests find sidebar inputs by their field label (`helpers.field/select`), so
+    renaming a label means updating tests; moving a field does not.
 - **Intentional visual change**: `tests/render-regression.test.ts` will fail; check the
   app/export, then replace the expected hash.
 
@@ -306,5 +325,5 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 
 ## Style
 
-Neutral grays, white space, system sans-serif UI; labels use Helvetica/Arial (matches
-PDF built-in font). Firm categories and the palette for new ones are in `model/defaults.ts`.
+Neutral grays, white space, system sans-serif UI (all values in `styles/tokens.css`);
+labels use Helvetica/Arial (matches PDF built-in font). Firm categories and the palette for new ones are in `model/defaults.ts`.
