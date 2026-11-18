@@ -1,0 +1,11 @@
+/*
+ * Stylesheet entry. Order matters (later files win ties): tokens first, then the
+ * shell, shared controls, and each area of the UI.
+ */
+@import './tokens.css';
+@import './base.css';
+@import './controls.css';
+@import './chrome.css';
+@import './canvas.css';
+@import './sidebar.css';
+@import './overlays.css';

@@ -8,8 +8,7 @@ import type { Scene } from '../render/scene';
 import { useUi } from '../store/uiStore';
 import { useOverlay } from './overlayStore';
 import { draftOutline } from './query';
-
-const ACCENT = '#2f7de1';
+import { canvasTheme } from './theme';
 
 function flat(pts: Point[]): number[] {
   const out: number[] = [];
@@ -25,6 +24,7 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
   const shapeDraft = useUi((s) => s.shapeDraft);
   const { marquee, pointerWorld, stroke, snapHint } = useOverlay();
 
+  const theme = canvasTheme();
   const selected = new Set(selection.nodes);
   const sole = selection.nodes.length === 1 && tool === 'select' ? doc.nodes[selection.nodes[0]] : undefined;
   const handle = sole ? resizeHandle(sole) : null;
@@ -32,7 +32,7 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
   const fromNode = connectFrom ? doc.nodes[connectFrom] : undefined;
   const highlighted = orderedNodes(doc).filter((n) => selected.has(n.id) || n.id === connectFrom);
   const ring = (n: BubbleNode) => ({
-    stroke: ACCENT,
+    stroke: theme.accent,
     strokeWidth: 1.5 / k,
     dash: n.id === connectFrom ? [4 / k, 3 / k] : undefined,
   });
@@ -44,7 +44,14 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
         .map((c) => {
           const seg = connectionSegment(doc.nodes[c.from], doc.nodes[c.to], doc);
           return seg ? (
-            <Line key={c.id} points={flat(seg)} stroke={ACCENT} opacity={0.45} strokeWidth={6 / k} lineCap="round" />
+            <Line
+              key={c.id}
+              points={flat(seg)}
+              stroke={theme.accent}
+              opacity={0.45}
+              strokeWidth={6 / k}
+              lineCap="round"
+            />
           ) : null;
         })}
 
@@ -60,8 +67,8 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
             width={10 / k}
             height={10 / k}
             rotation={45}
-            fill={selection.overlaps.includes(o.key) ? ACCENT : '#fff'}
-            stroke={ACCENT}
+            fill={selection.overlaps.includes(o.key) ? theme.accent : theme.handleFill}
+            stroke={theme.accent}
             strokeWidth={1.5 / k}
           />
         ))}
@@ -79,8 +86,8 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
           y={handle.y - 4.5 / k}
           width={9 / k}
           height={9 / k}
-          fill="#fff"
-          stroke={ACCENT}
+          fill={theme.handleFill}
+          stroke={theme.accent}
           strokeWidth={1.5 / k}
         />
       )}
@@ -88,7 +95,7 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
       {fromNode && pointerWorld && (
         <Line
           points={flat([boundaryPoint(fromNode, pointerWorld, doc), pointerWorld])}
-          stroke={ACCENT}
+          stroke={theme.accent}
           strokeWidth={1.5 / k}
           dash={[6 / k, 4 / k]}
         />
@@ -102,8 +109,12 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
             x={c.x}
             y={c.y}
             radius={4.5 / k}
-            fill={editShape.shape.kind === 'blob' && editShape.shape.points[i]?.t === 'anchor' ? ACCENT : '#fff'}
-            stroke={ACCENT}
+            fill={
+              editShape.shape.kind === 'blob' && editShape.shape.points[i]?.t === 'anchor'
+                ? theme.accent
+                : theme.handleFill
+            }
+            stroke={theme.accent}
             strokeWidth={1.5 / k}
           />
         ))}
@@ -114,19 +125,19 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
             x={snapHint.x}
             y={snapHint.y}
             radius={snapHint.R}
-            stroke={ACCENT}
+            stroke={theme.accent}
             strokeWidth={1 / k}
             dash={[5 / k, 4 / k]}
             opacity={0.8}
           />
-          <Circle x={snapHint.at.x} y={snapHint.at.y} radius={3.5 / k} fill={ACCENT} />
+          <Circle x={snapHint.at.x} y={snapHint.at.y} radius={3.5 / k} fill={theme.accent} />
         </>
       )}
 
       {stroke && (
         <Line
           points={flat(stroke)}
-          stroke="#3a3a3a"
+          stroke={theme.strokePreview}
           strokeWidth={1.4 / k}
           lineCap="round"
           lineJoin="round"
@@ -139,7 +150,7 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
           <Line
             points={flat(draftOutline(shapeDraft, pointerWorld))}
             closed
-            stroke={ACCENT}
+            stroke={theme.accent}
             strokeWidth={1.5 / k}
             fill="rgba(47,125,225,0.06)"
           />
@@ -149,8 +160,8 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
               x={q.x}
               y={q.y}
               radius={(i === 0 ? 5 : 3.5) / k}
-              fill={i === 0 ? '#fff' : ACCENT}
-              stroke={ACCENT}
+              fill={i === 0 ? theme.handleFill : theme.accent}
+              stroke={theme.accent}
               strokeWidth={1.5 / k}
             />
           ))}
@@ -164,15 +175,21 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
           width={marquee.maxX - marquee.minX}
           height={marquee.maxY - marquee.minY}
           fill="rgba(47,125,225,0.06)"
-          stroke={ACCENT}
+          stroke={theme.accent}
           strokeWidth={1 / k}
         />
       )}
 
       {readout && (
         <Label x={readout.at.x + 10 / k} y={readout.at.y - 10 / k} scaleX={1 / k} scaleY={1 / k}>
-          <Tag fill="#1f2328" cornerRadius={3} />
-          <Text text={readout.text} fill="#fff" fontSize={12} padding={5} fontFamily="system-ui, sans-serif" />
+          <Tag fill={theme.readoutBg} cornerRadius={3} />
+          <Text
+            text={readout.text}
+            fill={theme.readoutText}
+            fontSize={12}
+            padding={5}
+            fontFamily="system-ui, sans-serif"
+          />
         </Label>
       )}
     </Layer>

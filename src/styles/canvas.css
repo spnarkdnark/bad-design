@@ -1,0 +1,78 @@
+/* The drawing area and what floats over it: hints, tool tips, scale bar, in-place label editor. */
+.canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.canvas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  user-select: none;
+}
+.canvas-hint {
+  position: absolute;
+  top: 45%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--muted);
+  pointer-events: none;
+}
+.canvas-tip {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--tip-bg);
+  color: var(--on-dark);
+  font-size: var(--text-sm);
+  padding: 7px 12px;
+  border-radius: var(--radius);
+  pointer-events: none;
+  max-width: min(720px, 90%);
+  text-align: center;
+}
+
+.scalebar {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  background: var(--overlay);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 6px 8px 6px 4px;
+  pointer-events: none;
+  font-size: var(--text-xs);
+}
+.scalebar text {
+  fill: var(--text);
+  font-family: var(--font);
+}
+.scalebar-seg {
+  stroke: var(--scalebar-ink);
+}
+.scalebar-seg.dark {
+  fill: var(--scalebar-ink);
+}
+.scalebar-seg.light {
+  fill: var(--panel);
+}
+.scalebar-label {
+  color: var(--muted);
+  padding-left: 4px;
+}
+
+.label-editor {
+  position: absolute;
+  z-index: 5;
+  text-align: center;
+  resize: none;
+  overflow: hidden;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--overlay-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  padding: 2px 6px;
+  outline: none;
+}

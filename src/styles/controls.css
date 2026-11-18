@@ -1,0 +1,241 @@
+/* Shared inputs (ui/controls/Controls.tsx): buttons, inputs, swatches, sliders, segmented choices, fields. */
+.btn {
+  height: var(--control-h);
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) {
+  background: var(--hover-subtle);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.btn.ghost {
+  border-color: transparent;
+  background: none;
+}
+.btn.ghost:hover:not(:disabled) {
+  background: var(--hover);
+}
+.btn.primary {
+  background: var(--text);
+  color: var(--on-dark);
+  border-color: var(--text);
+}
+.btn.primary:hover:not(:disabled) {
+  background: var(--text-strong);
+}
+.btn.danger {
+  color: var(--danger);
+}
+.btn.small {
+  height: var(--control-h-sm);
+  padding: 0 8px;
+  font-size: var(--text-sm);
+}
+
+.input {
+  height: var(--input-h);
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-input);
+  background: var(--panel);
+  min-width: 0;
+  width: 100%;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.input.narrow {
+  width: 64px;
+}
+.input.mono {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+}
+.input.bare {
+  border-color: transparent;
+  background: transparent;
+  padding: 0 4px;
+}
+.input.bare:hover {
+  border-color: var(--line);
+}
+.input.bare:focus {
+  border-color: var(--accent);
+  background: var(--panel);
+}
+select.input {
+  padding-right: 4px;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.swatch {
+  width: var(--input-h);
+  height: var(--input-h);
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-input);
+  background: none;
+  cursor: pointer;
+  flex: none;
+}
+.swatch::-webkit-color-swatch-wrapper {
+  padding: 3px;
+}
+.swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+.swatch::-moz-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+.color-field {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.slider input {
+  flex: 1;
+  accent-color: var(--text);
+}
+.slider-value {
+  width: 36px;
+  text-align: right;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.readonly {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  padding: 0 2px;
+}
+
+/* label + control row */
+.field {
+  display: grid;
+  grid-template-columns: var(--field-label-w) 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.field-label {
+  color: var(--muted);
+}
+.field-control {
+  display: flex;
+  min-width: 0;
+}
+
+/* "this differs from what it inherits" marker next to a field label */
+.override-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  margin-left: 6px;
+  background: var(--accent);
+  cursor: pointer;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+.override-dot.partial {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+.override-dot:hover {
+  background: var(--danger);
+  box-shadow: none;
+}
+
+/* segmented choices */
+.segmented.vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.segmented-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.seg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+}
+.seg:hover {
+  background: var(--bg);
+}
+.seg.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.segmented-row .seg {
+  justify-content: center;
+}
+
+/* small square icon buttons */
+.icon-btn {
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  line-height: 1;
+}
+.icon-btn:hover {
+  background: var(--hover);
+  color: var(--danger);
+}
+.chev {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+}
+.chev:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.chev.open {
+  color: var(--accent);
+}

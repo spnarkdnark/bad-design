@@ -1,0 +1,116 @@
+/* Things that float above the app: menus, dialogs (with their notices) and the toast. */
+.menu {
+  position: relative;
+}
+.menu-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-menu);
+  padding: 4px;
+  min-width: 200px;
+  z-index: 20;
+}
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.menu-item:hover {
+  background: var(--hover-subtle);
+}
+.menu-item .kbd {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.menu-sep {
+  height: 1px;
+  background: var(--line);
+  margin: 4px 0;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--backdrop);
+  display: grid;
+  place-items: center;
+  z-index: 30;
+}
+.dialog {
+  background: var(--panel);
+  border-radius: 10px;
+  width: 400px;
+  max-width: calc(100vw - 32px);
+  box-shadow: var(--shadow-dialog);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dialog h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.dialog .field {
+  grid-template-columns: 110px 1fr;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+.warning {
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-line);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-size: var(--text-sm);
+}
+.info {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--text);
+  color: var(--on-dark);
+  padding: 9px 14px;
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  z-index: 40;
+  box-shadow: var(--shadow-toast);
+  max-width: 80vw;
+}
+.toast-action {
+  border: none;
+  background: none;
+  color: var(--on-dark-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.toast-action:hover {
+  text-decoration: underline;
+}

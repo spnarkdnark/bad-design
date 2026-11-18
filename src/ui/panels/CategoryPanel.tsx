@@ -144,7 +144,7 @@ export function CategoryPanel() {
             >
               {uncategorized}
             </button>
-            <span style={{ width: 24 }} />
+            <span className="cat-row-spacer" />
           </div>
           {open === '__default' && (
             <div className="category-style">

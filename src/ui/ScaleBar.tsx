@@ -19,8 +19,7 @@ export function ScaleBar() {
             y={6}
             width={w / segs}
             height={5}
-            fill={i % 2 ? '#fff' : '#333'}
-            stroke="#333"
+            className={`scalebar-seg ${i % 2 ? 'light' : 'dark'}`}
             strokeWidth={0.75}
           />
         ))}

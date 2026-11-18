@@ -1,0 +1,73 @@
+/* Page reset, the app shell (tab bar, toolbar, workspace = canvas + sidebar) and utilities. */
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+body {
+  font-family: var(--font);
+  font-size: var(--text-base);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.workspace {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+kbd {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+  background: var(--bg-subtle);
+}
+
+/* utilities */
+.spacer {
+  flex: 1;
+}
+.muted {
+  color: var(--muted);
+}
+.small {
+  font-size: var(--text-sm);
+  margin: 0;
+}
+.dim {
+  color: var(--muted);
+  font-style: italic;
+  padding-left: 4px;
+  flex: 1;
+}
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}

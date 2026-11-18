@@ -1,4 +1,5 @@
 import { Layer, Shape } from 'react-konva';
+import { canvasTheme } from '../theme';
 
 interface Props {
   spacingFt: number;
@@ -14,6 +15,7 @@ export function GridLayer({ spacingFt, k, panX, panY, width, height }: Props) {
   let step = spacingFt;
   while (step * k < 6) step *= 2;
   const majorEvery = 5;
+  const theme = canvasTheme();
   const x0 = -panX / k;
   const y0 = -panY / k;
   const x1 = (width - panX) / k;
@@ -40,7 +42,7 @@ export function GridLayer({ spacingFt, k, panX, panY, width, height }: Props) {
               c.moveTo(x0, j * step);
               c.lineTo(x1, j * step);
             }
-            c.strokeStyle = major ? '#d9dde2' : '#eef0f2';
+            c.strokeStyle = major ? theme.gridMajor : theme.gridMinor;
             c.lineWidth = 1 / k;
             c.stroke();
           }
