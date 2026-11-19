@@ -66,3 +66,28 @@ test('Save As picks the file; Save writes back to it; Open remembers its file', 
   const saved = await page.evaluate(() => (window as any).__files['Smith House.bubbles.json'].text);
   expect(Object.keys(JSON.parse(saved).nodes)).toHaveLength(3);
 });
+
+test('B.A.D. Example opens the example drawing at 1/16" and 100%, centered; again in a new tab', async ({
+  page,
+  canvas,
+}) => {
+  void canvas;
+  await page.getByRole('button', { name: 'B.A.D. Example' }).click();
+  const d = await doc(page);
+  expect(d.meta.name).toBe('B.A.D. sample');
+  expect(d.settings.scale).toBe('1/16');
+  expect(d.nodeOrder.length).toBeGreaterThan(0);
+  expect(await page.locator('.tab').count()).toBe(1); // the empty tab was reused
+  const { view } = await page.evaluate(() => ({ view: (window as any).__bd.ui.getState().view }));
+  expect(view.zoom).toBe(1);
+  // its content is centered in the canvas
+  const xs = Object.values<any>(d.texts).map((t) => t.x);
+  const box = (await page.locator('.canvas').boundingBox())!;
+  const k = 96 * (1 / 16);
+  const bubbleXs = Object.values<any>(d.nodes).map((n) => n.x);
+  const mid = (Math.min(...bubbleXs, ...xs) + Math.max(...bubbleXs)) / 2;
+  expect(Math.abs(mid * k + view.panX - box.width / 2)).toBeLessThan(box.width * 0.2);
+
+  await page.getByRole('button', { name: 'B.A.D. Example' }).click();
+  expect(await page.locator('.tab').count()).toBe(2);
+});

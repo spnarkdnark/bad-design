@@ -6,6 +6,7 @@ import { SCALES } from '../model/units';
 import { GRID_SPACINGS_FT, SIZABLE_SHAPES } from '../model/defaults';
 import type { ScaleId, SizableKind } from '../model/types';
 import { FileMenu } from './FileMenu';
+import { openExample } from '../io/fileActions';
 import { Icons } from './icons';
 import { PRESET_OPTIONS } from './options';
 
@@ -149,6 +150,9 @@ export function Toolbar() {
         </button>
       </div>
       <div className="spacer" />
+      <button className="btn ghost" title="Open an example drawing that shows what B.A.D. can do" onClick={openExample}>
+        B.A.D. Example
+      </button>
       <FileMenu />
     </header>
   );

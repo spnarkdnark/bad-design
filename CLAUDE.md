@@ -93,7 +93,9 @@ src/ui/       TabBar, Toolbar, FileMenu, ScaleBar, ExportDialog, Toast, Splash (
               + SizeFields + CostFields + StyleFields, LineProps, TextProps, ConnectionProps, OverlapProps,
               DrawingPanel, CostPanel, GraphicPanel,
               OverlapSettingsPanel, ShortcutsHelp, CategoryPanel)
-src/io/       fileActions (New/Open/Save/Save As/Import CSV), projectFile (JSON),
+src/io/       fileActions (New/Open/Save/Save As/Import CSV; openExample = the toolbar's
+              "B.A.D. Example": src/assets/example.bubbles.json, its standards applied, 100%
+              centered; to revise, replace that file), projectFile (JSON),
               fileSystem (system save/open dialogs, download fallback),
               clipboardActions (copy/paste events; logic in model/clip), autosave, csvImport, autoLayout,
               download, export/ (svg.ts is the single exporter; png/pdf build on it)
@@ -393,7 +395,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
   font outlines (no NaN), render regression.
-- e2e (39, one file per area): splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
+- e2e (40, one file per area): example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
   connect, sizing, names (+ nameless), in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags
