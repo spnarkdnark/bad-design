@@ -115,18 +115,21 @@
   text-decoration: underline;
 }
 
-/* the logo drawing shown when the app opens; any input fades it (ui/Splash.tsx) */
+/* the logo shown when the app opens; any input fades it (ui/Splash.tsx) */
 .splash {
   position: fixed;
   inset: 0;
   z-index: var(--z-splash);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
   background: var(--panel); /* under the paper + grid canvas */
   opacity: 1;
   transition: opacity var(--splash-fade) ease;
   user-select: none;
-}
-.splash.on-logo {
-  cursor: pointer;
 }
 .splash.fading {
   opacity: 0;
@@ -135,4 +138,20 @@
 .splash-grid {
   position: absolute;
   inset: 0;
+}
+.splash-logo,
+.splash-hint {
+  position: relative; /* above the grid */
+}
+.splash-logo {
+  width: min(900px, 86vw);
+  max-height: 70vh;
+  object-fit: contain;
+  /* the logo's white drops out, so it sits on the paper and grid like a drawing */
+  mix-blend-mode: multiply;
+}
+.splash-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
 }

@@ -26,7 +26,7 @@ react-konva canvas, Zustand + Immer state. No UI framework; plain CSS with token
   stripped from production). Prefer asserting on document state over pixels.
 - The opening splash covers the app until any key, click, wheel or touch (not mouse
   moves); the click that dismisses it is swallowed, keys pass through. e2e: the `canvas`
-  fixture dismisses it (Shift); after a reload use `helpers.reloadApp`, never bare `page.reload()`.
+  fixture dismisses it; after a reload use `helpers.reloadApp`, never bare `page.reload()`.
 - Edit with tools that fail loudly when text doesn't match; scripted find/replace
   that silently no-ops has bitten this codebase before.
 - `model/` is pure (no React, no stores). UI never mutates stores directly: it calls
@@ -80,8 +80,9 @@ src/canvas/   CanvasStage (stage + layers only), OverlayLayer (selection, handle
               overlayStore (marquee/stroke/snap hint), viewport.ts, hitTest,
               textLayout, LabelEditor, TextEditor, pointer, layers/GridLayer, theme.ts
               (overlay/grid colors read from the CSS tokens)
-src/ui/       TabBar, Toolbar, FileMenu, ScaleBar, ExportDialog, Toast, Splash + splash.ts (the
-              opening logo, a live drawing; see "Splash" below), focus.ts,
+src/ui/       TabBar, Toolbar, FileMenu, ScaleBar, ExportDialog, Toast, Splash (opening logo,
+              src/assets/logo.webp, on the drawing's paper + grid drawn where the canvas draws it,
+              via canvas/layers/grid.ts, so the grid stays put while the app fades in), focus.ts,
               icons.tsx (icon set), options.ts (choice lists shared by several
               controls), controls/ (Controls.tsx inputs; mixed.ts = common()/MIXED
               for multi-selection), panels/ (PropertiesPanel composes: BubbleProps
@@ -175,21 +176,6 @@ applies to every kind.
   each kind (old clips without a kind still paste).
 - Kind-specific dependents stay explicit: deleting bubbles also deletes their
   connections/overlaps and detaches hugging shapes (`actions/elements.deleteSelection`).
-
-## Splash (ui/Splash.tsx, ui/splash.ts)
-
-The splash is a drawing: `src/assets/splash/logo.bubbles.json`, drawn live (`drawScene`) on
-its own paper and grid, centered at most ~710 px wide (`splashView`); its own text and
-arrows are the instructions. Clicking one of its bubbles or shapes (`elementAt` → kind
-`nodes` only; its lettering and arrows don't count) opens `src/assets/splash/tutorial.bubbles.json` via
-`fileActions.openBuiltIn` (its standards become the shared standards; reuses an empty tab)
-at the same screen position — pan = splash pan − canvas offset — so the logo stays put while
-the tutorial's notes and the app fade in; then `actions.glideToFit` zooms out to frame the
-whole tutorial (its notes reach far past the logo). Any other input just fades it (back to the
-restored work, or an empty file). Revising: the owner edits the logo in the app and saves
-over `logo.bubbles.json`; the tutorial is built FROM the logo file (same coordinates) and
-saved over `tutorial.bubbles.json`. No code changes needed; keep the tutorial's `meta.name`
-as the tab name you want (e2e expects "B.A.D. sample").
 
 ## Tabs
 
@@ -403,7 +389,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
   font outlines (no NaN), render regression.
-- e2e (40, one file per area): splash (logo → tutorial at the same place + zoom out, lettering/outside clicks, keys), pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
+- e2e (38, one file per area): splash, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
   connect, sizing, names (+ nameless), in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags

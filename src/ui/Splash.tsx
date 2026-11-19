@@ -1,65 +1,34 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { View } from '../store/uiStore';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import logoUrl from '../assets/logo.webp';
+import { useDoc } from '../store/documentStore';
+import { useUi } from '../store/uiStore';
 import { pxPerFt } from '../model/units';
-import { elementAt, elementsBounds } from '../model/elements';
 import { PAPER_COLORS, paperTileUrl } from '../render/paper';
-import { buildScene } from '../render/scene';
-import { drawScene } from '../render/drawCanvas';
-import { fontsIn, loadWebFont } from '../render/fonts';
 import { gridLinesPx, gridStepFt } from '../canvas/layers/grid';
 import { canvasTheme } from '../canvas/theme';
-import { HIT_TOL_PX } from '../canvas/query';
-import { openBuiltIn } from '../io/fileActions';
-import { glideToFit } from '../store/actions';
-import { splashLogo, splashView, tutorialProject } from './splash';
 
 /** Must match --splash-fade in styles/tokens.css (plus a little slack). */
 const FADE_MS = 700;
 
 /**
- * The opening splash: the logo drawing (ui/splash.ts) on its paper and grid. Any real input
- * (a key, a click, the wheel, a touch; not moving the mouse) fades it out:
- * - a click on an element of the logo opens the tutorial drawing underneath at exactly the
- *   logo's place on screen, so the logo stays put while its notes and the app fade in;
- * - anything else just fades it, back to the work restored from last time (or an empty file).
- * The dismissing click is caught by the splash so it can't act on the drawing underneath.
+ * The logo, centered over the app when the page opens, on the drawing's paper and grid.
+ * The grid is drawn across the whole screen exactly where the canvas draws it, so as the
+ * splash fades the grid stays put while the logo fades out and the app fades in.
+ *
+ * Any real input (a key, a click, the wheel, a touch; not moving the mouse) starts the fade.
+ * The click that dismisses it is caught by the splash so it can't act blindly on the hidden
+ * drawing; keys pass through.
  */
 export function Splash() {
   const [phase, setPhase] = useState<'shown' | 'fading' | 'gone'>('shown');
-  const [win, setWin] = useState({ w: window.innerWidth, h: window.innerHeight });
-  const logo = splashLogo();
-  const view = useMemo(() => splashView(elementsBounds(logo)!, logo.settings.scale, win), [logo, win]);
-  const k = pxPerFt(logo.settings.scale, view.zoom);
-  const toWorld = (x: number, y: number) => ({ x: (x - view.panX) / k, y: (y - view.panY) / k });
-  // only the logo's bubbles and shapes open the tutorial (not its lettering or arrows)
-  const onLogo = (x: number, y: number) => elementAt(logo, toWorld(x, y), HIT_TOL_PX / k)?.kind === 'nodes';
-
-  // the event handlers below are re-created each render, so they see the current view
-  const latest = useRef({ onLogo, view });
-  latest.current = { onLogo, view };
-
-  useEffect(() => {
-    const onResize = () => setWin({ w: window.innerWidth, h: window.innerHeight });
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
 
   useEffect(() => {
     if (phase === 'shown') {
-      const onKey = () => setPhase('fading');
-      const onPointer = (e: PointerEvent | TouchEvent | WheelEvent) => {
-        const pt = 'touches' in e ? e.touches[0] : e;
-        if (e.type !== 'wheel' && pt && latest.current.onLogo(pt.clientX, pt.clientY))
-          openTutorial(latest.current.view);
-        setPhase('fading');
-      };
-      const opts = { capture: true, passive: true };
-      window.addEventListener('keydown', onKey, opts);
-      for (const ev of ['pointerdown', 'wheel', 'touchstart'] as const) window.addEventListener(ev, onPointer, opts);
+      const events = ['keydown', 'pointerdown', 'wheel', 'touchstart'] as const;
+      const dismiss = () => setPhase('fading');
+      for (const e of events) window.addEventListener(e, dismiss, { capture: true, passive: true });
       return () => {
-        window.removeEventListener('keydown', onKey, { capture: true });
-        for (const ev of ['pointerdown', 'wheel', 'touchstart'] as const)
-          window.removeEventListener(ev, onPointer, { capture: true });
+        for (const e of events) window.removeEventListener(e, dismiss, { capture: true });
       };
     }
     if (phase === 'fading') {
@@ -68,89 +37,69 @@ export function Splash() {
     }
   }, [phase]);
 
-  const [hover, setHover] = useState(false);
   if (phase === 'gone') return null;
   return (
-    <div
-      className={`splash${phase === 'fading' ? ' fading' : ''}${hover ? ' on-logo' : ''}`}
-      data-testid="splash"
-      data-view={JSON.stringify(view)}
-      onPointerMove={(e) => setHover(onLogo(e.clientX, e.clientY))}
-    >
-      <SplashDrawing view={view} win={win} />
+    <div className={`splash${phase === 'fading' ? ' fading' : ''}`} data-testid="splash">
+      <SplashGrid />
+      <img className="splash-logo" src={logoUrl} alt="Bubble Assisted Design" draggable={false} />
+      <p className="splash-hint">Press any key or click to start</p>
     </div>
   );
 }
 
-/**
- * Open the tutorial at the splash's place on screen: the canvas sits below the toolbars,
- * so its pan is the splash's (window-relative) pan less the canvas's offset.
- */
-function openTutorial(view: View) {
-  const r = document.querySelector('.canvas')?.getBoundingClientRect();
-  openBuiltIn(tutorialProject(), { ...view, panX: view.panX - (r?.left ?? 0), panY: view.panY - (r?.top ?? 0) });
-  // once the splash has faded, zoom out to show all of the tutorial's notes
-  window.setTimeout(() => glideToFit(), FADE_MS);
-}
-
-/** The logo drawing on its paper and grid, filling the window. */
-function SplashDrawing({ view, win }: { view: View; win: { w: number; h: number } }) {
+/** The drawing's paper and grid across the whole window, aligned with the canvas's own. */
+function SplashGrid() {
   const ref = useRef<HTMLCanvasElement>(null);
-  const logo = splashLogo();
-  const [fontsReady, setFontsReady] = useState(false);
+  const settings = useDoc().settings;
+  const view = useUi((s) => s.view);
+  const stage = useUi((s) => s.stageSize);
+  const [win, setWin] = useState({ w: window.innerWidth, h: window.innerHeight });
+  const [origin, setOrigin] = useState({ left: 0, top: 0 });
 
   useEffect(() => {
-    let alive = true;
-    const done = () => alive && setFontsReady(true);
-    Promise.all(fontsIn(logo).map(loadWebFont)).then(done, done);
-    return () => {
-      alive = false;
-    };
-  }, [logo]);
+    const onResize = () => setWin({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useLayoutEffect(() => {
+    // where the drawing canvas sits on screen (its grid is relative to its top-left)
+    const r = document.querySelector('.canvas')?.getBoundingClientRect();
+    const o = { left: r?.left ?? 0, top: r?.top ?? 0 };
+    setOrigin((cur) => (cur.left === o.left && cur.top === o.top ? cur : o));
     const c = ref.current!;
     const dpr = window.devicePixelRatio || 1;
     c.width = Math.round(win.w * dpr);
     c.height = Math.round(win.h * dpr);
     const ctx = c.getContext('2d');
     if (!ctx) return;
-    const { settings } = logo;
-    const k = pxPerFt(settings.scale, view.zoom);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, win.w, win.h);
-
-    // the grid, exactly as the canvas draws it for this drawing and view
-    if (settings.grid.visible) {
-      const step = gridStepFt(settings.grid.spacingFt, k);
-      const xs = gridLinesPx(step, k, view.panX, win.w);
-      const ys = gridLinesPx(step, k, view.panY, win.h);
-      const theme = canvasTheme();
-      ctx.lineWidth = 1;
-      for (const major of [false, true]) {
-        ctx.beginPath();
-        for (const l of xs)
-          if (l.major === major) {
-            ctx.moveTo(l.px, 0);
-            ctx.lineTo(l.px, win.h);
-          }
-        for (const l of ys)
-          if (l.major === major) {
-            ctx.moveTo(0, l.px);
-            ctx.lineTo(win.w, l.px);
-          }
-        ctx.strokeStyle = major ? theme.gridMajor : theme.gridMinor;
-        ctx.stroke();
-      }
+    if (!settings.grid.visible) return;
+    const k = pxPerFt(settings.scale, view.zoom);
+    const step = gridStepFt(settings.grid.spacingFt, k);
+    const xs = gridLinesPx(step, k, o.left + view.panX, win.w);
+    const ys = gridLinesPx(step, k, o.top + view.panY, win.h);
+    const theme = canvasTheme();
+    ctx.lineWidth = 1;
+    for (const major of [false, true]) {
+      ctx.beginPath();
+      for (const l of xs)
+        if (l.major === major) {
+          ctx.moveTo(l.px, 0);
+          ctx.lineTo(l.px, win.h);
+        }
+      for (const l of ys)
+        if (l.major === major) {
+          ctx.moveTo(0, l.px);
+          ctx.lineTo(win.w, l.px);
+        }
+      ctx.strokeStyle = major ? theme.gridMajor : theme.gridMinor;
+      ctx.stroke();
     }
+  }, [settings.grid, settings.scale, view, stage, win]);
 
-    // the logo itself, once its lettering font has loaded (so it measures right)
-    if (!fontsReady) return;
-    ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * view.panX, dpr * view.panY);
-    drawScene(ctx, buildScene(logo), k);
-  }, [logo, view, win, fontsReady]);
-
-  const tile = paperTileUrl(logo.settings.graphic.paper);
+  const tile = paperTileUrl(settings.graphic.paper);
   return (
     <canvas
       ref={ref}
@@ -158,8 +107,9 @@ function SplashDrawing({ view, win }: { view: View; win: { w: number; h: number 
       style={{
         width: win.w,
         height: win.h,
-        backgroundColor: PAPER_COLORS[logo.settings.graphic.paper],
+        backgroundColor: PAPER_COLORS[settings.graphic.paper],
         backgroundImage: tile ? `url(${tile})` : undefined,
+        backgroundPosition: `${origin.left}px ${origin.top}px`,
       }}
     />
   );

@@ -1,6 +1,5 @@
 /** Draw scene primitives onto a 2D canvas context already transformed to world feet. */
-import type { LabelPrim, Prim, Scene, StrokeP, TextScene } from './scene';
-import type { LabelPart } from '../model/types';
+import type { LabelPrim, Prim, StrokeP, TextScene } from './scene';
 import { lineBaselinePt } from './scene';
 import { textFont } from '../model/text';
 import { hexToRgb } from '../model/color';
@@ -85,39 +84,4 @@ export function drawTexts(ctx: CanvasRenderingContext2D, texts: TextScene[], k: 
         ctx.fillText(l.text, l.xPt * pxPerPt, lineBaselinePt(l.topPt, lineHeightPt, t.style.sizePt) * pxPerPt);
     ctx.restore();
   }
-}
-
-/**
- * A whole scene, back to front: connections, bubbles, overlap treatments, pen lines,
- * labels, text. Used by the canvas and the splash screen. `hide`: what an in-place editor
- * is showing instead (a label part, a text block).
- * @param k stage scale (px per ft)
- */
-export function drawScene(
-  ctx: CanvasRenderingContext2D,
-  scene: Scene,
-  k: number,
-  hide: { label?: { id: string; part: LabelPart } | null; textId?: string | null } = {},
-) {
-  drawPrims(ctx, scene.connections);
-  for (const n of scene.nodes) {
-    drawPrims(ctx, n.fill);
-    drawPrims(ctx, n.outline);
-  }
-  drawPrims(ctx, scene.overlays);
-  for (const l of scene.lines) drawPrims(ctx, l.prims);
-  const editing = hide.label;
-  const labels = scene.nodes.flatMap((n) => {
-    if (!n.label) return [];
-    if (n.id !== editing?.id) return [n.label];
-    const lines = n.label.layout.lines.filter((l) => l.part !== editing.part);
-    return [{ ...n.label, layout: { ...n.label.layout, lines } }];
-  });
-  drawLabels(ctx, labels, k, scene.ftPerPt);
-  drawTexts(
-    ctx,
-    scene.texts.filter((t) => t.id !== hide.textId),
-    k,
-    scene.ftPerPt,
-  );
 }
