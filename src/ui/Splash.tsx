@@ -10,6 +10,7 @@ import { gridLinesPx, gridStepFt } from '../canvas/layers/grid';
 import { canvasTheme } from '../canvas/theme';
 import { HIT_TOL_PX } from '../canvas/query';
 import { openBuiltIn } from '../io/fileActions';
+import { glideToFit } from '../store/actions';
 import { splashLogo, splashView, tutorialProject } from './splash';
 
 /** Must match --splash-fade in styles/tokens.css (plus a little slack). */
@@ -30,7 +31,8 @@ export function Splash() {
   const view = useMemo(() => splashView(elementsBounds(logo)!, logo.settings.scale, win), [logo, win]);
   const k = pxPerFt(logo.settings.scale, view.zoom);
   const toWorld = (x: number, y: number) => ({ x: (x - view.panX) / k, y: (y - view.panY) / k });
-  const onLogo = (x: number, y: number) => elementAt(logo, toWorld(x, y), HIT_TOL_PX / k) !== null;
+  // only the logo's bubbles and shapes open the tutorial (not its lettering or arrows)
+  const onLogo = (x: number, y: number) => elementAt(logo, toWorld(x, y), HIT_TOL_PX / k)?.kind === 'nodes';
 
   // the event handlers below are re-created each render, so they see the current view
   const latest = useRef({ onLogo, view });
@@ -76,9 +78,6 @@ export function Splash() {
       onPointerMove={(e) => setHover(onLogo(e.clientX, e.clientY))}
     >
       <SplashDrawing view={view} win={win} />
-      <p className="splash-hint" style={{ top: view.panY + elementsBounds(logo)!.maxY * k + 28 }}>
-        Click the logo for a guided sample · anywhere else to start drawing
-      </p>
     </div>
   );
 }
@@ -90,6 +89,8 @@ export function Splash() {
 function openTutorial(view: View) {
   const r = document.querySelector('.canvas')?.getBoundingClientRect();
   openBuiltIn(tutorialProject(), { ...view, panX: view.panX - (r?.left ?? 0), panY: view.panY - (r?.top ?? 0) });
+  // once the splash has faded, zoom out to show all of the tutorial's notes
+  window.setTimeout(() => glideToFit(), FADE_MS);
 }
 
 /** The logo drawing on its paper and grid, filling the window. */

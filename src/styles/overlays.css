@@ -136,12 +136,3 @@
   position: absolute;
   inset: 0;
 }
-.splash-hint {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  margin: 0;
-  text-align: center;
-  color: var(--muted);
-  font-size: var(--text-sm);
-}

@@ -179,11 +179,13 @@ applies to every kind.
 ## Splash (ui/Splash.tsx, ui/splash.ts)
 
 The splash is a drawing: `src/assets/splash/logo.bubbles.json`, drawn live (`drawScene`) on
-its own paper and grid, centered at most ~710 px wide (`splashView`). Clicking one of its
-elements (hit test with `elementAt`) opens `src/assets/splash/tutorial.bubbles.json` via
+its own paper and grid, centered at most ~710 px wide (`splashView`); its own text and
+arrows are the instructions. Clicking one of its bubbles or shapes (`elementAt` → kind
+`nodes` only; its lettering and arrows don't count) opens `src/assets/splash/tutorial.bubbles.json` via
 `fileActions.openBuiltIn` (its standards become the shared standards; reuses an empty tab)
 at the same screen position — pan = splash pan − canvas offset — so the logo stays put while
-the tutorial's notes and the app fade in. Any other input just fades it (back to the
+the tutorial's notes and the app fade in; then `actions.glideToFit` zooms out to frame the
+whole tutorial (its notes reach far past the logo). Any other input just fades it (back to the
 restored work, or an empty file). Revising: the owner edits the logo in the app and saves
 over `logo.bubbles.json`; the tutorial is built FROM the logo file (same coordinates) and
 saved over `tutorial.bubbles.json`. No code changes needed; keep the tutorial's `meta.name`
@@ -401,7 +403,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
   font outlines (no NaN), render regression.
-- e2e (39, one file per area): splash (logo → tutorial at the same place, outside click, keys), pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
+- e2e (40, one file per area): splash (logo → tutorial at the same place + zoom out, lettering/outside clicks, keys), pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
   connect, sizing, names (+ nameless), in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags
