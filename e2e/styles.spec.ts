@@ -1,4 +1,4 @@
-import { doc, expect, field, nodes, select, test } from './helpers';
+import { doc, expect, field, nodes, select, test, reloadApp } from './helpers';
 
 test('category style flows to bubbles; overrides show a reset dot', async ({ page, canvas }) => {
   await canvas.bubble(400, 300);
@@ -52,8 +52,7 @@ test('category styles are shared standards across tabs, and undo elsewhere canno
   expect((await publicStyle()).strokeWeightPt).toBe(5);
   // standards survive a reload
   await page.waitForTimeout(700);
-  await page.reload();
-  await page.waitForSelector('.canvas canvas');
+  await reloadApp(page);
   expect((await publicStyle()).strokeWeightPt).toBe(5);
   await page.locator('.tab-new').click();
   expect((await publicStyle()).strokeWeightPt).toBe(5);
@@ -73,8 +72,7 @@ test('the graphic style is a shared standard across tabs', async ({ page, canvas
   await page.keyboard.press('Control+z');
   expect((await graphic()).preset).toBe('marker');
   await page.waitForTimeout(700);
-  await page.reload();
-  await page.waitForSelector('.canvas canvas');
+  await reloadApp(page);
   expect((await graphic()).preset).toBe('marker');
 });
 

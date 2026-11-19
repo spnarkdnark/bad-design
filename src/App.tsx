@@ -5,6 +5,7 @@ import { TabBar } from './ui/TabBar';
 import { PropertiesPanel } from './ui/panels/PropertiesPanel';
 import { ScaleBar } from './ui/ScaleBar';
 import { Toast } from './ui/Toast';
+import { Splash } from './ui/Splash';
 import { ExportDialog } from './ui/ExportDialog';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { installSelectionPruning } from './store/actions';
@@ -34,6 +35,7 @@ export function App() {
       </main>
       <ExportDialog />
       <Toast />
+      <Splash />
     </div>
   );
 }

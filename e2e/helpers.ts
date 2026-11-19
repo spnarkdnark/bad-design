@@ -55,13 +55,25 @@ export class Canvas {
   }
 }
 
+/** The opening logo fades on any input; Shift does nothing else in the app. */
+export async function dismissSplash(page: Page) {
+  await page.keyboard.press('Shift');
+  await expect(page.getByTestId('splash')).toHaveCount(0);
+}
+
+/** Reload the page as a user would (the splash shows again) and wait until the app is usable. */
+export async function reloadApp(page: Page) {
+  await page.reload();
+  await page.waitForSelector('.canvas canvas');
+  await page.waitForFunction(() => (window as any).__bd);
+  await dismissSplash(page);
+}
+
 export const test = base.extend<{ canvas: Canvas }>({
   canvas: async ({ page }, use) => {
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
-    await page.reload();
-    await page.waitForSelector('.canvas canvas');
-    await page.waitForFunction(() => (window as any).__bd);
+    await reloadApp(page);
     const box = (await page.locator('.canvas').boundingBox())!;
     await use(new Canvas(page, box.x, box.y));
   },

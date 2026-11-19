@@ -77,4 +77,14 @@
   --z-menu: 20;
   --z-dialog: 30;
   --z-toast: 40;
+  --z-splash: 50;
+
+  /* motion */
+  --splash-fade: 600ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --splash-fade: 150ms;
+  }
 }

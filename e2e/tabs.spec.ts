@@ -1,4 +1,4 @@
-import { expect, nodes, test } from './helpers';
+import { expect, nodes, test, reloadApp } from './helpers';
 
 test('tabs keep separate diagrams and undo; restore after reload; reopen after close', async ({ page, canvas }) => {
   const names = async () => (await page.locator('.tab .tab-name').allTextContents()).join(' | ');
@@ -17,8 +17,7 @@ test('tabs keep separate diagrams and undo; restore after reload; reopen after c
   await page.locator('.tab').nth(1).click();
   expect(await nodes(page)).toHaveLength(1);
   await page.waitForTimeout(700); // autosave debounce
-  await page.reload();
-  await page.waitForSelector('.canvas canvas');
+  await reloadApp(page);
   expect(await names()).toBe('Untitled diagram | Scheme B');
   await page.locator('.tab.active .tab-close').click();
   expect(await names()).toBe('Untitled diagram');

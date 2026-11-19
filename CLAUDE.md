@@ -23,6 +23,9 @@ react-konva canvas, Zustand + Immer state. No UI framework; plain CSS with token
 - No `any` outside `model/migrate.ts` (untrusted JSON) and tests.
 - e2e tests read app state via `window.__bd` (dev builds only, set in `main.tsx`;
   stripped from production). Prefer asserting on document state over pixels.
+- The opening splash covers the app until any key, click, wheel or touch (not mouse
+  moves); the click that dismisses it is swallowed, keys pass through. e2e: the `canvas`
+  fixture dismisses it; after a reload use `helpers.reloadApp`, never bare `page.reload()`.
 - Edit with tools that fail loudly when text doesn't match; scripted find/replace
   that silently no-ops has bitten this codebase before.
 - `model/` is pure (no React, no stores). UI never mutates stores directly: it calls
@@ -74,7 +77,8 @@ src/canvas/   CanvasStage (stage + layers only), OverlayLayer (selection, handle
               overlayStore (marquee/stroke/snap hint), viewport.ts, hitTest,
               textLayout, LabelEditor, TextEditor, pointer, layers/GridLayer, theme.ts
               (overlay/grid colors read from the CSS tokens)
-src/ui/       TabBar, Toolbar, FileMenu, ScaleBar, ExportDialog, Toast, focus.ts,
+src/ui/       TabBar, Toolbar, FileMenu, ScaleBar, ExportDialog, Toast, Splash (opening logo,
+              src/assets/logo.webp), focus.ts,
               icons.tsx (icon set), options.ts (choice lists shared by several
               controls), controls/ (Controls.tsx inputs; mixed.ts = common()/MIXED
               for multi-selection), panels/ (PropertiesPanel composes: BubbleProps
@@ -362,7 +366,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 - Unit tests (73): units, geometry, squares/rectangles, history, project file + v1 migration, CSV, styles,
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), font outlines (no NaN), render regression.
-- e2e (32, one file per area): bubbles (scale, drag/resize/wheel, selection + undo,
+- e2e (34, one file per area): splash, bubbles (scale, drag/resize/wheel, selection + undo,
   connect, sizing, names (+ nameless), in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags

@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { fakeFileDialogs, field, nodes, select, test, texts, ui } from './helpers';
+import { fakeFileDialogs, field, nodes, select, test, texts, ui, reloadApp } from './helpers';
 
 const editor = (page: import('@playwright/test').Page) => page.getByRole('textbox', { name: 'Text', exact: true });
 
@@ -200,8 +200,7 @@ test('text survives reload and exports as text (standard fonts) or outlines (bun
   await select(page, 'Font').selectOption('architect');
 
   await page.waitForTimeout(700); // autosave
-  await page.reload();
-  await page.waitForFunction(() => (window as any).__bd);
+  await reloadApp(page);
   expect((await texts(page)).map((t) => t.text)).toEqual(['Helvetica note', 'Architect note']);
 
   await fakeFileDialogs(page);

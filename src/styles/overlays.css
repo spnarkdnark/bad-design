@@ -1,4 +1,4 @@
-/* Things that float above the app: menus, dialogs (with their notices) and the toast. */
+/* Things that float above the app: menus, dialogs (with their notices), the toast and the opening splash. */
 .menu {
   position: relative;
 }
@@ -113,4 +113,35 @@
 }
 .toast-action:hover {
   text-decoration: underline;
+}
+
+/* the logo shown when the app opens; any input fades it (ui/Splash.tsx) */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-splash);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  background: var(--panel);
+  opacity: 1;
+  transition: opacity var(--splash-fade) ease;
+  user-select: none;
+}
+.splash.fading {
+  opacity: 0;
+  pointer-events: none;
+}
+.splash-logo {
+  width: min(900px, 86vw);
+  max-height: 70vh;
+  object-fit: contain;
+}
+.splash-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
 }
