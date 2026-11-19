@@ -20,7 +20,7 @@ export const SCALES: ScaleDef[] = [
   { id: '1/2', label: '1/2" = 1\'-0"', paperInPerFt: 1 / 2 },
 ];
 
-export const DEFAULT_SCALE: ScaleId = '1/8';
+export const DEFAULT_SCALE: ScaleId = '1/16';
 
 export function getScale(id: ScaleId): ScaleDef {
   return SCALES.find((s) => s.id === id) ?? SCALES[2];

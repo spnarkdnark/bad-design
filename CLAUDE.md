@@ -27,6 +27,10 @@ react-konva canvas, Zustand + Immer state. No UI framework; plain CSS with token
 - The opening splash covers the app until any key, click, wheel or touch (not mouse
   moves); the click that dismisses it is swallowed, keys pass through. e2e: the `canvas`
   fixture dismisses it; after a reload use `helpers.reloadApp`, never bare `page.reload()`.
+- New drawings start at 1/16" (`units.DEFAULT_SCALE`); opening the site shows the active tab
+  at 100%, centered on its content (`CanvasStage` mount). The e2e `canvas` fixture pins its
+  drawing to 1/8" (12 px per ft at 100%), which all the tests' pixel math assumes; the
+  render-regression fixture pins 1/8" too.
 - Edit with tools that fail loudly when text doesn't match; scripted find/replace
   that silently no-ops has bitten this codebase before.
 - `model/` is pure (no React, no stores). UI never mutates stores directly: it calls
@@ -389,7 +393,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
   font outlines (no NaN), render regression.
-- e2e (38, one file per area): splash, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
+- e2e (39, one file per area): splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
   connect, sizing, names (+ nameless), in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags

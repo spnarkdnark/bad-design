@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Layer, Shape, Stage } from 'react-konva';
 import type { Paper } from '../model/types';
 import { pxPerFt } from '../model/units';
-import { hasElements } from '../model/elements';
+import { elementsBounds, hasElements } from '../model/elements';
+import { boundsCenter } from '../model/geometry';
 import { createText } from '../model/factory';
 import { getDoc, useDoc } from '../store/documentStore';
 import { useUi, type EditingLabel, type TextEdit } from '../store/uiStore';
@@ -87,17 +88,16 @@ export function CanvasStage() {
     };
   }, [fonts]);
 
-  // track the container size; on first mount center the origin or frame the drawing
+  // track the container size; on first mount center the drawing at 100%
   useEffect(() => {
     const el = containerRef.current!;
     const ro = new ResizeObserver(() => useUi.getState().setStageSize(el.clientWidth, el.clientHeight));
     ro.observe(el);
     const ui = useUi.getState();
     ui.setStageSize(el.clientWidth, el.clientHeight);
-    if (ui.view.panX === 0 && ui.view.panY === 0) {
-      if (hasElements(getDoc())) requestAnimationFrame(() => A.zoomToFit());
-      else ui.setView({ panX: el.clientWidth / 2, panY: el.clientHeight / 2 });
-    }
+    // opening the site: the drawing at 100% (true paper size), centered on its content
+    const b = elementsBounds(getDoc());
+    A.centerOn(b ? boundsCenter(b) : { x: 0, y: 0 }, 1);
     return () => ro.disconnect();
   }, []);
 

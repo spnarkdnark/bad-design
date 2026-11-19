@@ -80,6 +80,12 @@ export const test = base.extend<{ canvas: Canvas }>({
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await reloadApp(page);
+    // the tests' pixel math is written at 1/8" (12 px per ft at 100%), whatever the default scale
+    await page.evaluate(() => {
+      const d = (window as any).__bd.doc.getState();
+      const p = d.history.present;
+      d.replace({ ...p, settings: { ...p.settings, scale: '1/8' } }, true);
+    });
     const box = (await page.locator('.canvas').boundingBox())!;
     await use(new Canvas(page, box.x, box.y));
   },

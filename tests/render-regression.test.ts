@@ -14,6 +14,7 @@ it('scene output is unchanged', () => {
   for (const preset of ['clean', 'watercolor']) {
     for (const mode of ['merge', 'lens', 'lensFill', 'threshold', 'none'] as const) {
       const p = createProject();
+      p.settings.scale = '1/8'; // the fixture is drawn at 1/8", whatever the default
       const pr = PRESETS.find((x) => x.id === preset)!;
       Object.assign(p.settings.graphic, pr.params, { paper: pr.paper });
       p.settings.overlap.mode = mode;
