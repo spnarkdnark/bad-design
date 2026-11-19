@@ -6,10 +6,10 @@ import { pxPerFt } from '../model/units';
 import { hasElements } from '../model/elements';
 import { createText } from '../model/factory';
 import { getDoc, useDoc } from '../store/documentStore';
-import { useUi, type EditingLabel, type TextEdit } from '../store/uiStore';
+import { useUi } from '../store/uiStore';
 import * as A from '../store/actions';
-import { buildScene, editorLabel, type Scene } from '../render/scene';
-import { drawLabels, drawPrims, drawTexts } from '../render/drawCanvas';
+import { buildScene, editorLabel } from '../render/scene';
+import { drawScene } from '../render/drawCanvas';
 import { bundled, fontsIn, loadWebFont, type BundledFont } from '../render/fonts';
 import { PAPER_COLORS, paperTileUrl } from '../render/paper';
 import { GridLayer } from './layers/GridLayer';
@@ -22,37 +22,6 @@ import { setLatestScene } from './query';
 function paperStyle(paper: Paper): React.CSSProperties {
   const url = paperTileUrl(paper);
   return { backgroundColor: PAPER_COLORS[paper], backgroundImage: url ? `url(${url})` : undefined };
-}
-
-function drawScene(
-  ctx: CanvasRenderingContext2D,
-  scene: Scene,
-  k: number,
-  editing: EditingLabel | null,
-  editingText: TextEdit | null,
-) {
-  drawPrims(ctx, scene.connections);
-  for (const n of scene.nodes) {
-    drawPrims(ctx, n.fill);
-    drawPrims(ctx, n.outline);
-  }
-  drawPrims(ctx, scene.overlays);
-  for (const l of scene.lines) drawPrims(ctx, l.prims);
-  // hide the lines under the in-place editor
-  const labels = scene.nodes.flatMap((n) => {
-    if (!n.label) return [];
-    if (n.id !== editing?.id) return [n.label];
-    const lines = n.label.layout.lines.filter((l) => l.part !== editing.part);
-    return [{ ...n.label, layout: { ...n.label.layout, lines } }];
-  });
-  drawLabels(ctx, labels, k, scene.ftPerPt);
-  // the block being typed is drawn by its editor instead
-  drawTexts(
-    ctx,
-    scene.texts.filter((t) => t.id !== editingText?.id),
-    k,
-    scene.ftPerPt,
-  );
 }
 
 export function CanvasStage() {
@@ -145,7 +114,12 @@ export function CanvasStage() {
         <Layer listening={false}>
           <Shape
             listening={false}
-            sceneFunc={(c) => drawScene(c._context as CanvasRenderingContext2D, scene, k, editingLabel, editingText)}
+            sceneFunc={(c) =>
+              drawScene(c._context as CanvasRenderingContext2D, scene, k, {
+                label: editingLabel,
+                textId: editingText?.id,
+              })
+            }
           />
         </Layer>
         <OverlayLayer doc={doc} scene={scene} k={k} />

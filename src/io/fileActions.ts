@@ -1,7 +1,10 @@
 /** High-level file commands used by the toolbar and shortcuts. */
 import { getDoc, useDocument } from '../store/documentStore';
 import { useUi } from '../store/uiStore';
-import { adoptIntoStandards, newTab, useWorkspace } from '../store/workspaceStore';
+import { adoptIntoStandards, newTab, setStandardsEverywhere, useWorkspace } from '../store/workspaceStore';
+import { standardsOf } from '../model/standards';
+import type { Project } from '../model/types';
+import type { View } from '../store/uiStore';
 import { renameProject, selectElements, viewCenterWorld, zoomToFit } from '../store/actions';
 import { emptyPlan, insertPlan, planIds } from '../model/clip';
 import { hasElements } from '../model/elements';
@@ -48,6 +51,21 @@ export async function openProject() {
   } catch (e) {
     toast(`Could not open file: ${(e as Error).message}`);
   }
+}
+
+/**
+ * Open a built-in drawing (the tutorial) exactly as built, at a given view: its standards
+ * (categories, graphic style, overlaps) become the shared standards. Reuses the current tab
+ * when it is still empty, like Open.
+ */
+export function openBuiltIn(project: Project, view: View) {
+  setStandardsEverywhere(standardsOf(project));
+  if (!hasElements(getDoc())) {
+    useDocument.getState().replace(project, true);
+    useUi.getState().clearSelection();
+    useUi.getState().setView(view);
+    tabFiles.delete(activeTab());
+  } else newTab(project, view);
 }
 
 /** Save: back to this tab's file when it has one, otherwise ask where (Save As). */
