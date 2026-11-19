@@ -1,6 +1,7 @@
-# Bubble Diagram
+# B.A.D. · Bubble Assisted Design
 
-Architectural bubble (program) diagrams at true drawing scale. React + Vite + TypeScript + react-konva.
+Architectural bubble (program) diagrams at true drawing scale. Live at
+https://spnarkdnark.github.io/bad-design/. React + Vite + TypeScript + react-konva.
 
 ```bash
 npm install

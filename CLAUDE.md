@@ -1,6 +1,7 @@
-# Bubble Diagram — notes for future sessions
+# B.A.D. (Bubble Assisted Design) — notes for future sessions
 
-Web app for architectural bubble (program) diagrams. React 18 + Vite + TypeScript,
+Web app for architectural bubble (program) diagrams (repo `spnarkdnark/bad-design`, formerly
+`bubble-diagram`; live at https://spnarkdnark.github.io/bad-design/). React 18 + Vite + TypeScript,
 react-konva canvas, Zustand + Immer state. No UI framework; plain CSS with tokens.
 
 ## Commands
@@ -173,7 +174,8 @@ applies to every kind.
 view/selection in useUi, exactly as before tabs existed, so features stay tab-unaware.
 Inactive tabs are parked (`parked[id] = {history, view, selection}`) and swapped in by
 `switchTab`. New/Open open tabs (Open reuses an empty tab). Autosave stores every tab's
-project + view + the standards under `bubble-diagram:workspace:v1`; undo history is per
+project + view + the standards under `bubble-diagram:workspace:v1` (keep the old-name keys:
+renaming them would lose everyone's saved work; same for the clip type); undo history is per
 tab and in memory only. Closed tabs can be reopened from the toast.
 
 ## Standards (categories, graphic style, overlap defaults)

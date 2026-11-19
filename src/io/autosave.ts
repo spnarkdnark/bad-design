@@ -10,6 +10,7 @@ import { useDocument } from '../store/documentStore';
 import { useUi, type View } from '../store/uiStore';
 import { restoreWorkspace, tabProject, useWorkspace } from '../store/workspaceStore';
 
+// keys keep the app's original name: changing them would lose everyone's saved work
 export const WORKSPACE_KEY = 'bubble-diagram:workspace:v1';
 /** single-document autosave from before tabs existed */
 const LEGACY_KEY = 'bubble-diagram:autosave:v1';

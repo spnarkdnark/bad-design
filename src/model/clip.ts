@@ -23,6 +23,7 @@ import { overlapKey } from './overlaps';
 import { detachAnchors } from './blob';
 import { elementsBounds, existing, noElements, type ElementIds } from './elements';
 
+/** Keeps the app's original name so clips copied in older versions still paste. */
 export const CLIP_TYPE = 'bubble-diagram/clip';
 
 export interface ClipPayload {
