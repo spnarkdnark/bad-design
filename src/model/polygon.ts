@@ -58,3 +58,32 @@ export function labelPoint(poly: Point[], c: Point): Point {
     }
   return best;
 }
+
+/** Ramer–Douglas–Peucker: drop points within `eps` of the line through their neighbours. */
+export function simplifyPolyline(pts: Point[], eps: number): Point[] {
+  if (pts.length < 3) return pts;
+  const a = pts[0];
+  const b = pts[pts.length - 1];
+  let idx = -1;
+  let max = 0;
+  const L = Math.hypot(b.x - a.x, b.y - a.y) || 1e-9;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const p = pts[i];
+    const d = Math.abs((b.x - a.x) * (a.y - p.y) - (a.x - p.x) * (b.y - a.y)) / L;
+    if (d > max) {
+      max = d;
+      idx = i;
+    }
+  }
+  if (max <= eps) return [a, b];
+  return [...simplifyPolyline(pts.slice(0, idx + 1), eps).slice(0, -1), ...simplifyPolyline(pts.slice(idx), eps)];
+}
+
+/** Distance from `p` to the segment a–b. */
+export function distToSegment(p: Point, a: Point, b: Point): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len2 = dx * dx + dy * dy || 1e-12;
+  const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}

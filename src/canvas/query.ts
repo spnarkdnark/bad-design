@@ -9,6 +9,7 @@ import { getDoc } from '../store/documentStore';
 import { useUi, type EditingLabel } from '../store/uiStore';
 import { SNAP_PX } from '../store/actions';
 import { labelRect, type Scene } from '../render/scene';
+import { constrain45, linePoints, linePointsAll } from '../model/linework';
 import { hitTest, type Hit } from './hitTest';
 import { pxToFt } from './viewport';
 import type { SnapHint } from './overlayStore';
@@ -115,4 +116,52 @@ export function draftOutline(draft: Point[], cursor: Point | null): Point[] {
   const { shape, origin } = toBlobShape(blobFromClicks(pts, rings, gap, pxToFt(SNAP_PX)), gap, rings);
   const temp: BubbleNode = { id: '__draft', name: '', x: origin.x, y: origin.y, shape, categoryId: null, style: {} };
   return blobGeometry(temp, doc).poly;
+}
+
+// ---------- pen lines ----------
+
+/** Pixels within which pen points snap to other lines' points (and the draft's start). */
+export const POINT_SNAP_PX = 10;
+
+/**
+ * Where a pen click (or a dragged line point) lands: Shift locks the direction from
+ * `from` to 45° steps; otherwise it snaps to the nearest line point in `targets` (plus every
+ * other line's points). Alt: no snapping. `snapped` is the point snapped to, if any.
+ */
+export function penPoint(
+  e: { world: Point; shift: boolean; alt: boolean },
+  from: Point | undefined,
+  targets: Point[] = [],
+  exceptLine?: Id,
+): { p: Point; snapped: Point | null } {
+  if (e.shift && from) return { p: constrain45(from, e.world), snapped: null };
+  if (e.alt) return { p: e.world, snapped: null };
+  const tol = pxToFt(POINT_SNAP_PX);
+  let best: Point | null = null;
+  let bestD = tol;
+  for (const q of [...targets, ...linePointsAll(getDoc(), exceptLine)]) {
+    const d = Math.hypot(q.x - e.world.x, q.y - e.world.y);
+    if (d <= bestD) {
+      bestD = d;
+      best = q;
+    }
+  }
+  return best ? { p: { ...best }, snapped: best } : { p: e.world, snapped: null };
+}
+
+/** The single selected pen line (select tool only), whose points are editable. */
+export function lineEditTarget(): Id | null {
+  const ui = useUi.getState();
+  const s = ui.selection;
+  if (ui.tool !== 'select' || s.lines.length !== 1 || s.nodes.length || s.texts.length) return null;
+  return getDoc().lines[s.lines[0]] ? s.lines[0] : null;
+}
+
+/** Point of the editable line under `p`. */
+export function linePointAt(p: Point): { id: Id; index: number } | null {
+  const id = lineEditTarget();
+  if (!id) return null;
+  const tol = pxToFt(HIT_TOL_PX * 1.2);
+  const index = linePoints(getDoc().lines[id]).findIndex((c) => Math.hypot(p.x - c.x, p.y - c.y) <= tol);
+  return index >= 0 ? { id, index } : null;
 }

@@ -1,11 +1,23 @@
 import { nanoid } from 'nanoid';
-import type { BubbleNode, Category, Connection, ConnectionType, Id, Project, StyleProps, TextBlock } from './types';
+import type {
+  BubbleNode,
+  Category,
+  Connection,
+  ConnectionType,
+  Id,
+  PenLine,
+  Point,
+  Project,
+  StyleProps,
+  TextBlock,
+} from './types';
 import { SCHEMA_VERSION } from './types';
 import {
   CATEGORY_PALETTE,
   DEFAULT_CATEGORIES,
   DEFAULT_RADIUS_FT,
   DEFAULT_SETTINGS,
+  DEFAULT_LINE_STYLE,
   DEFAULT_TEXT_STYLE,
   styleWithFill,
 } from './defaults';
@@ -29,6 +41,8 @@ export function createProject(name = 'Untitled diagram'): Project {
     nodes: {},
     nodeOrder: [],
     connections: {},
+    lines: {},
+    lineOrder: [],
     texts: {},
     textOrder: [],
     overlaps: {},
@@ -57,6 +71,19 @@ export function createText(partial: Partial<Omit<TextBlock, 'id'>> = {}): TextBl
     text: partial.text ?? '',
     widthPt: partial.widthPt ?? null,
     style: { ...DEFAULT_TEXT_STYLE, ...partial.style },
+  };
+}
+
+/** A pen line through world points (its origin is the first point). */
+export function createLine(worldPts: Point[], closed = false, style: Partial<PenLine['style']> = {}): PenLine {
+  const o = worldPts[0];
+  return {
+    id: newId(),
+    x: o.x,
+    y: o.y,
+    points: worldPts.map((p) => ({ x: p.x - o.x, y: p.y - o.y })),
+    closed,
+    style: { ...DEFAULT_LINE_STYLE, ...style },
   };
 }
 

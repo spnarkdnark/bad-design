@@ -17,3 +17,4 @@ export * from './overlaps';
 export * from './graphic';
 export * from './blobs';
 export * from './texts';
+export * from './lines';

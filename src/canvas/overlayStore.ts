@@ -18,6 +18,8 @@ interface OverlayState {
   /** raw freehand stroke while drawing a shape */
   stroke: Point[] | null;
   snapHint: SnapHint | null;
+  /** the point a pen click or point drag snaps to (another line's point, or the draft's start) */
+  pointSnap: Point | null;
   set: (patch: Partial<Omit<OverlayState, 'set'>>) => void;
 }
 
@@ -26,6 +28,7 @@ export const useOverlay = create<OverlayState>((set) => ({
   pointerWorld: null,
   stroke: null,
   snapHint: null,
+  pointSnap: null,
   set: (patch) => set(patch),
 }));
 

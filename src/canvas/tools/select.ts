@@ -7,6 +7,7 @@ import { countElements, translateElements, type ElementKind } from '../../model/
 import { blobGeometry, movePoint } from '../../model/blob';
 import { resizeHandle, sizeAtHandle, withSize } from '../../model/geometry';
 import { textWidthAt } from '../../model/text';
+import { linePoints, movePoint as moveLinePoint, segmentAt } from '../../model/linework';
 import { dimensionText } from '../../model/selectors';
 import { MIN_SIZE_FT } from '../../model/defaults';
 import { snap } from '../../model/units';
@@ -14,7 +15,7 @@ import { getDoc, useDocument } from '../../store/documentStore';
 import { useUi } from '../../store/uiStore';
 import * as A from '../../store/actions';
 import { overlay, rectFrom } from '../overlayStore';
-import { hitAt, labelAt, pointEditTarget, shapePointAt, snapAt } from '../query';
+import { hitAt, labelAt, lineEditTarget, linePointAt, penPoint, pointEditTarget, shapePointAt, snapAt } from '../query';
 import { pxToFt } from '../viewport';
 import { DRAG_THRESHOLD_PX, screenDistance, type CanvasEvent, type Gesture, type Tool } from './types';
 
@@ -101,6 +102,36 @@ function textWidthGesture(id: Id): Gesture {
   };
 }
 
+/** Drag a pen line's point: snaps to other lines' points; Shift keeps 45° from its neighbour. */
+function linePointGesture(id: Id, index: number): Gesture {
+  let moved = false;
+  let dead = false;
+  return {
+    move(e) {
+      const l = getDoc().lines[id];
+      if (dead || !l) return;
+      if (!moved) {
+        moved = true;
+        gesture().beginGesture();
+      } else if (cancelled()) {
+        dead = true;
+        overlay().set({ pointSnap: null });
+        return;
+      }
+      const pts = linePoints(l);
+      const n = pts.length;
+      const neighbour = index > 0 ? pts[index - 1] : l.closed ? pts[n - 1] : pts[1];
+      const { p, snapped } = penPoint(e, neighbour, [], id);
+      overlay().set({ pointSnap: snapped });
+      gesture().preview((d) => void (d.lines[id].points = moveLinePoint(l, index, p)));
+    },
+    up() {
+      if (moved) gesture().endGesture();
+      overlay().set({ pointSnap: null });
+    },
+  };
+}
+
 function marqueeGesture(start: CanvasEvent, additive: boolean): Gesture {
   return {
     move(e) {
@@ -146,6 +177,8 @@ function shapePointGesture(id: Id, index: number): Gesture {
 export const selectTool: Tool = {
   down(e) {
     const ui = useUi.getState();
+    const linePoint = linePointAt(e.world);
+    if (linePoint) return linePointGesture(linePoint.id, linePoint.index);
     const point = shapePointAt(e.world);
     if (point) return shapePointGesture(point.id, point.index);
     const hit = hitAt(e.world);
@@ -176,6 +209,14 @@ export const selectTool: Tool = {
 
   doubleClick(e) {
     const ui = useUi.getState();
+    // the selected pen line: double-click a point to delete it, an edge to add one
+    const linePoint = linePointAt(e.world);
+    if (linePoint) return A.deleteLinePoint(linePoint.id, linePoint.index);
+    const editLine = lineEditTarget();
+    if (editLine) {
+      const seg = segmentAt(getDoc().lines[editLine], e.world, pxToFt(8));
+      if (seg >= 0) return A.insertLinePoint(editLine, seg, e.world);
+    }
     const point = shapePointAt(e.world);
     if (point) return A.deleteBlobPoint(point.id, point.index);
     const hit = hitAt(e.world);
@@ -212,7 +253,7 @@ export const selectTool: Tool = {
 
   cursor(e) {
     const ui = useUi.getState();
-    if (shapePointAt(e.world)) return 'grab';
+    if (shapePointAt(e.world) || linePointAt(e.world)) return 'grab';
     if (ui.selection.nodes.length === 1 && labelAt(e.world)?.id === ui.selection.nodes[0]) return 'text';
     const hit = hitAt(e.world);
     if (hit.kind === 'handle' || hit.kind === 'textWidth') return 'ew-resize';

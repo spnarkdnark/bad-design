@@ -5,6 +5,7 @@ import { pointer } from '../canvas/pointer';
 import { DUPLICATE_OFFSET_FT } from '../model/defaults';
 import {
   buildClip,
+  clipLineStyle,
   clipStyle,
   clipTextStyle,
   emptyPlan,
@@ -39,7 +40,7 @@ function onCopy(e: ClipboardEvent, cut: boolean) {
   useUi.getState().showToast(`${cut ? 'Cut' : 'Copied'} ${describeCount(ids)}`);
 }
 
-/** Ctrl+Shift+V: the copied bubble's look onto selected bubbles, the copied text's look onto selected text. */
+/** Ctrl+Shift+V: each copied kind's look (bubble, text, line) onto the selected elements of that kind. */
 function pasteStyle(clip: ClipPayload) {
   const doc = getDoc();
   const ui = useUi.getState();
@@ -47,7 +48,9 @@ function pasteStyle(clip: ClipPayload) {
   const textLook = clipTextStyle(clip);
   const nodes = look ? ui.selection.nodes.filter((id) => doc.nodes[id]) : [];
   const texts = textLook ? ui.selection.texts.filter((id) => doc.texts[id]) : [];
-  const n = nodes.length + texts.length;
+  const lineLook = clipLineStyle(clip);
+  const lines = lineLook ? ui.selection.lines.filter((id) => doc.lines[id]) : [];
+  const n = nodes.length + texts.length + lines.length;
   if (n === 0) return ui.showToast('Select elements like the copied one to paste its style onto');
   useDocument.getState().commit((d) => {
     if (look && nodes.length) {
@@ -61,6 +64,7 @@ function pasteStyle(clip: ClipPayload) {
       }
     }
     if (textLook) for (const id of texts) d.texts[id].style = { ...textLook };
+    if (lineLook) for (const id of lines) d.lines[id].style = { ...lineLook };
   });
   ui.showToast(`Pasted style onto ${n} element${n > 1 ? 's' : ''}`);
 }

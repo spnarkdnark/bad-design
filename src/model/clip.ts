@@ -14,6 +14,8 @@ import type {
   Project,
   StyleOverrides,
   TextBlock,
+  LineStyle,
+  PenLine,
   TextStyle,
 } from './types';
 import { boundsCenter } from './geometry';
@@ -35,6 +37,8 @@ export interface ClipPayload {
   overlaps: Record<string, { mode: OverlapMode }>;
   /** absent in clips from before text blocks existed */
   texts?: TextBlock[];
+  /** absent in clips from before pen lines existed */
+  lines?: PenLine[];
   /** center of the copied content, feet */
   center: Point;
 }
@@ -60,7 +64,18 @@ export function buildClip(project: Project, ids: Partial<ElementIds>): ClipPaylo
     if (set.has(a) && set.has(b)) overlaps[k] = v;
   }
   const texts = sel.texts.map((id) => structuredClone(project.texts[id]));
-  return { type: CLIP_TYPE, v: 2, nodes, connections, categories, overlaps, texts, center: boundsCenter(bounds) };
+  const lines = sel.lines.map((id) => structuredClone(project.lines[id]));
+  return {
+    type: CLIP_TYPE,
+    v: 2,
+    nodes,
+    connections,
+    categories,
+    overlaps,
+    texts,
+    lines,
+    center: boundsCenter(bounds),
+  };
 }
 
 export function parseClip(text: string): ClipPayload | null {
@@ -80,9 +95,17 @@ export interface PastePlan {
   connections: Connection[];
   overlaps: Record<string, { mode: OverlapMode }>;
   texts: TextBlock[];
+  lines: PenLine[];
 }
 
-export const emptyPlan = (): PastePlan => ({ categories: [], nodes: [], connections: [], overlaps: {}, texts: [] });
+export const emptyPlan = (): PastePlan => ({
+  categories: [],
+  nodes: [],
+  connections: [],
+  overlaps: {},
+  texts: [],
+  lines: [],
+});
 
 /** Map a clip into new elements for `project`, centered on `at`. */
 export function planPaste(project: Project, clip: ClipPayload, at: Point): PastePlan {
@@ -117,7 +140,8 @@ export function planPaste(project: Project, clip: ClipPayload, at: Point): Paste
     if (idMap.has(a) && idMap.has(b)) overlaps[overlapKey(idMap.get(a)!, idMap.get(b)!)] = v;
   }
   const texts = (clip.texts ?? []).map((t) => ({ ...structuredClone(t), id: newId(), x: t.x + dx, y: t.y + dy }));
-  return { categories: cats.added, nodes, connections, overlaps, texts };
+  const lines = (clip.lines ?? []).map((l) => ({ ...structuredClone(l), id: newId(), x: l.x + dx, y: l.y + dy }));
+  return { categories: cats.added, nodes, connections, overlaps, texts, lines };
 }
 
 /** Add a paste plan's elements (on top) and new categories to the document. */
@@ -132,6 +156,10 @@ export function insertPlan(d: Draft<Project>, plan: PastePlan) {
   }
   for (const c of plan.connections) d.connections[c.id] = c;
   Object.assign(d.overlaps, plan.overlaps);
+  for (const l of plan.lines) {
+    d.lines[l.id] = l;
+    d.lineOrder.push(l.id);
+  }
   for (const t of plan.texts) {
     d.texts[t.id] = t;
     d.textOrder.push(t.id);
@@ -143,6 +171,7 @@ export function planIds(plan: PastePlan): ElementIds {
   const ids = noElements();
   ids.nodes = plan.nodes.map((n) => n.id);
   ids.texts = plan.texts.map((t) => t.id);
+  ids.lines = plan.lines.map((l) => l.id);
   return ids;
 }
 
@@ -150,6 +179,12 @@ export function planIds(plan: PastePlan): ElementIds {
 export function clipTextStyle(clip: ClipPayload): TextStyle | null {
   const t = clip.texts?.[0];
   return t ? { ...t.style } : null;
+}
+
+/** The look of the first copied pen line, for pasting onto lines. */
+export function clipLineStyle(clip: ClipPayload): LineStyle | null {
+  const l = clip.lines?.[0];
+  return l ? { ...l.style } : null;
 }
 
 /** The "look" of the first copied bubble: its category (mapped by name) and overrides. */

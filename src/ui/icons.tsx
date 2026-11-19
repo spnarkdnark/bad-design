@@ -1,5 +1,16 @@
 /** The app's icon set: 16 px line icons drawn in currentColor (so they follow the text color). */
 export const Icons = {
+  pen: (
+    <svg width="16" height="16" viewBox="0 0 16 16">
+      <path
+        d="M2.5 13.5l2-5 6.5-6.5 3 3-6.5 6.5zM9.5 3.5l3 3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
   text: (
     <svg width="16" height="16" viewBox="0 0 16 16">
       <path d="M3 3.5h10M8 3.5v9.5M6 13h4" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />

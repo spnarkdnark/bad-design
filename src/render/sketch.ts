@@ -283,7 +283,10 @@ function emitStroke(ops: Op[], pts: Pt[], opts: StrokeOpts, pressure: number, al
   const pieces = opts.dash ? dashSplit(pts, opts.dash[0], opts.dash[1]) : [pts];
   for (const piece of pieces) {
     if (piece.length < 2) continue;
-    if (pressure <= 0) {
+    // dots (dotted lines) are shorter than the pen is wide: a tapered outline would vanish,
+    // so they stay round marks
+    const dot = Math.hypot(piece[piece.length - 1].x - piece[0].x, piece[piece.length - 1].y - piece[0].y) < opts.width;
+    if (pressure <= 0 || dot) {
       ops.push({ t: 'line', pts: piece, width: opts.width, color, alpha });
     } else {
       ops.push({

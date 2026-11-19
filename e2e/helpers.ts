@@ -13,12 +13,18 @@ export async function ui(page: Page) {
       view: s.view,
       editingLabel: s.editingLabel,
       editingText: s.editingText,
+      lineDraft: s.lineDraft,
     };
   });
 }
 export async function nodes(page: Page): Promise<any[]> {
   const d = await doc(page);
   return d.nodeOrder.map((id: string) => d.nodes[id]);
+}
+
+export async function lines(page: Page): Promise<any[]> {
+  const d = await doc(page);
+  return d.lineOrder.map((id: string) => d.lines[id]);
 }
 
 export async function texts(page: Page): Promise<any[]> {
@@ -82,6 +88,11 @@ export const test = base.extend<{ canvas: Canvas }>({
 /** Sidebar input whose field label is exactly `label`. */
 export function field(page: Page, label: string) {
   return page.locator(`.sidebar .field:has(.field-label:text-is("${label}")) input`).first();
+}
+
+/** Sidebar checkbox by its own text (checkbox names also include their row's label). */
+export function checkbox(page: Page, text: string) {
+  return page.locator(`.sidebar label.checkbox:has-text("${text}") input`).first();
 }
 
 /** Sidebar dropdown whose field label is exactly `label`. */

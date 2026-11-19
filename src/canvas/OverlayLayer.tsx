@@ -5,10 +5,12 @@ import { blobGeometry } from '../model/blob';
 import { boundaryPoint, connectionSegment, nodeOutline, resizeHandle, shapeSize } from '../model/geometry';
 import { orderedNodes } from '../model/selectors';
 import { textBounds, textWidthHandle } from '../model/text';
+import { linePoints } from '../model/linework';
 import type { Scene } from '../render/scene';
 import { useUi } from '../store/uiStore';
+import { useDocument } from '../store/documentStore';
 import { useOverlay } from './overlayStore';
-import { draftOutline, textWidthTarget } from './query';
+import { draftOutline, lineEditTarget, textWidthTarget } from './query';
 import { canvasTheme } from './theme';
 
 function flat(pts: Point[]): number[] {
@@ -23,7 +25,14 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
   const connectFrom = useUi((s) => s.connectFrom);
   const readout = useUi((s) => s.readout);
   const shapeDraft = useUi((s) => s.shapeDraft);
-  const { marquee, pointerWorld, stroke, snapHint } = useOverlay();
+  const { marquee, pointerWorld, stroke, snapHint, pointSnap } = useOverlay();
+  const lineDraft = useUi((s) => s.lineDraft);
+  // (the target comes from the live document; draw only what this render's doc has)
+  const editTarget = lineEditTarget();
+  const editLine = editTarget && doc.lines[editTarget] ? editTarget : null;
+  // a snap marker left over from the pen shows only while drawing or dragging a point
+  const dragging = useDocument((s) => !!s.gestureBase);
+  const showSnap = pointSnap && (tool === 'pen' || dragging);
 
   const theme = canvasTheme();
   const selected = new Set(selection.nodes);
@@ -84,6 +93,64 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
         // every other shape: its outline (works for any future shape kind)
         return <Line key={n.id} points={flat(nodeOutline(n, doc) ?? [])} closed {...ring(n)} />;
       })}
+
+      {selection.lines
+        .filter((id) => doc.lines[id])
+        .map((id) => (
+          <Line
+            key={id}
+            points={flat(linePoints(doc.lines[id]))}
+            closed={doc.lines[id].closed}
+            stroke={theme.accent}
+            opacity={0.45}
+            strokeWidth={6 / k}
+            lineCap="round"
+            lineJoin="round"
+          />
+        ))}
+
+      {editLine &&
+        linePoints(doc.lines[editLine]).map((q, i) => (
+          <Rect
+            key={i}
+            x={q.x - 4 / k}
+            y={q.y - 4 / k}
+            width={8 / k}
+            height={8 / k}
+            fill={theme.handleFill}
+            stroke={theme.accent}
+            strokeWidth={1.5 / k}
+          />
+        ))}
+
+      {lineDraft && lineDraft.length > 0 && (
+        <>
+          <Line points={flat(lineDraft)} stroke={theme.accent} strokeWidth={1.5 / k} lineJoin="round" />
+          {pointerWorld && (
+            <Line
+              points={flat([lineDraft[lineDraft.length - 1], pointerWorld])}
+              stroke={theme.accent}
+              strokeWidth={1.5 / k}
+              dash={[6 / k, 4 / k]}
+            />
+          )}
+          {lineDraft.map((q, i) => (
+            <Circle
+              key={i}
+              x={q.x}
+              y={q.y}
+              radius={(i === 0 ? 5 : 3.5) / k}
+              fill={i === 0 ? theme.handleFill : theme.accent}
+              stroke={theme.accent}
+              strokeWidth={1.5 / k}
+            />
+          ))}
+        </>
+      )}
+
+      {showSnap && pointSnap && (
+        <Circle x={pointSnap.x} y={pointSnap.y} radius={7 / k} stroke={theme.accent} strokeWidth={1.5 / k} />
+      )}
 
       {selectedTexts.map((id) => {
         const b = textBounds(doc.texts[id], doc);

@@ -6,6 +6,7 @@ import type {
   SizableKind,
   StrokeStyle,
   StyleProps,
+  LineStyle,
   TextFont,
   TextStyle,
 } from './types';
@@ -162,3 +163,17 @@ export const DEFAULT_TEXT_STYLE: TextStyle = {
 
 /** Narrowest wrapping width a text block can be given, in multiples of its text size. */
 export const MIN_TEXT_WIDTH_EM = 2;
+
+export const DEFAULT_LINE_STYLE: LineStyle = {
+  color: '#333333',
+  weightPt: 1,
+  dash: 'solid',
+  arrowStart: false,
+  arrowEnd: false,
+  fill: null,
+  fillOpacity: 0.25,
+  sketch: true,
+};
+
+/** Arrowhead length on paper for a line weight (pt); its width is half that. */
+export const arrowLengthPt = (weightPt: number) => Math.max(9, weightPt * 6);

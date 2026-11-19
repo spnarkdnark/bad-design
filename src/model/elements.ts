@@ -13,13 +13,15 @@
  * front), and TypeScript lists what else needs it (selection, clipboard, factory…).
  */
 import type { Draft } from 'immer';
-import type { Bounds, BubbleNode, Id, Point, Project, TextBlock } from './types';
+import type { Bounds, BubbleNode, Id, PenLine, Point, Project, TextBlock } from './types';
 import { containsPoint, intersectsRect, nodeBounds, unionBounds } from './geometry';
 import { textBounds, textContains, textIntersects } from './text';
+import { lineBounds, lineContains, lineIntersects } from './linework';
 
 /** Each element kind and its type, keyed by its collection name in Project. */
 export interface ElementOf {
   nodes: BubbleNode;
+  lines: PenLine;
   texts: TextBlock;
 }
 export type ElementKind = keyof ElementOf;
@@ -28,7 +30,7 @@ export type ElementIds = Record<ElementKind, Id[]>;
 
 interface KindDef<T> {
   /** key of the id list (back to front) in Project */
-  order: 'nodeOrder' | 'textOrder';
+  order: 'nodeOrder' | 'lineOrder' | 'textOrder';
   bounds(el: T, project: Project): Bounds;
   contains(el: T, p: Point, project: Project, tolFt: number): boolean;
   intersects(el: T, rect: Bounds, project: Project): boolean;
@@ -42,6 +44,12 @@ const KINDS: { [K in ElementKind]: KindDef<ElementOf[K]> } = {
     contains: (n, p, project) => containsPoint(n, p, project),
     intersects: intersectsRect,
   },
+  lines: {
+    order: 'lineOrder',
+    bounds: lineBounds,
+    contains: lineContains,
+    intersects: lineIntersects,
+  },
   texts: {
     order: 'textOrder',
     bounds: textBounds,
@@ -52,7 +60,7 @@ const KINDS: { [K in ElementKind]: KindDef<ElementOf[K]> } = {
 
 export const ELEMENT_KINDS = Object.keys(KINDS) as ElementKind[];
 
-export const noElements = (): ElementIds => ({ nodes: [], texts: [] });
+export const noElements = (): ElementIds => ({ nodes: [], lines: [], texts: [] });
 
 type AnyProject = Project | Draft<Project>;
 

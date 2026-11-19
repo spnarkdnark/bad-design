@@ -80,6 +80,22 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}) {
       }
       if (mod) return;
 
+      // pen draft: Enter or Esc finishes (keeping the line), Backspace takes back the last point
+      if (ui.lineDraft?.length) {
+        if (e.key === 'Enter' || e.key === 'Escape') {
+          e.preventDefault();
+          if (ui.lineDraft.length >= 2) A.finishLineDraft(false);
+          else ui.setLineDraft(null);
+          return;
+        }
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+          e.preventDefault();
+          const d = ui.lineDraft.slice(0, -1);
+          ui.setLineDraft(d.length ? d : null);
+          return;
+        }
+      }
+
       // shape tool draft editing
       if (ui.shapeDraft?.length) {
         if (e.key === 'Enter') {
@@ -154,6 +170,9 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}) {
           return;
         case 't':
           ui.setTool('text');
+          return;
+        case 'p':
+          ui.setTool('pen');
           return;
         case 'f':
           A.zoomToFit();

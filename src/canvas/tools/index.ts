@@ -4,6 +4,7 @@ import { connectTool } from './connect';
 import { selectTool } from './select';
 import { shapeTool } from './shape';
 import { textTool } from './text';
+import { penTool } from './pen';
 import type { Tool } from './types';
 
 export const TOOLS: Record<ToolId, Tool> = {
@@ -12,4 +13,5 @@ export const TOOLS: Record<ToolId, Tool> = {
   connect: connectTool,
   shape: shapeTool,
   text: textTool,
+  pen: penTool,
 };

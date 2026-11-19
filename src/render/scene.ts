@@ -29,6 +29,7 @@ import {
   type StrokeP,
 } from './primitives';
 import { buildOverlays } from './overlapScene';
+import { linePrims } from './lineScene';
 
 export type { Paint, Prim, StrokeP } from './primitives';
 
@@ -60,6 +61,8 @@ export interface TextScene {
 export interface Scene {
   connections: Prim[];
   nodes: NodeScene[];
+  /** pen lines, drawn above bubbles and overlaps, below labels */
+  lines: { id: Id; prims: Prim[] }[];
   /** text blocks, drawn above everything else */
   texts: TextScene[];
   /** overlap treatments, drawn above all bubbles */
@@ -203,8 +206,9 @@ export function buildScene(project: Project): Scene {
     connections.push(...openStrokePrims(seg, stroke, base, seed(c.id), ftPerPt));
   }
 
+  const lines = project.lineOrder.map((id) => ({ id, prims: linePrims(project.lines[id], project, base, ftPerPt) }));
   const texts = project.textOrder.map((id) => textScene(project.texts[id]));
-  return { connections, nodes, texts, overlays, overlaps, ftPerPt };
+  return { connections, nodes, lines, texts, overlays, overlaps, ftPerPt };
 }
 
 export function textScene(t: TextBlock): TextScene {

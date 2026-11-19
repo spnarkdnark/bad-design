@@ -3,6 +3,7 @@ import type { Id, Point, Project } from '../model/types';
 import { connectionSegment, containsPoint, resizeHandle } from '../model/geometry';
 import { elementAt, type ElementKind } from '../model/elements';
 import { textWidthHandle } from '../model/text';
+import { distToSegment } from '../model/polygon';
 
 export type Hit =
   | { kind: 'handle'; id: Id }
@@ -13,14 +14,6 @@ export type Hit =
   | { kind: 'connection'; id: Id }
   | { kind: 'overlap'; key: string }
   | { kind: 'empty' };
-
-function distToSegment(p: Point, a: Point, b: Point): number {
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const len2 = dx * dx + dy * dy || 1;
-  const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
-  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
-}
 
 /** Topmost bubble under `p`, ignoring other kinds of element (connect tool, wheel resize). */
 export function topNodeAt(project: Project, p: Point): Id | null {

@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import type { Id, LabelPart, Point, SizableKind, TextStyle } from '../model/types';
-import { DEFAULT_TEXT_STYLE, SIZABLE_SHAPES } from '../model/defaults';
+import type { Id, LabelPart, LineStyle, Point, SizableKind, TextStyle } from '../model/types';
+import { DEFAULT_LINE_STYLE, DEFAULT_TEXT_STYLE, SIZABLE_SHAPES } from '../model/defaults';
 import { noElements, type ElementIds } from '../model/elements';
 
 /** Which canvas tool is active (implementations live in canvas/tools/). */
-export type ToolId = 'select' | 'bubble' | 'connect' | 'shape' | 'text';
+export type ToolId = 'select' | 'bubble' | 'connect' | 'shape' | 'text' | 'pen';
 
 /** Selected elements (ids per kind, see model/elements.ts) plus connections and overlaps. */
 export interface Selection extends ElementIds {
@@ -56,6 +56,12 @@ interface UiState {
   /** the look new text blocks get: the last one placed or restyled (this session only) */
   textStyle: TextStyle;
   setTextStyle: (s: TextStyle) => void;
+  /** points placed so far with the pen (world feet) */
+  lineDraft: Point[] | null;
+  setLineDraft: (pts: Point[] | null) => void;
+  /** the look new pen lines get: the last one drawn or restyled (this session only) */
+  lineStyle: LineStyle;
+  setLineStyle: (s: LineStyle) => void;
   setShapeDraft: (pts: Point[] | null) => void;
 
   setTool: (t: ToolId) => void;
@@ -101,10 +107,14 @@ export const useUi = create<UiState>((set) => ({
   setEditingText: (editingText) => set(editingText ? { editingText, editingLabel: null } : { editingText }),
   textStyle: DEFAULT_TEXT_STYLE,
   setTextStyle: (textStyle) => set({ textStyle }),
+  lineDraft: null,
+  setLineDraft: (lineDraft) => set({ lineDraft }),
+  lineStyle: DEFAULT_LINE_STYLE,
+  setLineStyle: (lineStyle) => set({ lineStyle }),
   setShapeDraft: (shapeDraft) => set({ shapeDraft }),
   bumpFontEpoch: () => set((s) => ({ fontEpoch: s.fontEpoch + 1 })),
 
-  setTool: (tool) => set({ tool, connectFrom: null, shapeDraft: null }),
+  setTool: (tool) => set({ tool, connectFrom: null, shapeDraft: null, lineDraft: null }),
   // anything not given is deselected
   select: (sel) => set({ selection: { ...emptySelection(), ...sel } }),
   clearSelection: () => set({ selection: emptySelection() }),

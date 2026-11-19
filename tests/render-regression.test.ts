@@ -1,11 +1,11 @@
 /**
  * Render regression guard: a fixture covering every overlap mode, clean and sketched,
- * with shapes, connections and a text block. Refactors must not change the hash. When visuals change
+ * with shapes, connections, pen lines and a text block. Refactors must not change the hash. When visuals change
  * on purpose, check the app, then replace the expected hash below with the new one
  */
 import { expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
-import { createConnection, createNode, createProject, createText } from '../src/model/factory';
+import { createConnection, createLine, createNode, createProject, createText } from '../src/model/factory';
 import { buildScene } from '../src/render/scene';
 import { PRESETS } from '../src/render/sketch';
 
@@ -62,8 +62,33 @@ it('scene output is unchanged', () => {
         },
       };
       p.textOrder.push('t1');
+      p.lines.l1 = {
+        ...createLine(
+          [
+            { x: -5, y: 30 },
+            { x: 20, y: 30 },
+            { x: 20, y: 40 },
+          ],
+          false,
+          { dash: 'dotted', weightPt: 2, arrowEnd: true, color: '#225588' },
+        ),
+        id: 'l1',
+      };
+      p.lines.l2 = {
+        ...createLine(
+          [
+            { x: 40, y: 20 },
+            { x: 55, y: 20 },
+            { x: 50, y: 32 },
+          ],
+          true,
+          { fill: '#99cc99', fillOpacity: 0.4 },
+        ),
+        id: 'l2',
+      };
+      p.lineOrder.push('l1', 'l2');
       out.push(JSON.stringify(buildScene(p)));
     }
   }
-  expect(createHash('sha1').update(out.join('|')).digest('hex')).toBe('4d2c9a3482b2240489de131386d0febe16271a63');
+  expect(createHash('sha1').update(out.join('|')).digest('hex')).toBe('45ce4add38da4ab620c105728888e2c0b796117e');
 });

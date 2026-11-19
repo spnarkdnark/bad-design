@@ -1,11 +1,24 @@
 /* Parsing untrusted JSON: values are `any` until validated field by field below. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { BlobPoint, OverlapMode, Project, Shape, StyleOverrides, StyleProps, TextBlock, TextStyle } from './types';
+import type {
+  BlobPoint,
+  LineStyle,
+  OverlapMode,
+  PenLine,
+  Point,
+  Project,
+  Shape,
+  StyleOverrides,
+  StyleProps,
+  TextBlock,
+  TextStyle,
+} from './types';
 import { SCHEMA_VERSION } from './types';
 import {
   DEFAULT_GRAPHIC,
   DEFAULT_OVERLAP,
   DEFAULT_SETTINGS,
+  DEFAULT_LINE_STYLE,
   DEFAULT_STYLE,
   DEFAULT_TEXT_STYLE,
   TEXT_FONTS,
@@ -78,6 +91,32 @@ export function cleanText(raw: any, id: string): TextBlock | null {
   };
   const widthPt = finite(raw.widthPt) && raw.widthPt > 0 ? raw.widthPt : null;
   return { id, x: raw.x, y: raw.y, text: raw.text, widthPt, style };
+}
+
+const DASHES: LineStyle['dash'][] = ['solid', 'dashed', 'dotted'];
+const bool = (v: any, d: boolean) => (typeof v === 'boolean' ? v : d);
+
+/** A pen line from untrusted JSON (null when unusable); unknown style values fall back to defaults. */
+export function cleanLine(raw: any, id: string): PenLine | null {
+  if (!raw || !finite(raw.x) || !finite(raw.y) || !Array.isArray(raw.points)) return null;
+  const points: Point[] = raw.points
+    .filter((p: any) => p && finite(p.x) && finite(p.y))
+    .map((p: any) => ({ x: p.x, y: p.y }));
+  if (points.length < 2) return null;
+  const closed = raw.closed === true && points.length >= 3;
+  const st = raw.style ?? {};
+  const d = DEFAULT_LINE_STYLE;
+  const style: LineStyle = {
+    color: typeof st.color === 'string' ? st.color : d.color,
+    weightPt: finite(st.weightPt) && st.weightPt >= 0 ? st.weightPt : d.weightPt,
+    dash: DASHES.includes(st.dash) ? st.dash : d.dash,
+    arrowStart: bool(st.arrowStart, d.arrowStart),
+    arrowEnd: bool(st.arrowEnd, d.arrowEnd),
+    fill: typeof st.fill === 'string' ? st.fill : null,
+    fillOpacity: finite(st.fillOpacity) ? Math.min(1, Math.max(0, st.fillOpacity)) : d.fillOpacity,
+    sketch: bool(st.sketch, d.sketch),
+  };
+  return { id, x: raw.x, y: raw.y, points, closed, style };
 }
 
 /** v1 → v2: category.color becomes a full style; node fill/label become sparse overrides. */
@@ -180,6 +219,14 @@ export function migrateProject(raw: unknown): Project {
     if (categories[id] && money(v) !== undefined) costRates.categories[id] = money(v)!;
   if (money(p.costRates?.uncategorized) !== undefined) costRates.uncategorized = money(p.costRates.uncategorized);
 
+  const lines: Project['lines'] = {};
+  for (const [id, l] of Object.entries<any>(p.lines ?? {})) {
+    const clean = cleanLine(l, id);
+    if (clean) lines[id] = clean;
+  }
+  const lineOrder: string[] = Array.isArray(p.lineOrder) ? p.lineOrder.filter((id: string) => lines[id]) : [];
+  for (const id of Object.keys(lines)) if (!lineOrder.includes(id)) lineOrder.push(id);
+
   const texts: Project['texts'] = {};
   for (const [id, t] of Object.entries<any>(p.texts ?? {})) {
     const clean = cleanText(t, id);
@@ -209,6 +256,8 @@ export function migrateProject(raw: unknown): Project {
     nodes,
     nodeOrder: order,
     connections,
+    lines,
+    lineOrder,
     texts,
     textOrder,
     overlaps,

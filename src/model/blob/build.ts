@@ -1,6 +1,7 @@
 /** Building blobs from input: freehand strokes, clicked points and pocket fill, with ring snapping. */
 import type { BlobPoint, BlobShape, Id, Point } from '../types';
 import { TAU, type RingRef } from './geometry';
+import { simplifyPolyline } from '../polygon';
 
 export interface SnapInfo {
   ring: RingRef;
@@ -26,25 +27,6 @@ export function snapToRing(p: Point, rings: RingRef[], gap: number, tol: number)
 
 function wrapDelta(a: number): number {
   return ((((a + Math.PI) % TAU) + TAU) % TAU) - Math.PI;
-}
-
-function rdp(pts: Point[], eps: number): Point[] {
-  if (pts.length < 3) return pts;
-  const a = pts[0];
-  const b = pts[pts.length - 1];
-  let idx = -1;
-  let max = 0;
-  const L = Math.hypot(b.x - a.x, b.y - a.y) || 1e-9;
-  for (let i = 1; i < pts.length - 1; i++) {
-    const p = pts[i];
-    const d = Math.abs((b.x - a.x) * (a.y - p.y) - (a.x - p.x) * (b.y - a.y)) / L;
-    if (d > max) {
-      max = d;
-      idx = i;
-    }
-  }
-  if (max <= eps) return [a, b];
-  return [...rdp(pts.slice(0, idx + 1), eps).slice(0, -1), ...rdp(pts.slice(idx), eps)];
 }
 
 /** Absolute-coordinate version of BlobPoint used while building. */
@@ -74,7 +56,7 @@ export function pointsFromSamples(samples: { p: Point; snap: SnapInfo | null }[]
   const out: BuildPoint[] = [];
   for (const run of runs) {
     if (run.id === null) {
-      const simple = rdp(
+      const simple = simplifyPolyline(
         run.items.map((s) => s.p),
         simplifyEps,
       );

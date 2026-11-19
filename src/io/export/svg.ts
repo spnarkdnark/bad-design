@@ -115,6 +115,7 @@ export function buildSvg(project: Project, opts: ExportOptions = DEFAULT_EXPORT_
   for (const ns of scene.nodes) out.push(`<g id="bubble-${esc(ns.id)}">${prims(ns.fill)}${prims(ns.outline)}</g>`);
   out.push('</g>');
   out.push(`<g id="overlaps">${prims(scene.overlays)}</g>`);
+  out.push(`<g id="lines">${scene.lines.map((l) => `<g id="line-${esc(l.id)}">${prims(l.prims)}</g>`).join('')}</g>`);
   out.push('<g id="labels">');
   for (const ns of scene.nodes) {
     if (!ns.label) continue;

@@ -68,6 +68,7 @@ export function Toolbar() {
         </select>
         <ToolButton tool="connect" label="Connect" shortcut="C" icon={Icons.connect} />
         <ToolButton tool="shape" label="Shape" shortcut="S" icon={Icons.shape} />
+        <ToolButton tool="pen" label="Pen" shortcut="P" icon={Icons.pen} />
         <ToolButton tool="text" label="Text" shortcut="T" icon={Icons.text} />
       </div>
       <div className="group">

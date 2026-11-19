@@ -37,6 +37,7 @@ function drawScene(
     drawPrims(ctx, n.outline);
   }
   drawPrims(ctx, scene.overlays);
+  for (const l of scene.lines) drawPrims(ctx, l.prims);
   // hide the lines under the in-place editor
   const labels = scene.nodes.flatMap((n) => {
     if (!n.label) return [];
@@ -61,6 +62,7 @@ export function CanvasStage() {
   const size = useUi((s) => s.stageSize);
   const tool = useUi((s) => s.tool);
   const shapeDraft = useUi((s) => s.shapeDraft);
+  const lineDraft = useUi((s) => s.lineDraft);
   const editingLabel = useUi((s) => s.editingLabel);
   const editingText = useUi((s) => s.editingText);
   const textStyle = useUi((s) => s.textStyle);
@@ -189,6 +191,13 @@ export function CanvasStage() {
         </div>
       )}
       {editingText && <div className="canvas-tip">Enter adds a line · Esc or click away to finish</div>}
+      {tool === 'pen' && (
+        <div className="canvas-tip">
+          {lineDraft?.length
+            ? 'Click to add points (Shift: 45°) · click the first point to close · Enter, double-click or Esc finishes · Backspace removes the last point'
+            : 'Click to start a line, or drag to draw freehand. Points snap to other lines (Alt: no snapping).'}
+        </div>
+      )}
       {tool === 'shape' && (
         <div className="canvas-tip">
           {shapeDraft?.length

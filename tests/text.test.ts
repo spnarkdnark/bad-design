@@ -70,7 +70,11 @@ describe('elements: text alongside bubbles', () => {
     const { p, n, t } = withText();
     const b = elementsBounds(p)!;
     expect(b.maxX).toBeGreaterThan(40);
-    expect(elementsInRect(p, { minX: 39, minY: -1, maxX: 41, maxY: 1 })).toEqual({ nodes: [], texts: [t.id] });
+    expect(elementsInRect(p, { minX: 39, minY: -1, maxX: 41, maxY: 1 })).toEqual({
+      nodes: [],
+      lines: [],
+      texts: [t.id],
+    });
     expect(elementAt(p, { x: 0, y: 0 }, 0)).toEqual({ kind: 'nodes', id: n.id });
     // a text block placed over the bubble wins
     const over = produce(p, (d) => void (d.texts[t.id].x = -1));

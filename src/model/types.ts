@@ -176,6 +176,33 @@ export interface TextBlock {
   style: TextStyle;
 }
 
+/** A pen line's look. Weights and sizes are paper points. */
+export interface LineStyle {
+  color: string;
+  weightPt: number;
+  dash: StrokeStyle;
+  /** arrowheads (open lines only) */
+  arrowStart: boolean;
+  arrowEnd: boolean;
+  /** fill of a closed line; null = none */
+  fill: string | null;
+  fillOpacity: number; // 0..1
+  /** drawn in the drawing's hand-drawn style when it has one (false: always crisp) */
+  sketch: boolean;
+}
+
+/** Linework drawn with the pen: a polyline, open or closed. */
+export interface PenLine {
+  id: Id;
+  /** origin, feet: the first point; `points` are relative to it */
+  x: number;
+  y: number;
+  /** at least 2 (3 when closed), feet relative to x/y */
+  points: Point[];
+  closed: boolean;
+  style: LineStyle;
+}
+
 export type ConnectionType = 'strong' | 'near' | 'visual';
 
 export interface Connection {
@@ -212,6 +239,9 @@ export interface Project {
   /** z-order, back to front */
   nodeOrder: Id[];
   connections: Record<Id, Connection>;
+  lines: Record<Id, PenLine>;
+  /** z-order of pen lines, back to front (lines draw above bubbles, below labels and text) */
+  lineOrder: Id[];
   texts: Record<Id, TextBlock>;
   /** z-order of text blocks, back to front (all text draws above bubbles) */
   textOrder: Id[];
