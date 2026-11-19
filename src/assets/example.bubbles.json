@@ -31,7 +31,7 @@
     },
     "defaultCostPerSf": 0,
     "graphic": {
-      "preset": "custom",
+      "preset": "bad-standard",
       "wobble": 0.5,
       "overshoot": 0.7,
       "passes": 2,

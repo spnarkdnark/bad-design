@@ -14,7 +14,7 @@ export interface Pt {
   y: number;
 }
 
-import type { FillStyle, Paper } from '../model/types';
+import type { FillStyle, OverlapSettings, Paper } from '../model/types';
 
 export type { FillStyle, Paper };
 
@@ -538,9 +538,19 @@ export interface Preset {
   label: string;
   params: SketchParams;
   paper: Paper;
+  /** Overlap (merged bubble) defaults the preset also sets; others leave them alone. */
+  overlap?: OverlapSettings;
 }
 
 export const PRESETS: Preset[] = [
+  {
+    // the house style, as in the B.A.D. Example drawing
+    id: 'bad-standard',
+    label: 'B.A.D. Standard',
+    paper: 'none',
+    params: { wobble: 0.5, overshoot: 0.7, passes: 2, pressure: 0.55, fillStyle: 'pencil', fillOffset: 0.5 },
+    overlap: { mode: 'merge', weightPt: 7, color: 'largest', innerArcs: 'hidden' },
+  },
   { id: 'clean', label: 'Clean', paper: 'none', params: CLEAN },
   {
     id: 'fine-pen',

@@ -139,7 +139,8 @@ Schema v2 (v1 files upgrade in `migrate.ts`; files without `lines`/`texts` read 
   `settings.overlap` holds the default mode/weight/color/inner arcs (shared standard;
   per-pair overrides stay per diagram).
 - `settings.graphic`: the drawing's sketch character (render/sketch.ts PRESETS), paper,
-  lettering font and seed. Part of the shared standards (see below).
+  lettering font and seed. A preset may also set the overlap defaults (`Preset.overlap`; the house
+  "B.A.D. Standard" does: merged, 7 pt, largest color, inner arcs hidden). Part of the shared standards (see below).
 - **Costs** (`model/costs.ts`): cost per sf at three levels, each falling back to the one
   above: firm default (`Category.costPerSf`, `settings.defaultCostPerSf`; part of the
   shared standards) → this drawing's rate (`project.costRates.categories[id]` /

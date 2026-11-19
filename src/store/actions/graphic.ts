@@ -20,7 +20,10 @@ export function tuneGraphic(patch: Partial<GraphicSettings>) {
 export function applyPreset(id: string) {
   const p = PRESETS.find((x) => x.id === id);
   if (!p) return;
-  setGraphic({ ...p.params, paper: p.paper, preset: p.id }, false);
+  commit((d) => {
+    Object.assign(d.settings.graphic, { ...p.params, paper: p.paper, preset: p.id });
+    if (p.overlap) Object.assign(d.settings.overlap, p.overlap);
+  });
 }
 
 export function redrawHand() {

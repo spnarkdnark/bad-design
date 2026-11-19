@@ -76,6 +76,14 @@ test('the graphic style is a shared standard across tabs', async ({ page, canvas
   expect((await graphic()).preset).toBe('marker');
 });
 
+test('the B.A.D. Standard style sets the sketch look and merged overlaps', async ({ page, canvas }) => {
+  void canvas; // dismisses the splash
+  await page.locator('label[title="Graphic style"] select').selectOption('bad-standard');
+  const d = await doc(page);
+  expect(d.settings.graphic).toMatchObject({ preset: 'bad-standard', passes: 2, fillStyle: 'pencil', paper: 'none' });
+  expect(d.settings.overlap).toEqual({ mode: 'merge', weightPt: 7, color: 'largest', innerArcs: 'hidden' });
+});
+
 test('overlap defaults are shared across tabs; Reset restores the firm defaults', async ({ page, canvas }) => {
   await canvas.bubble(400, 300);
   await canvas.click(1000, 700);
