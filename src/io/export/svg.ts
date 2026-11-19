@@ -5,10 +5,10 @@
  */
 import type { Project } from '../../model/types';
 import { elementsBounds, subsetProject, type ElementIds } from '../../model/elements';
-import { LABEL_FONT_FAMILY } from '../../model/defaults';
+import { LABEL_FONT_FAMILY, TEXT_FONTS } from '../../model/defaults';
 import { ftToPt, getScale, niceScaleBarFt, PT_PER_IN, scaleBarSegments } from '../../model/units';
-import { buildScene, type Prim, type StrokeP } from '../../render/scene';
-import { outlineFont } from '../../render/fonts';
+import { buildScene, lineBaselinePt, type Prim, type StrokeP, type TextScene } from '../../render/scene';
+import { FAKE_ITALIC_SKEW, outlineFont, outlineText } from '../../render/fonts';
 import { PAPER_COLORS, paperCanvas } from '../../render/paper';
 
 export interface ExportOptions {
@@ -125,8 +125,8 @@ export function buildSvg(project: Project, opts: ExportOptions = DEFAULT_EXPORT_
       const of = outlineFont(project.settings.graphic.labelFont, l.weight === 600);
       if (of) {
         // hand fonts become vector outlines so PDFs/SVGs need no installed font
-        const w = of.font.getAdvanceWidth(l.text, l.sizePt);
-        const d = of.font.getPath(l.text, cx - w / 2, baseline, l.sizePt).toPathData(2);
+        const w = outlineText(of.font, l.text, 0, 0, l.sizePt).width;
+        const { d } = outlineText(of.font, l.text, cx - w / 2, baseline, l.sizePt);
         const bold = of.fakeBold
           ? ` stroke="${l.color}" stroke-width="${n(l.sizePt * 0.045)}" stroke-linejoin="round"`
           : '';
@@ -141,10 +141,43 @@ export function buildSvg(project: Project, opts: ExportOptions = DEFAULT_EXPORT_
     }
   }
   out.push('</g>');
+  out.push(`<g id="texts">${scene.texts.map((t) => textSvg(t, X(t.x), Y(t.y))).join('')}</g>`);
 
   if (opts.includeScaleBar) out.push(scaleBarSvg(project, m, m + drawH + 14));
   out.push('</svg>');
   return { svg: out.join('\n'), widthPt: W, heightPt: H };
+}
+
+/** A text block at (x, y) pt: PDF standard fonts as <text>, bundled fonts as outlines. */
+function textSvg(t: TextScene, x: number, y: number): string {
+  const { style, layout } = t;
+  const out: string[] = [];
+  const of = outlineFont(style.font, style.bold, style.italic);
+  for (const l of layout.lines) {
+    if (!l.text) continue;
+    const base = y + lineBaselinePt(l.topPt, layout.lineHeightPt, style.sizePt);
+    if (of) {
+      // align by the outline's own advance so centered/right text stays true in the export
+      const w = outlineText(of.font, l.text, 0, 0, style.sizePt).width;
+      const lx =
+        x + (style.align === 'left' ? 0 : style.align === 'center' ? (layout.widthPt - w) / 2 : layout.widthPt - w);
+      const { d } = outlineText(of.font, l.text, lx, base, style.sizePt);
+      const bold = of.fakeBold
+        ? ` stroke="${style.color}" stroke-width="${n(style.sizePt * 0.045)}" stroke-linejoin="round"`
+        : '';
+      const slant = of.fakeItalic
+        ? ` transform="matrix(1 0 ${n(-FAKE_ITALIC_SKEW)} 1 ${n(FAKE_ITALIC_SKEW * base)} 0)"`
+        : '';
+      out.push(`<path d="${d}" fill="${style.color}"${bold}${slant}/>`);
+    } else {
+      out.push(
+        `<text x="${n(x + l.xPt)}" y="${n(base)}" xml:space="preserve" font-family="${esc(TEXT_FONTS[style.font].family)}" font-size="${n(style.sizePt)}"${
+          style.bold ? ' font-weight="bold"' : ''
+        }${style.italic ? ' font-style="italic"' : ''} fill="${style.color}">${esc(l.text)}</text>`,
+      );
+    }
+  }
+  return `<g id="text-${esc(t.id)}">${out.join('')}</g>`;
 }
 
 function scaleBarSvg(project: Project, x: number, y: number): string {

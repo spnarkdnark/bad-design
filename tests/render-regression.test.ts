@@ -1,11 +1,11 @@
 /**
  * Render regression guard: a fixture covering every overlap mode, clean and sketched,
- * with shapes and connections. Refactors must not change the hash. When visuals change
+ * with shapes, connections and a text block. Refactors must not change the hash. When visuals change
  * on purpose, check the app, then replace the expected hash below with the new one
  */
 import { expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
-import { createConnection, createNode, createProject } from '../src/model/factory';
+import { createConnection, createNode, createProject, createText } from '../src/model/factory';
 import { buildScene } from '../src/render/scene';
 import { PRESETS } from '../src/render/sketch';
 
@@ -48,8 +48,22 @@ it('scene output is unchanged', () => {
         },
       };
       p.nodeOrder.unshift('b');
+      p.texts.t1 = {
+        ...createText({ x: 5, y: 20, text: 'North yard\nservice entry', widthPt: 60 }),
+        id: 't1',
+        style: {
+          font: 'garamond',
+          sizePt: 11,
+          color: '#553322',
+          bold: false,
+          italic: true,
+          caps: true,
+          align: 'center',
+        },
+      };
+      p.textOrder.push('t1');
       out.push(JSON.stringify(buildScene(p)));
     }
   }
-  expect(createHash('sha1').update(out.join('|')).digest('hex')).toBe('2d98e5ee8e3dd60b7927c56febf2d8e147edf379');
+  expect(createHash('sha1').update(out.join('|')).digest('hex')).toBe('4d2c9a3482b2240489de131386d0febe16271a63');
 });

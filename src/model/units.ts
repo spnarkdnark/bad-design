@@ -176,3 +176,14 @@ export function parsePt(input: string): number | null {
   const v = parseFloat(input);
   return Number.isFinite(v) ? v : null;
 }
+
+/** A paper width in points shown in inches: 180 -> `2.5"`. */
+export function formatPaperIn(pt: number): string {
+  return `${+(pt / PT_PER_IN).toFixed(2)}"`;
+}
+
+/** Parse `2.5`, `2.5"` or `2.5 in` (inches on paper) into points. */
+export function parsePaperIn(input: string): number | null {
+  const v = parseFloat(input);
+  return Number.isFinite(v) && v > 0 ? v * PT_PER_IN : null;
+}

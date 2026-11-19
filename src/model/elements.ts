@@ -13,12 +13,14 @@
  * front), and TypeScript lists what else needs it (selection, clipboard, factory…).
  */
 import type { Draft } from 'immer';
-import type { Bounds, BubbleNode, Id, Point, Project } from './types';
+import type { Bounds, BubbleNode, Id, Point, Project, TextBlock } from './types';
 import { containsPoint, intersectsRect, nodeBounds, unionBounds } from './geometry';
+import { textBounds, textContains, textIntersects } from './text';
 
 /** Each element kind and its type, keyed by its collection name in Project. */
 export interface ElementOf {
   nodes: BubbleNode;
+  texts: TextBlock;
 }
 export type ElementKind = keyof ElementOf;
 /** Ids per kind (a selection, a clipboard set, an export subset…). */
@@ -26,7 +28,7 @@ export type ElementIds = Record<ElementKind, Id[]>;
 
 interface KindDef<T> {
   /** key of the id list (back to front) in Project */
-  order: 'nodeOrder';
+  order: 'nodeOrder' | 'textOrder';
   bounds(el: T, project: Project): Bounds;
   contains(el: T, p: Point, project: Project, tolFt: number): boolean;
   intersects(el: T, rect: Bounds, project: Project): boolean;
@@ -40,11 +42,17 @@ const KINDS: { [K in ElementKind]: KindDef<ElementOf[K]> } = {
     contains: (n, p, project) => containsPoint(n, p, project),
     intersects: intersectsRect,
   },
+  texts: {
+    order: 'textOrder',
+    bounds: textBounds,
+    contains: textContains,
+    intersects: textIntersects,
+  },
 };
 
 export const ELEMENT_KINDS = Object.keys(KINDS) as ElementKind[];
 
-export const noElements = (): ElementIds => ({ nodes: [] });
+export const noElements = (): ElementIds => ({ nodes: [], texts: [] });
 
 type AnyProject = Project | Draft<Project>;
 

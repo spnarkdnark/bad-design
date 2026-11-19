@@ -33,6 +33,14 @@ export const resizeTarget = () => soleSelected(isSizable);
 /** Shape whose control points are editable. */
 export const pointEditTarget = () => soleSelected((s) => s.kind === 'blob');
 
+/** The single selected text block (select tool only), which shows its width handle. */
+export function textWidthTarget(): Id | null {
+  const ui = useUi.getState();
+  const sel = ui.selection;
+  if (ui.tool !== 'select' || ui.editingText || sel.texts.length !== 1 || sel.nodes.length) return null;
+  return getDoc().texts[sel.texts[0]] ? sel.texts[0] : null;
+}
+
 /** Overlap markers currently shown: those of selected bubbles or selected overlaps. */
 export function visibleMarkers() {
   const sel = useUi.getState().selection;
@@ -42,7 +50,7 @@ export function visibleMarkers() {
 }
 
 export function hitAt(p: Point): Hit {
-  return hitTest(getDoc(), p, pxToFt(HIT_TOL_PX), resizeTarget(), visibleMarkers());
+  return hitTest(getDoc(), p, pxToFt(HIT_TOL_PX), resizeTarget(), visibleMarkers(), textWidthTarget());
 }
 
 /**

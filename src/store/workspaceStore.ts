@@ -8,7 +8,7 @@ import type { Id, Project } from '../model/types';
 import { createProject, newId } from '../model/factory';
 import * as H from './history';
 import { useDocument } from './documentStore';
-import { useUi, type Selection, type View } from './uiStore';
+import { emptySelection, useUi, type Selection, type View } from './uiStore';
 import { zoomToFit } from './actions';
 import { adoptProject, applyStandards, hasStandards, standardsOf, type Standards } from '../model/standards';
 import { getStandards, setStandards } from './standardsStore';
@@ -28,8 +28,6 @@ interface WorkspaceState {
   /** most recently closed tab, for "Reopen" */
   lastClosed: { state: TabState; index: number } | null;
 }
-
-const EMPTY_SELECTION: Selection = { nodes: [], connections: [], overlaps: [] };
 
 export const useWorkspace = create<WorkspaceState>(() => ({
   order: [newId()],
@@ -103,7 +101,7 @@ export function newTab(incoming: Project = createProject(nextUntitledName()), vi
   const at = ws.order.indexOf(ws.activeId) + 1;
   const order = [...ws.order.slice(0, at), id, ...ws.order.slice(at)];
   useWorkspace.setState({ order, activeId: id, parked: { ...ws.parked, [ws.activeId]: captureActive() } });
-  activate({ history: H.initHistory(project), view, selection: EMPTY_SELECTION });
+  activate({ history: H.initHistory(project), view, selection: emptySelection() });
   return id;
 }
 
@@ -116,7 +114,7 @@ export function closeTab(id: Id) {
     const state = captureActive();
     const fresh = newId();
     useWorkspace.setState({ order: [fresh], activeId: fresh, parked: {}, lastClosed: { state, index: 0 } });
-    activate({ history: H.initHistory(createProject()), view: freshView(), selection: EMPTY_SELECTION });
+    activate({ history: H.initHistory(createProject()), view: freshView(), selection: emptySelection() });
     return;
   }
   if (id === ws.activeId) switchTab(ws.order[index + 1] ?? ws.order[index - 1]);
@@ -184,7 +182,7 @@ export function restoreWorkspace(
       parked[ids[i]] = {
         history: H.initHistory(t.project),
         view: t.view ?? { zoom: 1, panX: 0, panY: 0 },
-        selection: EMPTY_SELECTION,
+        selection: emptySelection(),
       };
   });
   useWorkspace.setState({ order: ids, activeId: ids[a], parked, lastClosed: null });

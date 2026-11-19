@@ -1,5 +1,7 @@
 /** Draw scene primitives onto a 2D canvas context already transformed to world feet. */
-import type { LabelPrim, Prim, StrokeP } from './scene';
+import type { LabelPrim, Prim, StrokeP, TextScene } from './scene';
+import { lineBaselinePt } from './scene';
+import { textFont } from '../model/text';
 import { hexToRgb } from '../model/color';
 
 function rgba(hex: string, a: number): string {
@@ -61,6 +63,25 @@ export function drawLabels(ctx: CanvasRenderingContext2D, labels: LabelPrim[], k
       ctx.fillStyle = line.color;
       ctx.fillText(line.text, 0, (line.topPt + line.heightPt / 2 + line.sizePt * 0.35) * pxPerPt);
     }
+    ctx.restore();
+  }
+}
+
+/** Text blocks, counter-scaled like labels. */
+export function drawTexts(ctx: CanvasRenderingContext2D, texts: TextScene[], k: number, ftPerPt: number) {
+  const pxPerPt = ftPerPt * k;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  for (const t of texts) {
+    ctx.save();
+    ctx.translate(t.x, t.y);
+    ctx.scale(1 / k, 1 / k);
+    ctx.font = textFont(t.style, t.style.sizePt * pxPerPt);
+    ctx.fillStyle = t.style.color;
+    const { lineHeightPt } = t.layout;
+    for (const l of t.layout.lines)
+      if (l.text)
+        ctx.fillText(l.text, l.xPt * pxPerPt, lineBaselinePt(l.topPt, lineHeightPt, t.style.sizePt) * pxPerPt);
     ctx.restore();
   }
 }

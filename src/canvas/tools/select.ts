@@ -6,6 +6,7 @@ import type { Id } from '../../model/types';
 import { countElements, translateElements, type ElementKind } from '../../model/elements';
 import { blobGeometry, movePoint } from '../../model/blob';
 import { resizeHandle, sizeAtHandle, withSize } from '../../model/geometry';
+import { textWidthAt } from '../../model/text';
 import { dimensionText } from '../../model/selectors';
 import { MIN_SIZE_FT } from '../../model/defaults';
 import { snap } from '../../model/units';
@@ -45,6 +46,8 @@ function moveGesture(start: CanvasEvent, clicked: { type: ElementKind; id: Id },
       if (moved) return gesture().endGesture();
       if (!e.shift && countElements(A.selectedElements()) > 1)
         return A.selectElements({ [clicked.type]: [clicked.id] });
+      // click on an already-selected text block: type into it
+      if (wasSelected && clicked.type === 'texts') return A.editText(clicked.id);
       // click on the name or area of the already-selected bubble: edit it in place
       if (wasSelected && clicked.type === 'nodes') {
         const label = labelAt(e.world);
@@ -78,6 +81,22 @@ function resizeGesture(id: Id): Gesture {
     up() {
       gesture().endGesture();
       ui.setReadout(null);
+    },
+  };
+}
+
+/** Drag a text block's right edge: its wrapping width (it starts wrapping if it didn't). */
+function textWidthGesture(id: Id): Gesture {
+  gesture().beginGesture();
+  return {
+    move(e) {
+      const t = getDoc().texts[id];
+      if (!t || cancelled()) return;
+      const w = textWidthAt(t, e.world, getDoc());
+      gesture().preview((d) => void (d.texts[id].widthPt = w));
+    },
+    up() {
+      gesture().endGesture();
     },
   };
 }
@@ -133,6 +152,8 @@ export const selectTool: Tool = {
     switch (hit.kind) {
       case 'handle':
         return resizeGesture(hit.id);
+      case 'textWidth':
+        return textWidthGesture(hit.id);
       case 'element': {
         const isSel = ui.selection[hit.type].includes(hit.id);
         if (e.shift) {
@@ -157,6 +178,10 @@ export const selectTool: Tool = {
     const ui = useUi.getState();
     const point = shapePointAt(e.world);
     if (point) return A.deleteBlobPoint(point.id, point.index);
+    const hit = hitAt(e.world);
+    // the width handle: back to no wrapping
+    if (hit.kind === 'textWidth') return A.setTextWidth([hit.id], null);
+    if (hit.kind === 'element' && hit.type === 'texts') return A.editText(hit.id);
     const label = labelAt(e.world);
     if (label) {
       A.selectNodes([label.id]);
@@ -164,7 +189,6 @@ export const selectTool: Tool = {
       return;
     }
     // a nameless element has no name to click: double-click anywhere on it to name it
-    const hit = hitAt(e.world);
     if (hit.kind === 'element' && hit.type === 'nodes' && !getDoc().nodes[hit.id].name.trim()) {
       A.selectNodes([hit.id]);
       ui.setEditingLabel({ id: hit.id, part: 'name' });
@@ -191,7 +215,7 @@ export const selectTool: Tool = {
     if (shapePointAt(e.world)) return 'grab';
     if (ui.selection.nodes.length === 1 && labelAt(e.world)?.id === ui.selection.nodes[0]) return 'text';
     const hit = hitAt(e.world);
-    if (hit.kind === 'handle') return 'ew-resize';
+    if (hit.kind === 'handle' || hit.kind === 'textWidth') return 'ew-resize';
     if (hit.kind === 'element') return 'move';
     if (hit.kind === 'connection' || hit.kind === 'overlap') return 'pointer';
     return 'default';

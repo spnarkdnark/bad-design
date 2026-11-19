@@ -1,7 +1,14 @@
 import { nanoid } from 'nanoid';
-import type { BubbleNode, Category, Connection, ConnectionType, Id, Project, StyleProps } from './types';
+import type { BubbleNode, Category, Connection, ConnectionType, Id, Project, StyleProps, TextBlock } from './types';
 import { SCHEMA_VERSION } from './types';
-import { CATEGORY_PALETTE, DEFAULT_CATEGORIES, DEFAULT_RADIUS_FT, DEFAULT_SETTINGS, styleWithFill } from './defaults';
+import {
+  CATEGORY_PALETTE,
+  DEFAULT_CATEGORIES,
+  DEFAULT_RADIUS_FT,
+  DEFAULT_SETTINGS,
+  DEFAULT_TEXT_STYLE,
+  styleWithFill,
+} from './defaults';
 
 export const newId = (): Id => nanoid(10);
 
@@ -22,6 +29,8 @@ export function createProject(name = 'Untitled diagram'): Project {
     nodes: {},
     nodeOrder: [],
     connections: {},
+    texts: {},
+    textOrder: [],
     overlaps: {},
     costRates: { categories: {} },
   };
@@ -37,6 +46,17 @@ export function createNode(partial: Partial<Omit<BubbleNode, 'id'>> = {}): Bubbl
     categoryId: partial.categoryId ?? null,
     style: { ...partial.style },
     ...(partial.costPerSf !== undefined && { costPerSf: partial.costPerSf }),
+  };
+}
+
+export function createText(partial: Partial<Omit<TextBlock, 'id'>> = {}): TextBlock {
+  return {
+    id: newId(),
+    x: partial.x ?? 0,
+    y: partial.y ?? 0,
+    text: partial.text ?? '',
+    widthPt: partial.widthPt ?? null,
+    style: { ...DEFAULT_TEXT_STYLE, ...partial.style },
   };
 }
 

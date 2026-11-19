@@ -13,12 +13,14 @@ if (import.meta.env.DEV) {
     import('./store/uiStore'),
     import('./store/workspaceStore'),
     import('./model/blob'),
-  ]).then(([d, u, w, b]) => {
+    import('./model/text'),
+  ]).then(([d, u, w, b, t]) => {
     (window as unknown as { __bd: unknown }).__bd = {
       doc: d.useDocument,
       ui: u.useUi,
       ws: w.useWorkspace,
       blobGeometry: b.blobGeometry,
+      textWidthHandle: t.textWidthHandle,
     };
   });
 }

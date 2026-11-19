@@ -7,12 +7,23 @@ export async function doc(page: Page) {
 export async function ui(page: Page) {
   return page.evaluate(() => {
     const s = (window as any).__bd.ui.getState();
-    return { selection: s.selection, tool: s.tool, view: s.view, editingLabel: s.editingLabel };
+    return {
+      selection: s.selection,
+      tool: s.tool,
+      view: s.view,
+      editingLabel: s.editingLabel,
+      editingText: s.editingText,
+    };
   });
 }
 export async function nodes(page: Page): Promise<any[]> {
   const d = await doc(page);
   return d.nodeOrder.map((id: string) => d.nodes[id]);
+}
+
+export async function texts(page: Page): Promise<any[]> {
+  const d = await doc(page);
+  return d.textOrder.map((id: string) => d.texts[id]);
 }
 
 export class Canvas {

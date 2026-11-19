@@ -48,6 +48,9 @@ react-konva canvas, Zustand + Immer state. No UI framework; plain CSS with token
 ```
 src/model/    pure TS: types, units, geometry (all shape-kind switches), color,
               defaults, factory, selectors (resolveStyle…), migrate, overlaps,
+              elements (registry of element kinds: selection/move/delete/copy/bounds
+              for any kind), clip (copy/paste/duplicate payloads), text (text block
+              layout + bounds; measurement injected by canvas/textLayout),
               costs (cost per sf: firm → drawing → element; totals, breakdown),
               standards (shared library + firm defaults), categories (matching by
               name: the one rule for files, paste, CSV, reset), polygon,
@@ -56,29 +59,31 @@ src/store/    history.ts (pure undo stack), documentStore (active tab's undoable
               Project), uiStore (selection/tool/view, NOT undoable), workspaceStore
               (tabs + standards sync), standardsStore, actions/ (all document ops,
               one file per area: nodes, size (circles/rectangles), blobs (freeform),
-              costs, labels (in-place label edits), categories, styles,
+              costs, labels (in-place label edits), texts (text blocks), elements
+              (delete/duplicate/nudge/to-front of any kind), categories, styles,
               connections, overlaps, graphic, settings, view, selection; index.ts re-exports: import * as A from 'store/actions')
 src/render/   scene.ts (Project -> primitives: nodes, labels, connections),
               overlapScene.ts (overlap treatments), primitives.ts (Prim types +
               helpers), drawCanvas.ts, sketch.ts (hand-drawn geometry + presets),
-              paper.ts, fonts.ts (hand lettering; outlines for export)
+              paper.ts, fonts.ts (bundled fonts: web fonts on screen, outlines for
+              export via outlineText)
 src/canvas/   CanvasStage (stage + layers only), OverlayLayer (selection, handles,
-              previews), tools/ (select, bubble, connect, shape behind the Tool/Gesture
+              previews), tools/ (select, bubble, connect, shape, text behind the Tool/Gesture
               interface in tools/types.ts), input/useCanvasInput (pan, dispatch to the
               active tool, cursor) + input/wheel, query.ts (hit testing, snapping),
               overlayStore (marquee/stroke/snap hint), viewport.ts, hitTest,
-              textLayout, LabelEditor, pointer, layers/GridLayer, theme.ts
+              textLayout, LabelEditor, TextEditor, pointer, layers/GridLayer, theme.ts
               (overlay/grid colors read from the CSS tokens)
 src/ui/       TabBar, Toolbar, FileMenu, ScaleBar, ExportDialog, Toast, focus.ts,
               icons.tsx (icon set), options.ts (choice lists shared by several
               controls), controls/ (Controls.tsx inputs; mixed.ts = common()/MIXED
               for multi-selection), panels/ (PropertiesPanel composes: BubbleProps
-              + SizeFields + CostFields + StyleFields, ConnectionProps, OverlapProps,
+              + SizeFields + CostFields + StyleFields, TextProps, ConnectionProps, OverlapProps,
               DrawingPanel, CostPanel, GraphicPanel,
               OverlapSettingsPanel, ShortcutsHelp, CategoryPanel)
 src/io/       fileActions (New/Open/Save/Save As/Import CSV), projectFile (JSON),
               fileSystem (system save/open dialogs, download fallback),
-              clipboard + clipboardActions, autosave, csvImport, autoLayout,
+              clipboardActions (copy/paste events; logic in model/clip), autosave, csvImport, autoLayout,
               download, export/ (svg.ts is the single exporter; png/pdf build on it)
 src/styles/   index.css imports, in cascade order: tokens (ALL colors, sizes, type,
               shadows, z-index), base (reset, shell, utilities), controls, chrome
@@ -92,8 +97,8 @@ e2e/          Playwright, one spec per feature area (helpers.ts: fixtures, reade
 
 ## Data model (src/model/types.ts)
 
-`Project { schemaVersion, meta, settings, categories, categoryOrder, nodes, nodeOrder, connections, overlaps }`
-Schema v2 (v1 files upgrade in `migrate.ts`).
+`Project { schemaVersion, meta, settings, categories, categoryOrder, nodes, nodeOrder, connections, texts, textOrder, overlaps, costRates }`
+Schema v2 (v1 files upgrade in `migrate.ts`; files without `texts` read as none).
 
 - `BubbleNode { id, name, x, y, shape, categoryId, style }` — x/y = center (circles) or
   the origin free blob points are relative to.
@@ -132,6 +137,31 @@ Schema v2 (v1 files upgrade in `migrate.ts`).
   line; it hides while the rate is $0. The scene cache key includes `nodeRate`.
 - `Connection { id, from, to, type: 'strong'|'near'|'visual' }`. Endpoints are never
   stored; `geometry.connectionSegment` computes edge-to-edge points.
+- `TextBlock { id, x, y, text, widthPt, style: TextStyle }`: free text. x/y = top-left
+  (feet); `widthPt` = wrapping width on paper (null = no wrapping); `TextStyle { font,
+sizePt, color, bold, italic, caps, align }` (paper points, like labels; per element, no
+  categories). Fonts: `TEXT_FONTS` in `model/defaults.ts` — Helvetica, Times, Courier are
+  PDF standard fonts (exported as `<text>`); the other seven are bundled (`render/fonts.ts`)
+  and exported as outlines. Layout (`model/text.ts#layoutText`) is shared by canvas,
+  editor, hit testing and export. All text draws above bubbles; `textOrder` orders texts.
+
+## Elements (model/elements.ts)
+
+Bubbles and text blocks are _element kinds_, registered in `KINDS` (drawing order, back to
+front). Selection (`uiStore.Selection` = ids per kind + connections + overlaps), marquee,
+hit testing (`elementAt`, topmost kind first), moving (`translateElements` from the
+gesture base), nudge, delete, duplicate, copy/paste, export subsets (`subsetProject`),
+zoom to fit (`elementsBounds`) and the "empty drawing" checks (`hasElements`) all loop
+over the registry. Never write `nodeOrder.length` / `selection.nodes` for something that
+applies to every kind.
+
+- Every kind is `project[kind]: Record<Id, T>` + an order array, and its position is
+  x/y with all other geometry relative to it (moving = changing x/y).
+- Copy, paste and duplicate are one path (`model/clip.ts`): `buildClip` → `planPaste` →
+  `insertPlan`; CSV import and table paste also insert through `insertPlan`. Clips carry
+  each kind (old clips without a kind still paste).
+- Kind-specific dependents stay explicit: deleting bubbles also deletes their
+  connections/overlaps and detaches hugging shapes (`actions/elements.deleteSelection`).
 
 ## Tabs
 
@@ -186,15 +216,29 @@ geometry for seeded hand-drawn ops (`render/sketch.ts`, amounts in paper points)
 `primitives.openStrokePrims` for "exact if clean, sketched otherwise" lines. Per-node
 results are cached by a JSON key of everything visual (identity is not enough: blobs
 depend on other nodes) — keep anything visual in that key. Labels are drawn counter-scaled.
-Hand fonts are bundled via @fontsource; exports outline them with opentype.js
-(`fonts.loadOutlineFont` must run before `buildSvg`).
+Bundled fonts (hand-lettered labels, seven text fonts) come from @fontsource; exports
+outline them with opentype.js (`fonts.loadOutlineFont` for every font in `fontsIn(project)`
+must run before `buildSvg`; ExportDialog does this). Use `fonts.outlineText`, never
+opentype's `getPath`/`getAdvanceWidth`/`toPathData`: its text shaping throws on some of
+these fonts and its number formatting writes NaN, which silently cuts glyphs out of PDFs
+(`tests/fonts.test.ts` guards this). Styles a family lacks are faked (bold = stroke,
+italic = slant), as the browser does on screen.
 
 ## Interaction summary
 
 - Tools: V select, B bubble (click to place; the toolbar picker or B again switches circle /
   square), C connect (click A then B, or drag A→B;
   Esc exits), S shape (drag freehand or click points; Enter/double-click/first point
-  closes; double-click a gap between bubbles to fill the pocket).
+  closes; double-click a gap between bubbles to fill the pocket), T text (click to place,
+  drag to set the wrapping width, click a block to edit it; back to select afterwards).
+- Text blocks: typed in place (`canvas/TextEditor.tsx`, `uiStore.editingText` = `{id}` or a
+  new block `{id: null, x, y, widthPt}` that only enters the document when committed with
+  text). Enter = new line; Esc, Ctrl/⌘+Enter or click away = finish (keeps the text;
+  emptied blocks are deleted). Edit: double-click, Enter on the selected block, or click
+  the already-selected block. The selected block's right-edge handle sets `widthPt`
+  (double-click it: no wrapping). New blocks take the last used style
+  (`uiStore.textStyle`, session only). Ctrl+Shift+V pastes a copied text's style onto
+  selected text blocks.
 - Selected shape: drag control points (snap to rings; Alt = no snap), double-click a
   point to delete it, the edge to insert one.
 - Overlaps: ◇ marker at each overlap of a selected bubble; click it to set its mode.
@@ -225,7 +269,7 @@ Hand fonts are bundled via @fontsource; exports outline them with opentype.js
 - Sidebar (sizing actions in `store/actions/size.ts`): Shape (convert, keeps area); a
   circle by radius, diameter or area; a rectangle by width, height (unlocks rectangles)
   or area. Area is exact (unsnapped) and keeps proportions; multi-select applies to each.
-- Shortcuts: Del, ⌘/Ctrl+D, ⌘/Ctrl+A, arrows (1', Shift 10'), ⌘/Ctrl+Z / Shift+Z / Y,
+- Shortcuts: Del, ⌘/Ctrl+D, ⌘/Ctrl+A, arrows (1', Shift 10'), Enter (edit selected text), ⌘/Ctrl+Z / Shift+Z / Y,
   ⌘/Ctrl+S save (⌘/Ctrl+Shift+S save as), ⌘/Ctrl+O open, F zoom to fit, ⌘/Ctrl+0 100% (true paper size). Keep
   `ui/panels/ShortcutsHelp.tsx` in sync.
 
@@ -282,6 +326,13 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   typed `Record<SizableKind, …>`, so TypeScript asks for them), `newShape` / `convertShape`,
   its fields in `ui/panels/SizeFields.tsx`, and CSV names in `io/csvImport.ts`.
   Sketch mode keeps corners via `primitives.subdivide`; smooth outlines use `resample`.
+- **New element kind** (e.g. linework): its type in `types.ts` (+ `Project[kind]`, an
+  order array, `factory.createProject`, `migrate.ts` cleaning, like `cleanText`), a row in
+  `model/elements.ts` (`ElementOf`, `KINDS`, `noElements`) with bounds/contains/intersects —
+  then selection, marquee, move, nudge, delete, export subsets and zoom to fit work.
+  TypeScript then asks for it in `model/clip.ts` (payload, `planPaste`, `insertPlan`,
+  `planIds`). Add its scene entry + canvas draw + SVG output, an editing action file, a
+  tool, a sidebar section in `PropertiesPanel`, and overlay selection drawing.
 - **New canvas tool**: implement `Tool` in `canvas/tools/<name>.ts` (return a `Gesture`
   from `down` for drags), register it in `tools/index.ts` and `ToolId` in uiStore, add a
   toolbar button and a shortcut.
@@ -290,7 +341,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   (a `LabelPart` + a row in `actions/labels.ts` to edit it in place), sidebar fields.
 - **New document data** (anything saved in files): add to `types.ts`, `factory.ts`,
   `migrate.ts`; if old files can't be read as-is, bump `SCHEMA_VERSION` with an upgrade
-  step. Copy/paste (`io/clipboard.ts`) and duplicate may need to carry it.
+  step. Copy/paste/duplicate (`model/clip.ts`) may need to carry it.
 - **UI / layout work**:
   - Restyle via `styles/tokens.css`; component rules use tokens, never raw colors or
     sizes (the canvas overlay picks them up through `canvas/theme.ts`).
@@ -308,10 +359,11 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 
 ## Testing notes
 
-- Unit tests (62): units, geometry, squares/rectangles, history, project file + v1 migration, CSV, styles,
-  standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs, render regression.
-- e2e (26, one file per area): bubbles (scale, drag/resize/wheel, selection + undo,
-  connect, sizing, names (+ nameless), in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, tabs, io (exports + save dialogs + download fallback).
+- Unit tests (73): units, geometry, squares/rectangles, history, project file + v1 migration, CSV, styles,
+  standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
+  text (layout, elements registry, clips, files), font outlines (no NaN), render regression.
+- e2e (32, one file per area): bubbles (scale, drag/resize/wheel, selection + undo,
+  connect, sizing, names (+ nameless), in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags
   continue outside the canvas.
@@ -321,7 +373,9 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 - More shapes (hexagon, ellipse, rounded rectangle): see "New shape kind" above.
 - Overlap treatments between rectangles/circles need polygon intersection (not built).
 - Metric: `settings.unitSystem`; formatting/parsing is confined to `units.ts`.
-- Layers / locking: reserved optional `layerId` / `locked` on `BubbleNode`.
+- Layers / locking: planned next after linework; add `layerId` to every element kind and
+  filter through `model/elements.ts` (hit testing, marquee, drawing, export).
+- Text styles shared like categories, rotation, leader lines (wait for linework).
 
 ## Style
 

@@ -6,6 +6,7 @@ import { DUPLICATE_OFFSET_FT } from '../model/defaults';
 import {
   buildClip,
   clipStyle,
+  clipTextStyle,
   emptyPlan,
   insertPlan,
   parseClip,
@@ -38,27 +39,38 @@ function onCopy(e: ClipboardEvent, cut: boolean) {
   useUi.getState().showToast(`${cut ? 'Cut' : 'Copied'} ${describeCount(ids)}`);
 }
 
-function pasteClip(clip: ClipPayload, text: string) {
+/** Ctrl+Shift+V: the copied bubble's look onto selected bubbles, the copied text's look onto selected text. */
+function pasteStyle(clip: ClipPayload) {
   const doc = getDoc();
   const ui = useUi.getState();
-
-  if (Date.now() - pasteStyleArmedAt < 1000) {
-    pasteStyleArmedAt = 0;
-    const look = clipStyle(doc, clip);
-    const ids = ui.selection.nodes;
-    if (!look || ids.length === 0) return ui.showToast('Select bubbles to paste a style onto');
-    useDocument.getState().commit((d) => {
+  const look = clipStyle(doc, clip);
+  const textLook = clipTextStyle(clip);
+  const nodes = look ? ui.selection.nodes.filter((id) => doc.nodes[id]) : [];
+  const texts = textLook ? ui.selection.texts.filter((id) => doc.texts[id]) : [];
+  const n = nodes.length + texts.length;
+  if (n === 0) return ui.showToast('Select elements like the copied one to paste its style onto');
+  useDocument.getState().commit((d) => {
+    if (look && nodes.length) {
       if (look.newCategory) {
         d.categories[look.newCategory.id] = look.newCategory;
         d.categoryOrder.push(look.newCategory.id);
       }
-      for (const id of ids)
-        if (d.nodes[id]) {
-          d.nodes[id].categoryId = look.categoryId;
-          d.nodes[id].style = { ...look.style };
-        }
-    });
-    return ui.showToast(`Pasted style onto ${ids.length} element${ids.length > 1 ? 's' : ''}`);
+      for (const id of nodes) {
+        d.nodes[id].categoryId = look.categoryId;
+        d.nodes[id].style = { ...look.style };
+      }
+    }
+    if (textLook) for (const id of texts) d.texts[id].style = { ...textLook };
+  });
+  ui.showToast(`Pasted style onto ${n} element${n > 1 ? 's' : ''}`);
+}
+
+function pasteClip(clip: ClipPayload, text: string) {
+  const doc = getDoc();
+
+  if (Date.now() - pasteStyleArmedAt < 1000) {
+    pasteStyleArmedAt = 0;
+    return pasteStyle(clip);
   }
 
   // where: at the cursor; otherwise offset from the original (further for repeated pastes)

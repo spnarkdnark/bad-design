@@ -6,9 +6,11 @@ import { Section } from '../controls/Controls';
 export function ShortcutsHelp() {
   const step = formatLengthCompact(useDoc().settings.snap.radiusIncrementFt);
   const rows: [string, string][] = [
-    ['V / B / C / S', 'Select / Bubble / Connect / Shape'],
+    ['V / B / C / S / T', 'Select / Bubble / Connect / Shape / Text'],
     ['B again', 'Switch bubble shape (circle / square)'],
     ['Shape tool', 'Drag freehand or click points; double-click a gap to fill it'],
+    ['Text tool', 'Click to place text, drag to set its width'],
+    ['Double-click text / Enter', 'Edit a text block (Esc or click away finishes)'],
     ['Scroll', `Zoom (over selected bubble: resize ${step})`],
     ['Space + drag', 'Pan (or middle mouse)'],
     ['Shift + click', 'Add to selection'],

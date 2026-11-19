@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { loadOutlineFont } from '../render/fonts';
+import { fontsIn, loadOutlineFont, type BundledFont } from '../render/fonts';
 import { useDoc } from '../store/documentStore';
 import { useUi } from '../store/uiStore';
 import { countElements } from '../model/elements';
@@ -34,18 +34,25 @@ function ExportDialogBody() {
   const [orientation, setOrientation] = useState<Orientation>('auto');
   const [busy, setBusy] = useState(false);
 
-  // hand-lettering fonts must be parsed before labels can be outlined
-  const labelFont = doc.settings.graphic.labelFont;
-  const [fontReady, setFontReady] = useState(labelFont === 'clean');
+  // bundled fonts (hand-lettered labels, text blocks) must be parsed before they can be outlined
+  const fonts = fontsIn(doc).join(',');
+  const [fontsReady, setFontsReady] = useState('');
+  const fontReady = fontsReady === fonts;
   useEffect(() => {
     let alive = true;
-    loadOutlineFont(labelFont)
-      .then(() => alive && setFontReady(true))
-      .catch(() => alive && setFontReady(true));
+    const done = () => alive && setFontsReady(fonts);
+    Promise.all(
+      fonts
+        .split(',')
+        .filter(Boolean)
+        .map((f) => loadOutlineFont(f as BundledFont)),
+    )
+      .then(done)
+      .catch(done);
     return () => {
       alive = false;
     };
-  }, [labelFont]);
+  }, [fonts]);
   const svg = useMemo(
     () =>
       fontReady

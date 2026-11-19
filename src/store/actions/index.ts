@@ -16,3 +16,4 @@ export * from './view';
 export * from './overlaps';
 export * from './graphic';
 export * from './blobs';
+export * from './texts';

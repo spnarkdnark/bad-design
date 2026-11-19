@@ -6,6 +6,8 @@ import type {
   SizableKind,
   StrokeStyle,
   StyleProps,
+  TextFont,
+  TextStyle,
 } from './types';
 import { DEFAULT_SCALE } from './units';
 
@@ -129,3 +131,34 @@ export function dashPatternPt(style: StrokeStyle, weightPt: number): [number, nu
 
 export const LABEL_FONT_FAMILY = 'Helvetica, Arial, sans-serif';
 export const SECONDARY_LABEL_COLOR = '#555555';
+
+/**
+ * Text block fonts. `builtIn` ones are the PDF standard fonts (exported as real text,
+ * like labels); the others are bundled with the app (render/fonts.ts) and exported as
+ * outlines, so the PDF looks the same without the font installed.
+ */
+export const TEXT_FONTS: Record<TextFont, { label: string; family: string; builtIn?: true }> = {
+  helvetica: { label: 'Helvetica / Arial', family: LABEL_FONT_FAMILY, builtIn: true },
+  times: { label: 'Times New Roman', family: "'Times New Roman', Times, serif", builtIn: true },
+  courier: { label: 'Courier', family: "'Courier New', Courier, monospace", builtIn: true },
+  garamond: { label: 'Garamond', family: "'EB Garamond', Garamond, serif" },
+  futura: { label: 'Jost (Futura style)', family: "'Jost', Futura, sans-serif" },
+  condensed: { label: 'Roboto Condensed', family: "'Roboto Condensed', 'Arial Narrow', sans-serif" },
+  oswald: { label: 'Oswald (titles)', family: "'Oswald', Impact, sans-serif" },
+  architect: { label: 'Architect', family: "'Architects Daughter', Helvetica, Arial, sans-serif" },
+  pen: { label: 'Pen hand (Kalam)', family: "'Kalam', Helvetica, Arial, sans-serif" },
+  comic: { label: 'Comic Neue (Comic Sans style)', family: "'Comic Neue', sans-serif" },
+};
+
+export const DEFAULT_TEXT_STYLE: TextStyle = {
+  font: 'helvetica',
+  sizePt: 12,
+  color: '#333333',
+  bold: false,
+  italic: false,
+  caps: false,
+  align: 'left',
+};
+
+/** Narrowest wrapping width a text block can be given, in multiples of its text size. */
+export const MIN_TEXT_WIDTH_EM = 2;

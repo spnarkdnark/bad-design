@@ -4,7 +4,18 @@
  * turns it into new elements for a document, `insertPlan` adds them.
  */
 import type { Draft } from 'immer';
-import type { BubbleNode, Category, Connection, Id, OverlapMode, Point, Project, StyleOverrides } from './types';
+import type {
+  BubbleNode,
+  Category,
+  Connection,
+  Id,
+  OverlapMode,
+  Point,
+  Project,
+  StyleOverrides,
+  TextBlock,
+  TextStyle,
+} from './types';
 import { boundsCenter } from './geometry';
 import { newId } from './factory';
 import { categoryResolver } from './categories';
@@ -21,6 +32,8 @@ export interface ClipPayload {
   connections: Connection[];
   categories: Category[];
   overlaps: Record<string, { mode: OverlapMode }>;
+  /** absent in clips from before text blocks existed */
+  texts?: TextBlock[];
   /** center of the copied content, feet */
   center: Point;
 }
@@ -45,7 +58,8 @@ export function buildClip(project: Project, ids: Partial<ElementIds>): ClipPaylo
     const [a, b] = k.split('|');
     if (set.has(a) && set.has(b)) overlaps[k] = v;
   }
-  return { type: CLIP_TYPE, v: 2, nodes, connections, categories, overlaps, center: boundsCenter(bounds) };
+  const texts = sel.texts.map((id) => structuredClone(project.texts[id]));
+  return { type: CLIP_TYPE, v: 2, nodes, connections, categories, overlaps, texts, center: boundsCenter(bounds) };
 }
 
 export function parseClip(text: string): ClipPayload | null {
@@ -64,9 +78,10 @@ export interface PastePlan {
   nodes: BubbleNode[];
   connections: Connection[];
   overlaps: Record<string, { mode: OverlapMode }>;
+  texts: TextBlock[];
 }
 
-export const emptyPlan = (): PastePlan => ({ categories: [], nodes: [], connections: [], overlaps: {} });
+export const emptyPlan = (): PastePlan => ({ categories: [], nodes: [], connections: [], overlaps: {}, texts: [] });
 
 /** Map a clip into new elements for `project`, centered on `at`. */
 export function planPaste(project: Project, clip: ClipPayload, at: Point): PastePlan {
@@ -100,7 +115,8 @@ export function planPaste(project: Project, clip: ClipPayload, at: Point): Paste
     const [a, b] = k.split('|');
     if (idMap.has(a) && idMap.has(b)) overlaps[overlapKey(idMap.get(a)!, idMap.get(b)!)] = v;
   }
-  return { categories: cats.added, nodes, connections, overlaps };
+  const texts = (clip.texts ?? []).map((t) => ({ ...structuredClone(t), id: newId(), x: t.x + dx, y: t.y + dy }));
+  return { categories: cats.added, nodes, connections, overlaps, texts };
 }
 
 /** Add a paste plan's elements (on top) and new categories to the document. */
@@ -115,16 +131,27 @@ export function insertPlan(d: Draft<Project>, plan: PastePlan) {
   }
   for (const c of plan.connections) d.connections[c.id] = c;
   Object.assign(d.overlaps, plan.overlaps);
+  for (const t of plan.texts) {
+    d.texts[t.id] = t;
+    d.textOrder.push(t.id);
+  }
 }
 
 /** The ids a paste plan creates (to select them). */
 export function planIds(plan: PastePlan): ElementIds {
   const ids = noElements();
   ids.nodes = plan.nodes.map((n) => n.id);
+  ids.texts = plan.texts.map((t) => t.id);
   return ids;
 }
 
-/** The "look" of the first copied element: its category (mapped by name) and overrides. */
+/** The look of the first copied text block, for pasting onto text blocks. */
+export function clipTextStyle(clip: ClipPayload): TextStyle | null {
+  const t = clip.texts?.[0];
+  return t ? { ...t.style } : null;
+}
+
+/** The "look" of the first copied bubble: its category (mapped by name) and overrides. */
 export function clipStyle(
   project: Project,
   clip: ClipPayload,

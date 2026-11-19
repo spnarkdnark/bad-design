@@ -1,8 +1,15 @@
 /* Parsing untrusted JSON: values are `any` until validated field by field below. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { BlobPoint, OverlapMode, Project, Shape, StyleOverrides, StyleProps } from './types';
+import type { BlobPoint, OverlapMode, Project, Shape, StyleOverrides, StyleProps, TextBlock, TextStyle } from './types';
 import { SCHEMA_VERSION } from './types';
-import { DEFAULT_GRAPHIC, DEFAULT_OVERLAP, DEFAULT_SETTINGS, DEFAULT_STYLE } from './defaults';
+import {
+  DEFAULT_GRAPHIC,
+  DEFAULT_OVERLAP,
+  DEFAULT_SETTINGS,
+  DEFAULT_STYLE,
+  DEFAULT_TEXT_STYLE,
+  TEXT_FONTS,
+} from './defaults';
 import { SCALES } from './units';
 
 export class ProjectFormatError extends Error {}
@@ -50,6 +57,27 @@ function cleanShape(raw: any): Shape | null {
     return points.length >= 3 ? { kind: 'blob', points, gapFt: typeof raw.gapFt === 'number' ? raw.gapFt : 2 } : null;
   }
   return null;
+}
+
+const ALIGNS: TextStyle['align'][] = ['left', 'center', 'right'];
+const finite = (v: any): v is number => typeof v === 'number' && Number.isFinite(v);
+
+/** A text block from untrusted JSON (null when unusable); unknown style values fall back to defaults. */
+export function cleanText(raw: any, id: string): TextBlock | null {
+  if (!raw || !finite(raw.x) || !finite(raw.y) || typeof raw.text !== 'string') return null;
+  const st = raw.style ?? {};
+  const d = DEFAULT_TEXT_STYLE;
+  const style: TextStyle = {
+    font: Object.hasOwn(TEXT_FONTS, st.font) ? st.font : d.font,
+    sizePt: finite(st.sizePt) && st.sizePt > 0 ? st.sizePt : d.sizePt,
+    color: typeof st.color === 'string' ? st.color : d.color,
+    bold: typeof st.bold === 'boolean' ? st.bold : d.bold,
+    italic: typeof st.italic === 'boolean' ? st.italic : d.italic,
+    caps: typeof st.caps === 'boolean' ? st.caps : d.caps,
+    align: ALIGNS.includes(st.align) ? st.align : d.align,
+  };
+  const widthPt = finite(raw.widthPt) && raw.widthPt > 0 ? raw.widthPt : null;
+  return { id, x: raw.x, y: raw.y, text: raw.text, widthPt, style };
 }
 
 /** v1 → v2: category.color becomes a full style; node fill/label become sparse overrides. */
@@ -152,6 +180,14 @@ export function migrateProject(raw: unknown): Project {
     if (categories[id] && money(v) !== undefined) costRates.categories[id] = money(v)!;
   if (money(p.costRates?.uncategorized) !== undefined) costRates.uncategorized = money(p.costRates.uncategorized);
 
+  const texts: Project['texts'] = {};
+  for (const [id, t] of Object.entries<any>(p.texts ?? {})) {
+    const clean = cleanText(t, id);
+    if (clean) texts[id] = clean;
+  }
+  const textOrder: string[] = Array.isArray(p.textOrder) ? p.textOrder.filter((id: string) => texts[id]) : [];
+  for (const id of Object.keys(texts)) if (!textOrder.includes(id)) textOrder.push(id);
+
   const order: string[] = Array.isArray(p.nodeOrder) ? p.nodeOrder.filter((id: string) => nodes[id]) : [];
   for (const id of Object.keys(nodes)) if (!order.includes(id)) order.push(id);
   const catOrder: string[] = Array.isArray(p.categoryOrder)
@@ -173,6 +209,8 @@ export function migrateProject(raw: unknown): Project {
     nodes,
     nodeOrder: order,
     connections,
+    texts,
+    textOrder,
     overlaps,
     costRates,
   };

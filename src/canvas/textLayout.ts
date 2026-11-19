@@ -9,6 +9,7 @@ import { labelWidthFt } from '../model/geometry';
 import { resolveStyle, secondaryLabel, type ResolvedStyle } from '../model/selectors';
 import { ftToPt } from '../model/units';
 import { LABEL_FONT_FAMILY, SECONDARY_LABEL_COLOR } from '../model/defaults';
+import { setTextMeasurer } from '../model/text';
 
 export interface LabelLine {
   text: string;
@@ -54,19 +55,26 @@ export function measureEpoch(): number {
   return epoch;
 }
 
-function measure(text: string, sizePt: number, weight: number): number {
-  const key = `${family}|${weight}|${text}`;
+/** Width at 1 pt of `text` in a CSS font given at 100px (cached). */
+function measureFont(text: string, font100: string): number {
+  const key = `${font100}|${text}`;
   let w = widthCache.get(key);
   if (w === undefined) {
     if (!ctx && typeof document !== 'undefined') ctx = document.createElement('canvas').getContext('2d');
     if (ctx) {
-      ctx.font = `${weight} 100px ${family}`;
+      ctx.font = font100;
       w = ctx.measureText(text).width / 100;
     } else w = text.length * 0.55;
     if (widthCache.size > 20000) widthCache.clear();
     widthCache.set(key, w);
   }
-  return w * sizePt;
+  return w;
+}
+// text blocks (model/text.ts) measure with the same cache
+setTextMeasurer(measureFont);
+
+function measure(text: string, sizePt: number, weight: number): number {
+  return measureFont(text, `${weight} 100px ${family}`) * sizePt;
 }
 
 function wrap(text: string, sizePt: number, weight: number, maxWidth: number): string[] {

@@ -76,3 +76,18 @@
   padding: 2px 6px;
   outline: none;
 }
+
+/* typing a text block in place: no padding or border, so the text sits exactly where it draws */
+.text-editor {
+  position: absolute;
+  z-index: var(--z-canvas-editor);
+  margin: 0;
+  padding: 0;
+  border: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  outline: 1.5px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 0;
+}

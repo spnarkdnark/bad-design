@@ -9,15 +9,17 @@ import { GraphicPanel } from './GraphicPanel';
 import { NodeOverlaps, OverlapProps } from './OverlapProps';
 import { OverlapSettingsPanel } from './OverlapSettingsPanel';
 import { ShortcutsHelp } from './ShortcutsHelp';
+import { TextProps } from './TextProps';
 
 export function PropertiesPanel() {
-  const { nodes, connections, overlaps } = useUi((s) => s.selection);
+  const { nodes, texts, connections, overlaps } = useUi((s) => s.selection);
   return (
     <aside className="sidebar">
-      {nodes.length > 0 ? (
+      {nodes.length > 0 || texts.length > 0 ? (
         <>
-          <BubbleProps ids={nodes} />
-          <NodeOverlaps ids={nodes} />
+          {nodes.length > 0 && <BubbleProps ids={nodes} />}
+          {nodes.length > 0 && <NodeOverlaps ids={nodes} />}
+          {texts.length > 0 && <TextProps ids={texts} actions={nodes.length === 0} />}
         </>
       ) : overlaps.length > 0 ? (
         <OverlapProps keys={overlaps} />

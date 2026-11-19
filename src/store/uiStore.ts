@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import type { Id, LabelPart, Point, SizableKind } from '../model/types';
-import { SIZABLE_SHAPES } from '../model/defaults';
+import type { Id, LabelPart, Point, SizableKind, TextStyle } from '../model/types';
+import { DEFAULT_TEXT_STYLE, SIZABLE_SHAPES } from '../model/defaults';
 import { noElements, type ElementIds } from '../model/elements';
 
 /** Which canvas tool is active (implementations live in canvas/tools/). */
-export type ToolId = 'select' | 'bubble' | 'connect' | 'shape';
+export type ToolId = 'select' | 'bubble' | 'connect' | 'shape' | 'text';
 
 /** Selected elements (ids per kind, see model/elements.ts) plus connections and overlaps. */
 export interface Selection extends ElementIds {
@@ -17,6 +17,9 @@ export interface EditingLabel {
   id: Id;
   part: LabelPart;
 }
+
+/** Text being typed on the canvas: an existing block, or a new one not yet in the document. */
+export type TextEdit = { id: Id } | { id: null; x: number; y: number; widthPt: number | null };
 
 export interface View {
   zoom: number;
@@ -47,6 +50,12 @@ interface UiState {
   /** label line being edited on the canvas: a node's name or its size line (area / dimensions) */
   editingLabel: EditingLabel | null;
   setEditingLabel: (e: EditingLabel | null) => void;
+  /** text block being typed (never at the same time as editingLabel) */
+  editingText: TextEdit | null;
+  setEditingText: (e: TextEdit | null) => void;
+  /** the look new text blocks get: the last one placed or restyled (this session only) */
+  textStyle: TextStyle;
+  setTextStyle: (s: TextStyle) => void;
   setShapeDraft: (pts: Point[] | null) => void;
 
   setTool: (t: ToolId) => void;
@@ -67,7 +76,7 @@ export function nextBubbleKind(k: SizableKind): SizableKind {
   return SIZABLE_SHAPES[(i + 1) % SIZABLE_SHAPES.length].kind;
 }
 
-const emptySelection = (): Selection => ({ ...noElements(), connections: [], overlaps: [] });
+export const emptySelection = (): Selection => ({ ...noElements(), connections: [], overlaps: [] });
 
 export const MIN_ZOOM = 0.05;
 export const MAX_ZOOM = 32;
@@ -87,7 +96,11 @@ export const useUi = create<UiState>((set) => ({
   fontEpoch: 0,
   shapeDraft: null,
   editingLabel: null,
-  setEditingLabel: (editingLabel) => set({ editingLabel }),
+  setEditingLabel: (editingLabel) => set(editingLabel ? { editingLabel, editingText: null } : { editingLabel }),
+  editingText: null,
+  setEditingText: (editingText) => set(editingText ? { editingText, editingLabel: null } : { editingText }),
+  textStyle: DEFAULT_TEXT_STYLE,
+  setTextStyle: (textStyle) => set({ textStyle }),
   setShapeDraft: (shapeDraft) => set({ shapeDraft }),
   bumpFontEpoch: () => set((s) => ({ fontEpoch: s.fontEpoch + 1 })),
 

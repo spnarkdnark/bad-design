@@ -2,9 +2,12 @@
 import type { Id, Point, Project } from '../model/types';
 import { connectionSegment, containsPoint, resizeHandle } from '../model/geometry';
 import { elementAt, type ElementKind } from '../model/elements';
+import { textWidthHandle } from '../model/text';
 
 export type Hit =
   | { kind: 'handle'; id: Id }
+  /** the wrapping-width handle of the selected text block */
+  | { kind: 'textWidth'; id: Id }
   /** an element of any kind (topmost) */
   | { kind: 'element'; type: ElementKind; id: Id }
   | { kind: 'connection'; id: Id }
@@ -31,6 +34,7 @@ export function topNodeAt(project: Project, p: Point): Id | null {
 /**
  * @param tolFt hit tolerance in feet (screen px / stage scale)
  * @param handleFor node id showing a resize handle (single selection), if any
+ * @param textHandleFor text block id showing its width handle (single selection), if any
  */
 export function hitTest(
   project: Project,
@@ -38,7 +42,13 @@ export function hitTest(
   tolFt: number,
   handleFor: Id | null,
   markers: { key: string; marker: Point }[] = [],
+  textHandleFor: Id | null = null,
 ): Hit {
+  const t = textHandleFor ? project.texts[textHandleFor] : undefined;
+  if (t) {
+    const h = textWidthHandle(t, project);
+    if (Math.hypot(p.x - h.x, p.y - h.y) <= tolFt * 1.2) return { kind: 'textWidth', id: t.id };
+  }
   if (handleFor) {
     const h = project.nodes[handleFor] ? resizeHandle(project.nodes[handleFor]) : null;
     if (h && Math.hypot(p.x - h.x, p.y - h.y) <= tolFt * 1.2) return { kind: 'handle', id: handleFor };

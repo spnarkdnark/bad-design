@@ -4,10 +4,11 @@ import type { BubbleNode, Point, Project } from '../model/types';
 import { blobGeometry } from '../model/blob';
 import { boundaryPoint, connectionSegment, nodeOutline, resizeHandle, shapeSize } from '../model/geometry';
 import { orderedNodes } from '../model/selectors';
+import { textBounds, textWidthHandle } from '../model/text';
 import type { Scene } from '../render/scene';
 import { useUi } from '../store/uiStore';
 import { useOverlay } from './overlayStore';
-import { draftOutline } from './query';
+import { draftOutline, textWidthTarget } from './query';
 import { canvasTheme } from './theme';
 
 function flat(pts: Point[]): number[] {
@@ -30,6 +31,10 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
   const handle = sole ? resizeHandle(sole) : null;
   const editShape = sole?.shape.kind === 'blob' ? sole : undefined;
   const fromNode = connectFrom ? doc.nodes[connectFrom] : undefined;
+  const editingText = useUi((s) => s.editingText);
+  const selectedTexts = selection.texts.filter((id) => doc.texts[id] && editingText?.id !== id);
+  const widthFor = textWidthTarget();
+  const widthHandle = widthFor && doc.texts[widthFor] ? textWidthHandle(doc.texts[widthFor], doc) : null;
   const highlighted = orderedNodes(doc).filter((n) => selected.has(n.id) || n.id === connectFrom);
   const ring = (n: BubbleNode) => ({
     stroke: theme.accent,
@@ -79,6 +84,35 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
         // every other shape: its outline (works for any future shape kind)
         return <Line key={n.id} points={flat(nodeOutline(n, doc) ?? [])} closed {...ring(n)} />;
       })}
+
+      {selectedTexts.map((id) => {
+        const b = textBounds(doc.texts[id], doc);
+        const pad = 3 / k;
+        return (
+          <Rect
+            key={id}
+            x={b.minX - pad}
+            y={b.minY - pad}
+            width={b.maxX - b.minX + pad * 2}
+            height={b.maxY - b.minY + pad * 2}
+            stroke={theme.accent}
+            strokeWidth={1.5 / k}
+          />
+        );
+      })}
+
+      {widthHandle && (
+        <Rect
+          x={widthHandle.x + 3 / k - 2.5 / k}
+          y={widthHandle.y - 6 / k}
+          width={5 / k}
+          height={12 / k}
+          cornerRadius={1.5 / k}
+          fill={theme.handleFill}
+          stroke={theme.accent}
+          strokeWidth={1.5 / k}
+        />
+      )}
 
       {handle && (
         <Rect

@@ -146,6 +146,36 @@ export interface BubbleNode {
   // Future: layerId?: Id; locked?: boolean;
 }
 
+/** Fonts for text blocks (registry: TEXT_FONTS in model/defaults.ts). */
+export type TextFont =
+  'helvetica' | 'times' | 'courier' | 'garamond' | 'futura' | 'condensed' | 'oswald' | 'architect' | 'pen' | 'comic';
+export type TextAlign = 'left' | 'center' | 'right';
+
+/** A text block's look. Sizes are paper points, like labels. */
+export interface TextStyle {
+  font: TextFont;
+  sizePt: number;
+  color: string;
+  bold: boolean;
+  italic: boolean;
+  /** shown in capitals (the text itself keeps its case) */
+  caps: boolean;
+  align: TextAlign;
+}
+
+/** Free text placed on the drawing, independent of bubbles. */
+export interface TextBlock {
+  id: Id;
+  /** top-left corner of the block, feet */
+  x: number;
+  y: number;
+  /** may contain line breaks */
+  text: string;
+  /** wrapping width on paper, pt; null = no wrapping (as wide as its longest line) */
+  widthPt: number | null;
+  style: TextStyle;
+}
+
 export type ConnectionType = 'strong' | 'near' | 'visual';
 
 export interface Connection {
@@ -182,6 +212,9 @@ export interface Project {
   /** z-order, back to front */
   nodeOrder: Id[];
   connections: Record<Id, Connection>;
+  texts: Record<Id, TextBlock>;
+  /** z-order of text blocks, back to front (all text draws above bubbles) */
+  textOrder: Id[];
   /** per-overlap overrides keyed by overlapKey(a, b) */
   overlaps: Record<string, { mode: OverlapMode }>;
   costRates: CostRates;

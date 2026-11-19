@@ -6,7 +6,7 @@
  * Everything visual about an element (category style, overrides, sketch
  * character, overlap treatment) is decided here or in overlapScene.ts.
  */
-import type { BubbleNode, GraphicSettings, Id, LabelPart, Project } from '../model/types';
+import type { BubbleNode, GraphicSettings, Id, LabelPart, Project, TextBlock, TextStyle } from '../model/types';
 import { resolveStyle, type ResolvedStyle } from '../model/selectors';
 import { connectionSegment, nodeCenter, nodeOutline } from '../model/geometry';
 import { blobGeometry } from '../model/blob';
@@ -15,6 +15,7 @@ import { darken } from '../model/color';
 import { ptToFt } from '../model/units';
 import { findOverlaps, type Overlap } from '../model/overlaps';
 import { nodeRate } from '../model/costs';
+import { layoutText, type TextLayout } from '../model/text';
 import { layoutLabel, measureEpoch, type LabelLayout } from '../canvas/textLayout';
 import { isClean, sampleCircle, scaleParams, sketchClosedStroke, sketchFill, type SketchParams } from './sketch';
 import {
@@ -46,9 +47,21 @@ export interface NodeScene {
   label: LabelPrim | null;
 }
 
+/** A text block, laid out (positions in feet, sizes in points). */
+export interface TextScene {
+  id: Id;
+  /** top-left, feet */
+  x: number;
+  y: number;
+  layout: TextLayout;
+  style: TextStyle;
+}
+
 export interface Scene {
   connections: Prim[];
   nodes: NodeScene[];
+  /** text blocks, drawn above everything else */
+  texts: TextScene[];
   /** overlap treatments, drawn above all bubbles */
   overlays: Prim[];
   overlaps: Overlap[];
@@ -190,7 +203,17 @@ export function buildScene(project: Project): Scene {
     connections.push(...openStrokePrims(seg, stroke, base, seed(c.id), ftPerPt));
   }
 
-  return { connections, nodes, overlays, overlaps, ftPerPt };
+  const texts = project.textOrder.map((id) => textScene(project.texts[id]));
+  return { connections, nodes, texts, overlays, overlaps, ftPerPt };
+}
+
+export function textScene(t: TextBlock): TextScene {
+  return { id: t.id, x: t.x, y: t.y, layout: layoutText(t), style: t.style };
+}
+
+/** Baseline of a text line below its line box top, pt (shared by canvas and export). */
+export function lineBaselinePt(topPt: number, lineHeightPt: number, sizePt: number): number {
+  return topPt + lineHeightPt / 2 + sizePt * 0.35;
 }
 
 /** A node's label (null when it has no lines: no name, size or cost line). */

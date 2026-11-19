@@ -101,6 +101,13 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}) {
       }
 
       switch (e.key) {
+        case 'Enter':
+          // type into the one selected text block
+          if (ui.selection.texts.length === 1 && countElements(A.selectedElements()) === 1) {
+            e.preventDefault();
+            A.editText(ui.selection.texts[0]);
+          }
+          return;
         case ' ':
           e.preventDefault();
           if (!ui.spaceDown) ui.setSpaceDown(true);
@@ -144,6 +151,9 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}) {
           return;
         case 's':
           ui.setTool('shape');
+          return;
+        case 't':
+          ui.setTool('text');
           return;
         case 'f':
           A.zoomToFit();
