@@ -1,5 +1,6 @@
 import { Layer, Shape } from 'react-konva';
 import { canvasTheme } from '../theme';
+import { GRID_MAJOR_EVERY, gridStepFt } from './grid';
 
 interface Props {
   spacingFt: number;
@@ -12,9 +13,8 @@ interface Props {
 
 /** Draws only the visible portion of the grid. Lines thinner than ~6px apart are skipped. */
 export function GridLayer({ spacingFt, k, panX, panY, width, height }: Props) {
-  let step = spacingFt;
-  while (step * k < 6) step *= 2;
-  const majorEvery = 5;
+  const step = gridStepFt(spacingFt, k);
+  const majorEvery = GRID_MAJOR_EVERY;
   const theme = canvasTheme();
   const x0 = -panX / k;
   const y0 = -panY / k;

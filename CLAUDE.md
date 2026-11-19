@@ -81,7 +81,8 @@ src/canvas/   CanvasStage (stage + layers only), OverlayLayer (selection, handle
               textLayout, LabelEditor, TextEditor, pointer, layers/GridLayer, theme.ts
               (overlay/grid colors read from the CSS tokens)
 src/ui/       TabBar, Toolbar, FileMenu, ScaleBar, ExportDialog, Toast, Splash (opening logo,
-              src/assets/logo.webp), focus.ts,
+              src/assets/logo.webp, on the drawing's paper + grid drawn where the canvas draws it,
+              via canvas/layers/grid.ts, so the grid stays put while the app fades in), focus.ts,
               icons.tsx (icon set), options.ts (choice lists shared by several
               controls), controls/ (Controls.tsx inputs; mixed.ts = common()/MIXED
               for multi-selection), panels/ (PropertiesPanel composes: BubbleProps
