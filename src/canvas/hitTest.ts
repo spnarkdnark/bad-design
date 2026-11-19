@@ -1,10 +1,12 @@
 /** Geometry-based hit testing in world feet (Konva layers are non-listening). */
 import type { Id, Point, Project } from '../model/types';
 import { connectionSegment, containsPoint, resizeHandle } from '../model/geometry';
+import { elementAt, type ElementKind } from '../model/elements';
 
 export type Hit =
   | { kind: 'handle'; id: Id }
-  | { kind: 'node'; id: Id }
+  /** an element of any kind (topmost) */
+  | { kind: 'element'; type: ElementKind; id: Id }
   | { kind: 'connection'; id: Id }
   | { kind: 'overlap'; key: string }
   | { kind: 'empty' };
@@ -17,6 +19,7 @@ function distToSegment(p: Point, a: Point, b: Point): number {
   return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
 }
 
+/** Topmost bubble under `p`, ignoring other kinds of element (connect tool, wheel resize). */
 export function topNodeAt(project: Project, p: Point): Id | null {
   for (let i = project.nodeOrder.length - 1; i >= 0; i--) {
     const id = project.nodeOrder[i];
@@ -42,8 +45,8 @@ export function hitTest(
   }
   for (const m of markers)
     if (Math.hypot(p.x - m.marker.x, p.y - m.marker.y) <= tolFt * 1.1) return { kind: 'overlap', key: m.key };
-  const node = topNodeAt(project, p);
-  if (node) return { kind: 'node', id: node };
+  const el = elementAt(project, p, tolFt);
+  if (el) return { kind: 'element', type: el.kind, id: el.id };
   for (const c of Object.values(project.connections)) {
     const a = project.nodes[c.from];
     const b = project.nodes[c.to];

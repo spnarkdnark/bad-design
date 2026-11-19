@@ -83,7 +83,7 @@ export function BubbleProps({ ids }: { ids: Id[] }) {
         <button className="btn" onClick={A.duplicateSelection}>
           Duplicate
         </button>
-        <button className="btn" onClick={() => A.bringToFront(ids)}>
+        <button className="btn" onClick={() => A.bringToFront({ nodes: ids })}>
           To front
         </button>
         <button className="btn danger" onClick={A.deleteSelection}>

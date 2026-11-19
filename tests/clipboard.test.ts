@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createCategory, createConnection, createNode, createProject } from '../src/model/factory';
-import { buildClip, clipStyle, parseClip, planPaste } from '../src/io/clipboard';
+import { buildClip, clipStyle, parseClip, planPaste } from '../src/model/clip';
 import { overlapKey } from '../src/model/overlaps';
 
 function setup() {
@@ -20,7 +20,7 @@ function setup() {
 describe('clipboard', () => {
   it('round-trips through text and pastes with new ids at a point', () => {
     const { p, a, b } = setup();
-    const clip = parseClip(JSON.stringify(buildClip(p, [a.id, b.id])))!;
+    const clip = parseClip(JSON.stringify(buildClip(p, { nodes: [a.id, b.id] })))!;
     const plan = planPaste(p, clip, { x: 100, y: 100 });
     expect(plan.nodes).toHaveLength(2);
     expect(plan.nodes[0].id).not.toBe(a.id);
@@ -31,7 +31,7 @@ describe('clipboard', () => {
   });
   it('maps categories by name into another diagram, creating missing ones', () => {
     const { p, a } = setup();
-    const clip = buildClip(p, [a.id])!;
+    const clip = buildClip(p, { nodes: [a.id] })!;
     const other = createProject();
     const plan = planPaste(other, clip, { x: 0, y: 0 });
     expect(plan.categories).toHaveLength(0);
@@ -42,7 +42,7 @@ describe('clipboard', () => {
   });
   it('drops connections to nodes not copied; paste style keeps look', () => {
     const { p, a, cat } = setup();
-    const clip = buildClip(p, [a.id])!;
+    const clip = buildClip(p, { nodes: [a.id] })!;
     expect(clip.connections).toHaveLength(0);
     const look = clipStyle(p, clip)!;
     expect(look.categoryId).toBe(cat.id);

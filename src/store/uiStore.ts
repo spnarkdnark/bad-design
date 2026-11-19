@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import type { Id, LabelPart, Point, SizableKind } from '../model/types';
 import { SIZABLE_SHAPES } from '../model/defaults';
+import { noElements, type ElementIds } from '../model/elements';
 
 /** Which canvas tool is active (implementations live in canvas/tools/). */
 export type ToolId = 'select' | 'bubble' | 'connect' | 'shape';
 
-export interface Selection {
-  nodes: Id[];
+/** Selected elements (ids per kind, see model/elements.ts) plus connections and overlaps. */
+export interface Selection extends ElementIds {
   connections: Id[];
   /** overlap keys (see model/overlaps.overlapKey) */
   overlaps: string[];
@@ -66,6 +67,8 @@ export function nextBubbleKind(k: SizableKind): SizableKind {
   return SIZABLE_SHAPES[(i + 1) % SIZABLE_SHAPES.length].kind;
 }
 
+const emptySelection = (): Selection => ({ ...noElements(), connections: [], overlaps: [] });
+
 export const MIN_ZOOM = 0.05;
 export const MAX_ZOOM = 32;
 
@@ -73,7 +76,7 @@ export const useUi = create<UiState>((set) => ({
   tool: 'select',
   bubbleKind: 'circle',
   setBubbleKind: (bubbleKind) => set({ bubbleKind }),
-  selection: { nodes: [], connections: [], overlaps: [] },
+  selection: emptySelection(),
   connectFrom: null,
   view: { zoom: 1, panX: 0, panY: 0 },
   stageSize: { width: 800, height: 600 },
@@ -89,9 +92,9 @@ export const useUi = create<UiState>((set) => ({
   bumpFontEpoch: () => set((s) => ({ fontEpoch: s.fontEpoch + 1 })),
 
   setTool: (tool) => set({ tool, connectFrom: null, shapeDraft: null }),
-  select: (sel) =>
-    set({ selection: { nodes: sel.nodes ?? [], connections: sel.connections ?? [], overlaps: sel.overlaps ?? [] } }),
-  clearSelection: () => set({ selection: { nodes: [], connections: [], overlaps: [] } }),
+  // anything not given is deselected
+  select: (sel) => set({ selection: { ...emptySelection(), ...sel } }),
+  clearSelection: () => set({ selection: emptySelection() }),
   setConnectFrom: (connectFrom) => set({ connectFrom }),
   setView: (v) =>
     set((s) => {

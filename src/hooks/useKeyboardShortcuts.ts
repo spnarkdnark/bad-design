@@ -3,6 +3,7 @@ import { useDocument } from '../store/documentStore';
 import { nextBubbleKind, useUi } from '../store/uiStore';
 import * as A from '../store/actions';
 import { NUDGE_BIG_FT, NUDGE_FT } from '../model/defaults';
+import { countElements } from '../model/elements';
 import { armPasteStyle } from '../io/clipboardActions';
 import { isTextEntry } from '../ui/focus';
 
@@ -120,12 +121,12 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}) {
         case 'ArrowDown':
         case 'ArrowLeft':
         case 'ArrowRight': {
-          if (ui.selection.nodes.length === 0) return;
+          if (countElements(A.selectedElements()) === 0) return;
           e.preventDefault();
           const d = e.shiftKey ? NUDGE_BIG_FT : NUDGE_FT;
           const dx = e.key === 'ArrowLeft' ? -d : e.key === 'ArrowRight' ? d : 0;
           const dy = e.key === 'ArrowUp' ? -d : e.key === 'ArrowDown' ? d : 0;
-          A.nudge(ui.selection.nodes, dx, dy);
+          A.nudgeSelection(dx, dy);
           return;
         }
       }

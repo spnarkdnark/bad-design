@@ -1,9 +1,19 @@
 import { getDoc, useDocument } from '../store/documentStore';
 import { useUi } from '../store/uiStore';
-import { deleteSelection, selectNodes, viewCenterWorld } from '../store/actions';
+import { deleteSelection, selectedElements, selectElements, viewCenterWorld } from '../store/actions';
 import { pointer } from '../canvas/pointer';
 import { DUPLICATE_OFFSET_FT } from '../model/defaults';
-import { buildClip, clipStyle, parseClip, planPaste, type ClipPayload } from './clipboard';
+import {
+  buildClip,
+  clipStyle,
+  emptyPlan,
+  insertPlan,
+  parseClip,
+  planIds,
+  planPaste,
+  type ClipPayload,
+} from '../model/clip';
+import { describeCount, existing } from '../model/elements';
 import { buildImport, parseCsv } from './csvImport';
 import { isTextEntry } from '../ui/focus';
 
@@ -15,21 +25,17 @@ export function armPasteStyle() {
   pasteStyleArmedAt = Date.now();
 }
 
-function copyText(): string | null {
-  const clip = buildClip(getDoc(), useUi.getState().selection.nodes);
-  return clip ? JSON.stringify(clip) : null;
-}
-
 function onCopy(e: ClipboardEvent, cut: boolean) {
   if (isTextEntry(document.activeElement) || useUi.getState().exportOpen) return;
-  const text = copyText();
-  if (!text) return;
+  const ids = existing(getDoc(), selectedElements());
+  const clip = buildClip(getDoc(), ids);
+  if (!clip) return;
+  const text = JSON.stringify(clip);
   e.preventDefault();
   e.clipboardData?.setData('text/plain', text);
   lastClip = { text, pastes: 0 };
-  const n = useUi.getState().selection.nodes.length;
   if (cut) deleteSelection();
-  useUi.getState().showToast(`${cut ? 'Cut' : 'Copied'} ${n} element${n > 1 ? 's' : ''}`);
+  useUi.getState().showToast(`${cut ? 'Cut' : 'Copied'} ${describeCount(ids)}`);
 }
 
 function pasteClip(clip: ClipPayload, text: string) {
@@ -66,19 +72,8 @@ function pasteClip(clip: ClipPayload, text: string) {
           y: clip.center.y + DUPLICATE_OFFSET_FT * lastClip.pastes,
         };
   const plan = planPaste(doc, clip, at);
-  useDocument.getState().commit((d) => {
-    for (const c of plan.categories) {
-      d.categories[c.id] = c;
-      d.categoryOrder.push(c.id);
-    }
-    for (const n of plan.nodes) {
-      d.nodes[n.id] = n;
-      d.nodeOrder.push(n.id);
-    }
-    for (const c of plan.connections) d.connections[c.id] = c;
-    Object.assign(d.overlaps, plan.overlaps);
-  });
-  selectNodes(plan.nodes.map((n) => n.id));
+  useDocument.getState().commit((d) => insertPlan(d, plan));
+  selectElements(planIds(plan));
 }
 
 /** Rows copied from a spreadsheet (tab or comma separated with a header) become bubbles. */
@@ -92,17 +87,9 @@ function pasteTable(text: string): boolean {
     rows,
     pointer.inside && pointer.world ? pointer.world : viewCenterWorld(),
   );
-  useDocument.getState().commit((d) => {
-    for (const c of categories) {
-      d.categories[c.id] = c;
-      d.categoryOrder.push(c.id);
-    }
-    for (const n of nodes) {
-      d.nodes[n.id] = n;
-      d.nodeOrder.push(n.id);
-    }
-  });
-  selectNodes(nodes.map((n) => n.id));
+  const plan = { ...emptyPlan(), nodes, categories };
+  useDocument.getState().commit((d) => insertPlan(d, plan));
+  selectElements(planIds(plan));
   useUi.getState().showToast(`Pasted ${nodes.length} bubbles from table`);
   return true;
 }

@@ -2,7 +2,9 @@
 import { getDoc, useDocument } from '../store/documentStore';
 import { useUi } from '../store/uiStore';
 import { adoptIntoStandards, newTab, useWorkspace } from '../store/workspaceStore';
-import { renameProject, selectNodes, viewCenterWorld, zoomToFit } from '../store/actions';
+import { renameProject, selectElements, viewCenterWorld, zoomToFit } from '../store/actions';
+import { emptyPlan, insertPlan, planIds } from '../model/clip';
+import { hasElements } from '../model/elements';
 import { pickFile } from './download';
 import { buildImport, parseCsv } from './csvImport';
 import { parseProject, projectBlob, projectFilename, projectNameFromFile } from './projectFile';
@@ -31,7 +33,7 @@ export async function openProject() {
     const { project, restyled } = adoptIntoStandards(p);
     const regraphed = JSON.stringify(p.settings.graphic) !== JSON.stringify(project.settings.graphic);
     // like a browser: reuse the current tab only when it is still empty
-    if (getDoc().nodeOrder.length === 0) {
+    if (!hasElements(getDoc())) {
       useDocument.getState().replace(project, true);
       useUi.getState().clearSelection();
     } else newTab(project);
@@ -88,17 +90,9 @@ export async function importCsv() {
     return;
   }
   const { nodes, categories } = buildImport(getDoc(), rows, viewCenterWorld());
-  useDocument.getState().commit((d) => {
-    for (const c of categories) {
-      d.categories[c.id] = c;
-      d.categoryOrder.push(c.id);
-    }
-    for (const n of nodes) {
-      d.nodes[n.id] = n;
-      d.nodeOrder.push(n.id);
-    }
-  });
-  selectNodes(nodes.map((n) => n.id));
+  const plan = { ...emptyPlan(), nodes, categories };
+  useDocument.getState().commit((d) => insertPlan(d, plan));
+  selectElements(planIds(plan));
   requestAnimationFrame(zoomToFit);
   const skipped = errors.length ? ` (${errors.length} row${errors.length > 1 ? 's' : ''} skipped)` : '';
   toast(`Imported ${nodes.length} bubbles${skipped}`);

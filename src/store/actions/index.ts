@@ -3,6 +3,7 @@
  * so every document change is undoable via commit()/gestures.
  */
 export * from './selection';
+export * from './elements';
 export * from './nodes';
 export * from './size';
 export * from './costs';

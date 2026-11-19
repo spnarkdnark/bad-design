@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { loadOutlineFont } from '../render/fonts';
 import { useDoc } from '../store/documentStore';
 import { useUi } from '../store/uiStore';
+import { countElements } from '../model/elements';
 import { buildSvg } from '../io/export/svg';
 import { clampDpi, svgToPng } from '../io/export/png';
 import { pageLayout, SHEETS, svgToPdf, type Orientation, type SheetId } from '../io/export/pdf';
@@ -21,7 +22,8 @@ export function ExportDialog() {
 
 function ExportDialogBody() {
   const doc = useDoc();
-  const selection = useUi((s) => s.selection.nodes);
+  const selection = useUi((s) => s.selection);
+  const selectedCount = countElements(selection);
   const close = () => useUi.getState().setExportOpen(false);
   const [format, setFormat] = useState<Format>('pdf');
   const [includeGrid, setIncludeGrid] = useState(false);
@@ -51,10 +53,10 @@ function ExportDialogBody() {
             includeGrid,
             includeScaleBar,
             marginIn: 0.5,
-            nodeIds: onlySelection && selection.length ? selection : undefined,
+            only: onlySelection && selectedCount ? selection : undefined,
           })
         : null,
-    [doc, includeGrid, includeScaleBar, onlySelection, selection, fontReady],
+    [doc, includeGrid, includeScaleBar, onlySelection, selection, selectedCount, fontReady],
   );
   const layout = svg && format === 'pdf' ? pageLayout(svg, sheet, orientation) : null;
   const effDpi = svg && format === 'png' ? clampDpi(svg, parseInt(dpi)) : 0;
@@ -95,9 +97,9 @@ function ExportDialogBody() {
         </div>
         <Checkbox label="Include scale bar & title" checked={includeScaleBar} onChange={setIncludeScaleBar} />
         <Checkbox label="Include grid" checked={includeGrid} onChange={setIncludeGrid} />
-        {selection.length > 0 && (
+        {selectedCount > 0 && (
           <Checkbox
-            label={`Only selected bubbles (${selection.length})`}
+            label={`Only selected elements (${selectedCount})`}
             checked={onlySelection}
             onChange={setOnlySelection}
           />

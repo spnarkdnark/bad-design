@@ -30,19 +30,6 @@ export function detachAnchors(node: BubbleNode, project: Project, shouldDetach: 
   return { ...shape, points: fixArcs(points) };
 }
 
-/**
- * Copy a blob for duplicate/paste: anchors to bubbles that are copied along
- * are re-pointed at the copies; anchors to bubbles left behind become free
- * points at their current position.
- */
-export function remapBlob(node: BubbleNode, project: Project, idMap: Map<Id, Id>): BlobShape {
-  const detached = detachAnchors(node, project, (id) => !idMap.has(id));
-  return {
-    ...detached,
-    points: detached.points.map((pt) => (pt.t === 'anchor' ? { ...pt, node: idMap.get(pt.node)! } : pt)),
-  };
-}
-
 /** Move one control point to `p`: snapped to a ring when `snap` is given, otherwise free. */
 export function movePoint(node: BubbleNode, index: number, p: Point, snap: SnapInfo | null): BlobShape {
   const shape = node.shape as BlobShape;

@@ -1,13 +1,16 @@
 /**
- * Copy/paste payloads. The clipboard carries plain-text JSON so it works
- * between tabs (and two different diagrams) via native copy/paste events.
+ * Copying elements: one path for copy/paste (as JSON text, so it works between tabs
+ * and diagrams) and duplicate. `buildClip` takes a self-contained copy, `planPaste`
+ * turns it into new elements for a document, `insertPlan` adds them.
  */
-import type { BubbleNode, Category, Connection, Id, OverlapMode, Point, Project, StyleOverrides } from '../model/types';
-import { boundsCenter, nodeBounds, unionBounds } from '../model/geometry';
-import { newId } from '../model/factory';
-import { categoryResolver } from '../model/categories';
-import { overlapKey } from '../model/overlaps';
-import { detachAnchors } from '../model/blob';
+import type { Draft } from 'immer';
+import type { BubbleNode, Category, Connection, Id, OverlapMode, Point, Project, StyleOverrides } from './types';
+import { boundsCenter } from './geometry';
+import { newId } from './factory';
+import { categoryResolver } from './categories';
+import { overlapKey } from './overlaps';
+import { detachAnchors } from './blob';
+import { elementsBounds, existing, noElements, type ElementIds } from './elements';
 
 export const CLIP_TYPE = 'bubble-diagram/clip';
 
@@ -22,11 +25,13 @@ export interface ClipPayload {
   center: Point;
 }
 
-export function buildClip(project: Project, nodeIds: Id[]): ClipPayload | null {
-  const ids = project.nodeOrder.filter((id) => nodeIds.includes(id));
-  if (ids.length === 0) return null;
-  const set = new Set(ids);
-  const nodes = ids.map((id) => {
+/** A self-contained copy of some elements (null when none of them exist). */
+export function buildClip(project: Project, ids: Partial<ElementIds>): ClipPayload | null {
+  const sel = existing(project, ids);
+  const bounds = elementsBounds(project, sel);
+  if (!bounds) return null;
+  const set = new Set(sel.nodes);
+  const nodes = sel.nodes.map((id) => {
     const n = structuredClone(project.nodes[id]);
     // shapes copied without the bubbles they hug keep their outline as free points
     if (n.shape.kind === 'blob') n.shape = detachAnchors(project.nodes[id], project, (a) => !set.has(a));
@@ -40,8 +45,7 @@ export function buildClip(project: Project, nodeIds: Id[]): ClipPayload | null {
     const [a, b] = k.split('|');
     if (set.has(a) && set.has(b)) overlaps[k] = v;
   }
-  const b = unionBounds(nodes.map((n) => nodeBounds(n, project)))!;
-  return { type: CLIP_TYPE, v: 2, nodes, connections, categories, overlaps, center: boundsCenter(b) };
+  return { type: CLIP_TYPE, v: 2, nodes, connections, categories, overlaps, center: boundsCenter(bounds) };
 }
 
 export function parseClip(text: string): ClipPayload | null {
@@ -61,6 +65,8 @@ export interface PastePlan {
   connections: Connection[];
   overlaps: Record<string, { mode: OverlapMode }>;
 }
+
+export const emptyPlan = (): PastePlan => ({ categories: [], nodes: [], connections: [], overlaps: {} });
 
 /** Map a clip into new elements for `project`, centered on `at`. */
 export function planPaste(project: Project, clip: ClipPayload, at: Point): PastePlan {
@@ -95,6 +101,27 @@ export function planPaste(project: Project, clip: ClipPayload, at: Point): Paste
     if (idMap.has(a) && idMap.has(b)) overlaps[overlapKey(idMap.get(a)!, idMap.get(b)!)] = v;
   }
   return { categories: cats.added, nodes, connections, overlaps };
+}
+
+/** Add a paste plan's elements (on top) and new categories to the document. */
+export function insertPlan(d: Draft<Project>, plan: PastePlan) {
+  for (const c of plan.categories) {
+    d.categories[c.id] = c;
+    d.categoryOrder.push(c.id);
+  }
+  for (const n of plan.nodes) {
+    d.nodes[n.id] = n;
+    d.nodeOrder.push(n.id);
+  }
+  for (const c of plan.connections) d.connections[c.id] = c;
+  Object.assign(d.overlaps, plan.overlaps);
+}
+
+/** The ids a paste plan creates (to select them). */
+export function planIds(plan: PastePlan): ElementIds {
+  const ids = noElements();
+  ids.nodes = plan.nodes.map((n) => n.id);
+  return ids;
 }
 
 /** The "look" of the first copied element: its category (mapped by name) and overrides. */

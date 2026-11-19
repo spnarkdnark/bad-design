@@ -15,7 +15,7 @@ export const connectTool: Tool = {
       A.selectConnection(hit.id);
       return null;
     }
-    if (hit.kind !== 'node') {
+    if (hit.kind !== 'element' || hit.type !== 'nodes') {
       ui.setConnectFrom(null);
       return null;
     }
@@ -42,5 +42,5 @@ export const connectTool: Tool = {
   hover(e) {
     if (useUi.getState().connectFrom) overlay().set({ pointerWorld: e.world });
   },
-  cursor: (e) => (hitAt(e.world).kind === 'node' ? 'crosshair' : 'default'),
+  cursor: (e) => (topNodeAt(getDoc(), e.world) ? 'crosshair' : 'default'),
 };

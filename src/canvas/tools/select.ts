@@ -2,7 +2,8 @@
  * Select tool: click/shift-click/marquee selection, moving, the resize
  * handle, shape point editing, overlap markers and in-place name/area editing.
  */
-import type { Id, Point } from '../../model/types';
+import type { Id } from '../../model/types';
+import { countElements, translateElements, type ElementKind } from '../../model/elements';
 import { blobGeometry, movePoint } from '../../model/blob';
 import { resizeHandle, sizeAtHandle, withSize } from '../../model/geometry';
 import { dimensionText } from '../../model/selectors';
@@ -20,11 +21,9 @@ const gesture = () => useDocument.getState();
 /** true when the user pressed Esc mid-drag (the document gesture was cancelled) */
 const cancelled = () => !gesture().gestureBase;
 
-function moveGesture(start: CanvasEvent, clicked: Id, wasSelected: boolean): Gesture {
-  const doc = getDoc();
-  const origins = new Map<Id, Point>(
-    useUi.getState().selection.nodes.map((id) => [id, { x: doc.nodes[id].x, y: doc.nodes[id].y }]),
-  );
+/** Drag the selection (any kinds of element); a click without dragging refines the selection. */
+function moveGesture(start: CanvasEvent, clicked: { type: ElementKind; id: Id }, wasSelected: boolean): Gesture {
+  const ids = A.selectedElements();
   let moved = false;
   let dead = false;
   return {
@@ -38,24 +37,18 @@ function moveGesture(start: CanvasEvent, clicked: Id, wasSelected: boolean): Ges
         dead = true;
         return;
       }
-      const dx = e.world.x - start.world.x;
-      const dy = e.world.y - start.world.y;
-      gesture().preview((d) => {
-        for (const [id, o] of origins) {
-          if (!d.nodes[id]) continue;
-          d.nodes[id].x = o.x + dx;
-          d.nodes[id].y = o.y + dy;
-        }
-      });
+      const base = gesture().gestureBase!;
+      gesture().preview((d) => translateElements(d, base, ids, e.world.x - start.world.x, e.world.y - start.world.y));
     },
     up(e) {
       const ui = useUi.getState();
-      if (moved) gesture().endGesture();
-      else if (!e.shift && ui.selection.nodes.length > 1) A.selectNodes([clicked]);
-      // click on the name or area of the already-selected element: edit it in place
-      else if (wasSelected && ui.selection.nodes.length === 1) {
+      if (moved) return gesture().endGesture();
+      if (!e.shift && countElements(A.selectedElements()) > 1)
+        return A.selectElements({ [clicked.type]: [clicked.id] });
+      // click on the name or area of the already-selected bubble: edit it in place
+      if (wasSelected && clicked.type === 'nodes') {
         const label = labelAt(e.world);
-        if (label?.id === clicked) ui.setEditingLabel(label);
+        if (label?.id === clicked.id) ui.setEditingLabel(label);
       }
     },
   };
@@ -97,7 +90,7 @@ function marqueeGesture(start: CanvasEvent, additive: boolean): Gesture {
     up(e) {
       overlay().set({ marquee: null });
       if (screenDistance(e, start) < DRAG_THRESHOLD_PX) return;
-      A.selectNodes(A.nodesInRect(rectFrom(start.world, e.world)), additive);
+      A.selectElements(A.elementsInMarquee(rectFrom(start.world, e.world)), additive);
     },
   };
 }
@@ -140,13 +133,13 @@ export const selectTool: Tool = {
     switch (hit.kind) {
       case 'handle':
         return resizeGesture(hit.id);
-      case 'node': {
-        const isSel = ui.selection.nodes.includes(hit.id);
+      case 'element': {
+        const isSel = ui.selection[hit.type].includes(hit.id);
         if (e.shift) {
-          A.toggleNodeSelection(hit.id);
+          A.toggleElement(hit.type, hit.id);
           if (isSel) return null; // deselected: no drag
-        } else if (!isSel) A.selectNodes([hit.id]);
-        return moveGesture(e, hit.id, isSel && !e.shift);
+        } else if (!isSel) A.selectElements({ [hit.type]: [hit.id] });
+        return moveGesture(e, hit, isSel && !e.shift);
       }
       case 'connection':
         A.selectConnection(hit.id, e.shift);
@@ -172,7 +165,7 @@ export const selectTool: Tool = {
     }
     // a nameless element has no name to click: double-click anywhere on it to name it
     const hit = hitAt(e.world);
-    if (hit.kind === 'node' && !getDoc().nodes[hit.id].name.trim()) {
+    if (hit.kind === 'element' && hit.type === 'nodes' && !getDoc().nodes[hit.id].name.trim()) {
       A.selectNodes([hit.id]);
       ui.setEditingLabel({ id: hit.id, part: 'name' });
       return;
@@ -199,7 +192,7 @@ export const selectTool: Tool = {
     if (ui.selection.nodes.length === 1 && labelAt(e.world)?.id === ui.selection.nodes[0]) return 'text';
     const hit = hitAt(e.world);
     if (hit.kind === 'handle') return 'ew-resize';
-    if (hit.kind === 'node') return 'move';
+    if (hit.kind === 'element') return 'move';
     if (hit.kind === 'connection' || hit.kind === 'overlap') return 'pointer';
     return 'default';
   },

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Layer, Shape, Stage } from 'react-konva';
 import type { Paper } from '../model/types';
 import { pxPerFt } from '../model/units';
+import { hasElements } from '../model/elements';
 import { getDoc, useDoc } from '../store/documentStore';
 import { useUi, type EditingLabel } from '../store/uiStore';
 import * as A from '../store/actions';
@@ -72,7 +73,7 @@ export function CanvasStage() {
     const ui = useUi.getState();
     ui.setStageSize(el.clientWidth, el.clientHeight);
     if (ui.view.panX === 0 && ui.view.panY === 0) {
-      if (getDoc().nodeOrder.length) requestAnimationFrame(() => A.zoomToFit());
+      if (hasElements(getDoc())) requestAnimationFrame(() => A.zoomToFit());
       else ui.setView({ panX: el.clientWidth / 2, panY: el.clientHeight / 2 });
     }
     return () => ro.disconnect();
@@ -145,7 +146,7 @@ export function CanvasStage() {
             : 'Drag to draw a shape freehand, or click to place points. Edges near a bubble snap to it. Double-click in a gap between bubbles to fill it.'}
         </div>
       )}
-      {doc.nodeOrder.length === 0 && (
+      {!hasElements(doc) && (
         <div className="canvas-hint">
           Press <kbd>B</kbd> and click to place a bubble, or import a CSV.
         </div>

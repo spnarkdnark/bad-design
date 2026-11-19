@@ -1,6 +1,7 @@
 /** Zoom and pan (not undoable). */
 import type { Point } from '../../model/types';
-import { boundsCenter, nodeBounds, unionBounds } from '../../model/geometry';
+import { boundsCenter } from '../../model/geometry';
+import { elementsBounds } from '../../model/elements';
 import { pxPerFt } from '../../model/units';
 import { getDoc } from '../documentStore';
 import { MAX_ZOOM, MIN_ZOOM } from '../uiStore';
@@ -31,7 +32,7 @@ export function centerOn(p: Point, zoom = ui().view.zoom) {
 
 export function zoomToFit() {
   const doc = getDoc();
-  const b = unionBounds(doc.nodeOrder.map((id) => nodeBounds(doc.nodes[id], doc)));
+  const b = elementsBounds(doc);
   if (!b) return centerOn({ x: 0, y: 0 }, 1);
   const { stageSize } = ui();
   const pad = 60;

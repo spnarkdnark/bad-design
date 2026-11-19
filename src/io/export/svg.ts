@@ -3,9 +3,8 @@
  * model at TRUE PAPER SCALE (independent of on-screen zoom). User units are
  * paper points (1/72"), so stroke weights and font sizes map 1:1.
  */
-import type { Bounds, Project } from '../../model/types';
-import type { Id } from '../../model/types';
-import { nodeBounds, unionBounds } from '../../model/geometry';
+import type { Project } from '../../model/types';
+import { elementsBounds, subsetProject, type ElementIds } from '../../model/elements';
 import { LABEL_FONT_FAMILY } from '../../model/defaults';
 import { ftToPt, getScale, niceScaleBarFt, PT_PER_IN, scaleBarSegments } from '../../model/units';
 import { buildScene, type Prim, type StrokeP } from '../../render/scene';
@@ -17,8 +16,8 @@ export interface ExportOptions {
   /** scale bar + project name + scale note under the drawing */
   includeScaleBar: boolean;
   marginIn: number;
-  /** only these node ids (and connections between them); all when undefined */
-  nodeIds?: string[];
+  /** only these elements (and the connections between their bubbles); everything when undefined */
+  only?: Partial<ElementIds>;
 }
 
 const DEFAULT_EXPORT_OPTIONS: ExportOptions = { includeGrid: false, includeScaleBar: true, marginIn: 0.5 };
@@ -32,19 +31,6 @@ export interface SvgResult {
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const n = (v: number) => +v.toFixed(3);
 const FOOTER_PT = 40;
-
-/** Project restricted to some nodes (and the connections/overlaps among them). */
-function subsetProject(project: Project, ids: Set<Id>): Project {
-  if (ids.size === project.nodeOrder.length) return project;
-  return {
-    ...project,
-    nodes: Object.fromEntries(Object.entries(project.nodes).filter(([id]) => ids.has(id))),
-    nodeOrder: project.nodeOrder.filter((id) => ids.has(id)),
-    connections: Object.fromEntries(
-      Object.entries(project.connections).filter(([, c]) => ids.has(c.from) && ids.has(c.to)),
-    ),
-  };
-}
 
 function strokeAttrs(s: StrokeP, k: number): string {
   return ` stroke="${s.color}"${s.alpha < 1 ? ` stroke-opacity="${n(s.alpha)}"` : ''} stroke-width="${n(s.width * k)}"${
@@ -78,18 +64,8 @@ function primSvg(p: Prim, X: (ft: number) => number, Y: (ft: number) => number, 
   }
 }
 
-export function contentBounds(project: Project, nodeIds?: string[]): Bounds | null {
-  const ids = nodeIds ?? project.nodeOrder;
-  return unionBounds(
-    ids
-      .map((id) => project.nodes[id])
-      .filter(Boolean)
-      .map((n) => nodeBounds(n, project)),
-  );
-}
-
 export function buildSvg(project: Project, opts: ExportOptions = DEFAULT_EXPORT_OPTIONS): SvgResult | null {
-  const bounds = contentBounds(project, opts.nodeIds);
+  const bounds = elementsBounds(project, opts.only);
   if (!bounds) return null;
   const scale = project.settings.scale;
   const m = opts.marginIn * PT_PER_IN;
@@ -102,8 +78,7 @@ export function buildSvg(project: Project, opts: ExportOptions = DEFAULT_EXPORT_
   const W = drawW + m * 2;
   const H = drawH + m * 2 + footer;
 
-  const ids = new Set(opts.nodeIds ?? project.nodeOrder);
-  const scene = buildScene(subsetProject(project, ids));
+  const scene = buildScene(opts.only ? subsetProject(project, opts.only) : project);
   const k = toPt(1); // pt per ft
   const out: string[] = [];
   out.push(
