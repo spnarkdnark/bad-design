@@ -3,7 +3,7 @@
   "meta": {
     "name": "B.A.D. sample",
     "createdAt": "2026-11-19T03:02:22.046Z",
-    "modifiedAt": "2026-11-19T05:12:50.547Z"
+    "modifiedAt": "2026-11-19T05:27:03.328Z"
   },
   "settings": {
     "scale": "1/16",
@@ -44,7 +44,7 @@
     },
     "overlap": {
       "mode": "merge",
-      "weightPt": 2.5,
+      "weightPt": 7,
       "color": "largest",
       "innerArcs": "hidden"
     }
@@ -681,7 +681,7 @@
     },
     "wtE3y37OwH": {
       "id": "wtE3y37OwH",
-      "x": 97.52809446351885,
+      "x": 92.52809446351885,
       "y": -3.9273353919487057,
       "points": [
         {
@@ -707,7 +707,7 @@
     },
     "yscl4wYa7n": {
       "id": "yscl4wYa7n",
-      "x": 97.38464313411467,
+      "x": 85.38464313411467,
       "y": 0.9500098077932897,
       "points": [
         {
@@ -834,6 +834,138 @@
         "fillOpacity": 0.25,
         "sketch": true
       }
+    },
+    "ty_Z2FlE_3": {
+      "id": "ty_Z2FlE_3",
+      "x": -3.7492489179426833,
+      "y": -42.94064195821585,
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": -1.7379035142977513,
+          "y": 0.45734303007835564
+        },
+        {
+          "x": -3.4758070285955025,
+          "y": 1.6464349082820817
+        },
+        {
+          "x": -4.756367512814899,
+          "y": 3.4758070285955043
+        },
+        {
+          "x": -5.1222419368775824,
+          "y": 5.030773330861912
+        },
+        {
+          "x": -4.93930472484624,
+          "y": 9.055391995551446
+        },
+        {
+          "x": -3.933150058673858,
+          "y": 11.433575751958891
+        },
+        {
+          "x": -2.6525895744544625,
+          "y": 13.262947872272314
+        }
+      ],
+      "closed": false,
+      "style": {
+        "color": "#333333",
+        "weightPt": 3,
+        "dash": "solid",
+        "arrowStart": false,
+        "arrowEnd": true,
+        "fill": null,
+        "fillOpacity": 0.25,
+        "sketch": true
+      }
+    },
+    "rieS0c4ew2": {
+      "id": "rieS0c4ew2",
+      "x": -53.738266133584396,
+      "y": 21.081573570087013,
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": -16.174531151550845,
+          "y": 7.902061020604993
+        }
+      ],
+      "closed": false,
+      "style": {
+        "color": "#333333",
+        "weightPt": 3,
+        "dash": "solid",
+        "arrowStart": false,
+        "arrowEnd": true,
+        "fill": null,
+        "fillOpacity": 0.25,
+        "sketch": true
+      }
+    },
+    "N8E3NfLrZF": {
+      "id": "N8E3NfLrZF",
+      "x": 91.74958626612067,
+      "y": -12.995480754097331,
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 12.917790221572602,
+          "y": 0
+        }
+      ],
+      "closed": false,
+      "style": {
+        "color": "#333333",
+        "weightPt": 3,
+        "dash": "solid",
+        "arrowStart": false,
+        "arrowEnd": true,
+        "fill": null,
+        "fillOpacity": 0.25,
+        "sketch": true
+      }
+    },
+    "A1O_dG2GtH": {
+      "id": "A1O_dG2GtH",
+      "x": 59.19205508766985,
+      "y": 20.217869473133035,
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": -6.791956048682643,
+          "y": 0
+        },
+        {
+          "x": -17.28575848257342,
+          "y": -5.062257841325074
+        }
+      ],
+      "closed": false,
+      "style": {
+        "color": "#333333",
+        "weightPt": 3,
+        "dash": "solid",
+        "arrowStart": false,
+        "arrowEnd": true,
+        "fill": null,
+        "fillOpacity": 0.25,
+        "sketch": true
+      }
     }
   },
   "lineOrder": [
@@ -848,7 +980,11 @@
     "qmi3XDvszX",
     "O0WQutfCB3",
     "EfJs_i-6ZJ",
-    "R6zU4JifhI"
+    "R6zU4JifhI",
+    "ty_Z2FlE_3",
+    "rieS0c4ew2",
+    "N8E3NfLrZF",
+    "A1O_dG2GtH"
   ],
   "texts": {
     "848xDHm7Ao": {
@@ -999,7 +1135,7 @@
       "id": "1-20-X2xoM",
       "x": -84.76447127495919,
       "y": -38.91726882115587,
-      "text": "DRAWING TOOLS!",
+      "text": "DRAWING TOOLS!\nW.I.P.!",
       "widthPt": null,
       "style": {
         "font": "comic",
@@ -1026,6 +1162,54 @@
         "caps": false,
         "align": "left"
       }
+    },
+    "Zh6BFQYFtx": {
+      "id": "Zh6BFQYFtx",
+      "x": -3.073249364397004,
+      "y": -44.9115960979844,
+      "text": "IF YOU DRAW AROUND CLUSTERS IT WILL LOOK LIKE THIS!",
+      "widthPt": 431.6143657451682,
+      "style": {
+        "font": "comic",
+        "sizePt": 16,
+        "color": "#333333",
+        "bold": true,
+        "italic": false,
+        "caps": false,
+        "align": "left"
+      }
+    },
+    "w5AAtCoyPN": {
+      "id": "w5AAtCoyPN",
+      "x": -52.03020265784125,
+      "y": 18.08395231262501,
+      "text": "EVERTHING IS TO SCALE!",
+      "widthPt": null,
+      "style": {
+        "font": "comic",
+        "sizePt": 16,
+        "color": "#333333",
+        "bold": true,
+        "italic": false,
+        "caps": false,
+        "align": "left"
+      }
+    },
+    "LnFbwV8B4M": {
+      "id": "LnFbwV8B4M",
+      "x": 61.65173234341174,
+      "y": 17.788627243208293,
+      "text": "USE THE PEN TOOL!",
+      "widthPt": null,
+      "style": {
+        "font": "comic",
+        "sizePt": 16,
+        "color": "#333333",
+        "bold": true,
+        "italic": false,
+        "caps": false,
+        "align": "left"
+      }
     }
   },
   "textOrder": [
@@ -1039,7 +1223,10 @@
     "GQzWwmit9i",
     "K2dktkFFEz",
     "1-20-X2xoM",
-    "iqJ43UVwGg"
+    "iqJ43UVwGg",
+    "Zh6BFQYFtx",
+    "w5AAtCoyPN",
+    "LnFbwV8B4M"
   ],
   "overlaps": {},
   "costRates": {
