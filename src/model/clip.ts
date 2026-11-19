@@ -13,9 +13,7 @@ import type {
   Point,
   Project,
   StyleOverrides,
-  TextBlock,
   LineStyle,
-  PenLine,
   TextStyle,
 } from './types';
 import { boundsCenter } from './geometry';
@@ -23,25 +21,35 @@ import { newId } from './factory';
 import { categoryResolver } from './categories';
 import { overlapKey } from './overlaps';
 import { detachAnchors } from './blob';
-import { elementsBounds, existing, noElements, type ElementIds } from './elements';
+import {
+  addElements,
+  elementsBounds,
+  existing,
+  noElements,
+  SIMPLE_KINDS,
+  type ElementIds,
+  type ElementOf,
+  type SimpleKind,
+} from './elements';
 
 /** Keeps the app's original name so clips copied in older versions still paste. */
 export const CLIP_TYPE = 'bubble-diagram/clip';
 
-export interface ClipPayload {
+interface ClipBase {
   type: typeof CLIP_TYPE;
   v: 2;
   nodes: BubbleNode[];
   connections: Connection[];
   categories: Category[];
   overlaps: Record<string, { mode: OverlapMode }>;
-  /** absent in clips from before text blocks existed */
-  texts?: TextBlock[];
-  /** absent in clips from before pen lines existed */
-  lines?: PenLine[];
   /** center of the copied content, feet */
   center: Point;
 }
+/** Plus a list per simple kind (texts, lines…); absent in clips from before that kind existed. */
+export type ClipPayload = ClipBase & Partial<SimpleLists>;
+type SimpleLists = { [K in SimpleKind]: ElementOf[K][] };
+/** The simple kinds' lists as plain positioned things (they're copied the same way). */
+type Positioned = { id: Id; x: number; y: number };
 
 /** A self-contained copy of some elements (null when none of them exist). */
 export function buildClip(project: Project, ids: Partial<ElementIds>): ClipPayload | null {
@@ -63,19 +71,18 @@ export function buildClip(project: Project, ids: Partial<ElementIds>): ClipPaylo
     const [a, b] = k.split('|');
     if (set.has(a) && set.has(b)) overlaps[k] = v;
   }
-  const texts = sel.texts.map((id) => structuredClone(project.texts[id]));
-  const lines = sel.lines.map((id) => structuredClone(project.lines[id]));
-  return {
+  const clip: ClipPayload = {
     type: CLIP_TYPE,
     v: 2,
     nodes,
     connections,
     categories,
     overlaps,
-    texts,
-    lines,
     center: boundsCenter(bounds),
   };
+  for (const k of SIMPLE_KINDS)
+    (clip as Record<SimpleKind, unknown>)[k] = sel[k].map((id) => structuredClone(project[k][id]));
+  return clip;
 }
 
 export function parseClip(text: string): ClipPayload | null {
@@ -89,23 +96,18 @@ export function parseClip(text: string): ClipPayload | null {
   }
 }
 
-export interface PastePlan {
+export interface PastePlan extends SimpleLists {
   categories: Category[];
   nodes: BubbleNode[];
   connections: Connection[];
   overlaps: Record<string, { mode: OverlapMode }>;
-  texts: TextBlock[];
-  lines: PenLine[];
 }
 
-export const emptyPlan = (): PastePlan => ({
-  categories: [],
-  nodes: [],
-  connections: [],
-  overlaps: {},
-  texts: [],
-  lines: [],
-});
+export const emptyPlan = (): PastePlan => {
+  const plan = { categories: [], nodes: [], connections: [], overlaps: {} } as unknown as PastePlan;
+  for (const k of SIMPLE_KINDS) (plan as Record<SimpleKind, unknown[]>)[k] = [];
+  return plan;
+};
 
 /** Map a clip into new elements for `project`, centered on `at`. */
 export function planPaste(project: Project, clip: ClipPayload, at: Point): PastePlan {
@@ -139,9 +141,15 @@ export function planPaste(project: Project, clip: ClipPayload, at: Point): Paste
     const [a, b] = k.split('|');
     if (idMap.has(a) && idMap.has(b)) overlaps[overlapKey(idMap.get(a)!, idMap.get(b)!)] = v;
   }
-  const texts = (clip.texts ?? []).map((t) => ({ ...structuredClone(t), id: newId(), x: t.x + dx, y: t.y + dy }));
-  const lines = (clip.lines ?? []).map((l) => ({ ...structuredClone(l), id: newId(), x: l.x + dx, y: l.y + dy }));
-  return { categories: cats.added, nodes, connections, overlaps, texts, lines };
+  const plan: PastePlan = { ...emptyPlan(), categories: cats.added, nodes, connections, overlaps };
+  for (const k of SIMPLE_KINDS)
+    (plan as Record<SimpleKind, Positioned[]>)[k] = ((clip[k] ?? []) as Positioned[]).map((el) => ({
+      ...structuredClone(el),
+      id: newId(),
+      x: el.x + dx,
+      y: el.y + dy,
+    }));
+  return plan;
 }
 
 /** Add a paste plan's elements (on top) and new categories to the document. */
@@ -156,22 +164,14 @@ export function insertPlan(d: Draft<Project>, plan: PastePlan) {
   }
   for (const c of plan.connections) d.connections[c.id] = c;
   Object.assign(d.overlaps, plan.overlaps);
-  for (const l of plan.lines) {
-    d.lines[l.id] = l;
-    d.lineOrder.push(l.id);
-  }
-  for (const t of plan.texts) {
-    d.texts[t.id] = t;
-    d.textOrder.push(t.id);
-  }
+  for (const k of SIMPLE_KINDS) addElements(d, k, plan[k]);
 }
 
 /** The ids a paste plan creates (to select them). */
 export function planIds(plan: PastePlan): ElementIds {
   const ids = noElements();
   ids.nodes = plan.nodes.map((n) => n.id);
-  ids.texts = plan.texts.map((t) => t.id);
-  ids.lines = plan.lines.map((l) => l.id);
+  for (const k of SIMPLE_KINDS) ids[k] = plan[k].map((el) => el.id);
   return ids;
 }
 

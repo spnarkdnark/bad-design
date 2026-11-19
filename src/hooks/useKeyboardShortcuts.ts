@@ -6,6 +6,7 @@ import { NUDGE_BIG_FT, NUDGE_FT } from '../model/defaults';
 import { countElements } from '../model/elements';
 import { armPasteStyle } from '../io/clipboardActions';
 import { isTextEntry } from '../ui/focus';
+import { toolForKey } from '../ui/toolList';
 
 export interface ShortcutHandlers {
   save?: () => void;
@@ -154,30 +155,17 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}) {
         }
       }
       switch (key) {
-        case 'v':
-          ui.setTool('select');
-          return;
         case 'b':
           // B again switches what the bubble tool places
           if (ui.tool === 'bubble') ui.setBubbleKind(nextBubbleKind(ui.bubbleKind));
           else ui.setTool('bubble');
           return;
-        case 'c':
-          ui.setTool('connect');
-          return;
-        case 's':
-          ui.setTool('shape');
-          return;
-        case 't':
-          ui.setTool('text');
-          return;
-        case 'p':
-          ui.setTool('pen');
-          return;
         case 'f':
           A.zoomToFit();
           return;
       }
+      const tool = toolForKey(key);
+      if (tool) ui.setTool(tool);
     };
     const onUp = (e: KeyboardEvent) => {
       if (e.key === ' ') useUi.getState().setSpaceDown(false);

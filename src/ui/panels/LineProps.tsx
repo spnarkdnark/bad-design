@@ -12,8 +12,7 @@ const DASHES: { value: StrokeStyle; label: string }[] = [
   { value: 'dotted', label: 'Dotted' },
 ];
 
-/** `actions`: show the Duplicate/Delete row (off when a section above already has one). */
-export function LineProps({ ids, actions = true }: { ids: string[]; actions?: boolean }) {
+export function LineProps({ ids }: { ids: string[] }) {
   const doc = useDoc();
   const lines = ids.map((id) => doc.lines[id]).filter(Boolean) as PenLine[];
   if (lines.length === 0) return null;
@@ -84,19 +83,6 @@ export function LineProps({ ids, actions = true }: { ids: string[]; actions?: bo
           <Checkbox label="Like the drawing" checked={get('sketch')} onChange={(sketch) => set({ sketch })} />
         </Field>
       </Section>
-      {actions && (
-        <div className="button-row">
-          <button className="btn" onClick={A.duplicateSelection}>
-            Duplicate
-          </button>
-          <button className="btn" onClick={() => A.bringToFront({ lines: ids })}>
-            To front
-          </button>
-          <button className="btn danger" onClick={A.deleteSelection}>
-            Delete
-          </button>
-        </div>
-      )}
       <p className="tip">
         Drag a point to move it (it snaps to other lines; Shift keeps 45°). Double-click a point to delete it, or an
         edge to add one.

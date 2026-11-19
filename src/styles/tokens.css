@@ -42,6 +42,7 @@
   --canvas-grid-minor: #eef0f2;
   --canvas-grid-major: #d9dde2;
   --canvas-stroke-preview: #3a3a3a;
+  --canvas-select-fill: rgba(47, 125, 225, 0.06); /* marquee, shape draft */
   --scalebar-ink: #333333;
 
   /* shadows */

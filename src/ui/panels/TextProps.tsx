@@ -14,8 +14,7 @@ const ALIGNS: { value: TextAlign; label: string }[] = [
   { value: 'right', label: 'Right' },
 ];
 
-/** `actions`: show the Duplicate/Delete row (off when the bubble section above already has one). */
-export function TextProps({ ids, actions = true }: { ids: string[]; actions?: boolean }) {
+export function TextProps({ ids }: { ids: string[] }) {
   const doc = useDoc();
   const texts = ids.map((id) => doc.texts[id]).filter(Boolean) as TextBlock[];
   if (texts.length === 0) return null;
@@ -83,21 +82,10 @@ export function TextProps({ ids, actions = true }: { ids: string[]; actions?: bo
           </Field>
         )}
       </Section>
-      {actions && (
+      {texts.length === 1 && (
         <div className="button-row">
-          {texts.length === 1 && (
-            <button className="btn" onClick={() => A.editText(texts[0].id)}>
-              Edit text
-            </button>
-          )}
-          <button className="btn" onClick={A.duplicateSelection}>
-            Duplicate
-          </button>
-          <button className="btn" onClick={() => A.bringToFront({ texts: ids })}>
-            To front
-          </button>
-          <button className="btn danger" onClick={A.deleteSelection}>
-            Delete
+          <button className="btn" onClick={() => A.editText(texts[0].id)}>
+            Edit text
           </button>
         </div>
       )}

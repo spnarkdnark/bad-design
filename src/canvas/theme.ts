@@ -7,6 +7,7 @@ export interface CanvasTheme {
   accent: string;
   handleFill: string;
   strokePreview: string;
+  selectFill: string;
   readoutBg: string;
   readoutText: string;
   gridMinor: string;
@@ -17,6 +18,7 @@ const FALLBACK: CanvasTheme = {
   accent: '#2f7de1',
   handleFill: '#ffffff',
   strokePreview: '#3a3a3a',
+  selectFill: 'rgba(47,125,225,0.06)',
   readoutBg: '#1f2328',
   readoutText: '#ffffff',
   gridMinor: '#eef0f2',
@@ -27,6 +29,7 @@ const TOKENS: Record<keyof CanvasTheme, string> = {
   accent: '--accent',
   handleFill: '--panel',
   strokePreview: '--canvas-stroke-preview',
+  selectFill: '--canvas-select-fill',
   readoutBg: '--text',
   readoutText: '--on-dark',
   gridMinor: '--canvas-grid-minor',

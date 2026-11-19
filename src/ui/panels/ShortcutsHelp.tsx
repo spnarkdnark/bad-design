@@ -2,11 +2,12 @@
 import { useDoc } from '../../store/documentStore';
 import { formatLengthCompact } from '../../model/units';
 import { Section } from '../controls/Controls';
+import { TOOL_LIST } from '../toolList';
 
 export function ShortcutsHelp() {
   const step = formatLengthCompact(useDoc().settings.snap.radiusIncrementFt);
   const rows: [string, string][] = [
-    ['V / B / C / S / P / T', 'Select / Bubble / Connect / Shape / Pen / Text'],
+    [TOOL_LIST.map((t) => t.key.toUpperCase()).join(' / '), TOOL_LIST.map((t) => t.label).join(' / ')],
     ['B again', 'Switch bubble shape (circle / square)'],
     ['Shape tool', 'Drag freehand or click points; double-click a gap to fill it'],
     [

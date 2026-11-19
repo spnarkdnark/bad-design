@@ -79,17 +79,6 @@ export function BubbleProps({ ids }: { ids: Id[] }) {
           )}
         </div>
       )}
-      <div className="button-row">
-        <button className="btn" onClick={A.duplicateSelection}>
-          Duplicate
-        </button>
-        <button className="btn" onClick={() => A.bringToFront({ nodes: ids })}>
-          To front
-        </button>
-        <button className="btn danger" onClick={A.deleteSelection}>
-          Delete
-        </button>
-      </div>
       <p className="tip">
         {blobs.length > 0 ? (
           'Drag a point to move it; near a bubble it snaps on (Alt: no snapping). Double-click a point to delete it, or the edge to add one.'

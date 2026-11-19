@@ -60,6 +60,23 @@ const KINDS: { [K in ElementKind]: KindDef<ElementOf[K]> } = {
 
 export const ELEMENT_KINDS = Object.keys(KINDS) as ElementKind[];
 
+/**
+ * Kinds with no dependents (everything but bubbles, which carry connections, overlaps and
+ * hugging shapes): copied, pasted and inserted generically.
+ */
+export type SimpleKind = Exclude<ElementKind, 'nodes'>;
+export const SIMPLE_KINDS = ELEMENT_KINDS.filter((k): k is SimpleKind => k !== 'nodes');
+
+/** Add elements of one kind on top of the drawing. */
+export function addElements<K extends ElementKind>(d: Draft<Project>, kind: K, els: ElementOf[K][]) {
+  const coll = d[kind] as Record<Id, ElementOf[K]>;
+  const order = d[KINDS[kind].order] as Id[];
+  for (const el of els) {
+    coll[el.id] = el;
+    order.push(el.id);
+  }
+}
+
 export const noElements = (): ElementIds => ({ nodes: [], lines: [], texts: [] });
 
 type AnyProject = Project | Draft<Project>;

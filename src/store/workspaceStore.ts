@@ -49,6 +49,7 @@ function activate(t: TabState) {
   const ui = useUi.getState();
   ui.setTool('select');
   ui.setEditingLabel(null);
+  ui.setEditingText(null);
   ui.setReadout(null);
   useDocument.setState({ history: t.history, gestureBase: null });
   ui.setView(t.view);

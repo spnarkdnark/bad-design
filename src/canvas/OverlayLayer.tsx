@@ -253,7 +253,7 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
             closed
             stroke={theme.accent}
             strokeWidth={1.5 / k}
-            fill="rgba(47,125,225,0.06)"
+            fill={theme.selectFill}
           />
           {shapeDraft.map((q, i) => (
             <Circle
@@ -275,7 +275,7 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
           y={marquee.minY}
           width={marquee.maxX - marquee.minX}
           height={marquee.maxY - marquee.minY}
-          fill="rgba(47,125,225,0.06)"
+          fill={theme.selectFill}
           stroke={theme.accent}
           strokeWidth={1 / k}
         />

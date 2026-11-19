@@ -179,7 +179,9 @@ applies to every kind.
   x/y with all other geometry relative to it (moving = changing x/y).
 - Copy, paste and duplicate are one path (`model/clip.ts`): `buildClip` → `planPaste` →
   `insertPlan`; CSV import and table paste also insert through `insertPlan`. Clips carry
-  each kind (old clips without a kind still paste).
+  each kind under its collection name (old clips without a kind still paste). Bubbles get
+  special handling (categories, connections, overlaps, hugging shapes); every other kind
+  (`SIMPLE_KINDS`) is cloned, re-id'd and offset by the same loop.
 - Kind-specific dependents stay explicit: deleting bubbles also deletes their
   connections/overlaps and detaches hugging shapes (`actions/elements.deleteSelection`).
 
@@ -357,17 +359,17 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 - **New element kind** (e.g. linework): its type in `types.ts` (+ `Project[kind]`, an
   order array, `factory.createProject`, `migrate.ts` cleaning, like `cleanText`), a row in
   `model/elements.ts` (`ElementOf`, `KINDS` in drawing order, `noElements`) with
-  bounds/contains/intersects — then selection, marquee, move, nudge, delete, export subsets
-  and zoom to fit work. TypeScript does NOT flag `model/clip.ts`: add it there by hand
-  (payload field, `buildClip`, `planPaste`, `insertPlan`, `planIds`, a `clipXStyle` +
-  `clipboardActions.pasteStyle`). Add its scene entry + canvas draw + SVG group, an action
+  bounds/contains/intersects — then selection, marquee, move, nudge, delete, export subsets,
+  zoom to fit and copy/paste/duplicate work (a kind with no dependents is a `SimpleKind`;
+  `model/clip.ts` copies those generically). For Ctrl+Shift+V add a `clipXStyle` +
+  `clipboardActions.pasteStyle` branch. Add its scene entry + canvas draw + SVG group, an action
   file, a tool, a sidebar section in `PropertiesPanel`, overlay selection drawing, and a reader in `e2e/helpers.ts`
   (like `lines()`). Pen lines (`PenLine`) are the latest worked example.
 - Overlay drawing reads selection from the live stores but draws from the `doc` prop, which
   can be a render behind: check an id exists in `doc` before drawing it.
 - **New canvas tool**: implement `Tool` in `canvas/tools/<name>.ts` (return a `Gesture`
-  from `down` for drags), register it in `tools/index.ts` and `ToolId` in uiStore, add a
-  toolbar button and a shortcut.
+  from `down` for drags), register it in `tools/index.ts` and `ToolId` in uiStore, and add
+  a row to `ui/toolList.ts` (toolbar button, shortcut and help follow).
 - **New per-element number that rolls up** (like cost): follow `model/costs.ts`: resolve
   in one function, total/breakdown there, a `labelX` style property for the label line
   (a `LabelPart` + a row in `actions/labels.ts` to edit it in place), sidebar fields.
@@ -384,6 +386,11 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
     decides which appear (selection vs. drawing). Moving a block = moving one line there.
   - Inputs come from `ui/controls/Controls.tsx`; a choice list used in two places goes in
     `ui/options.ts`; icons in `ui/icons.tsx`.
+  - Drawing tools as presented: `ui/toolList.ts` (order, label, shortcut key, icon) feeds the
+    toolbar buttons, the keyboard shortcuts and the shortcuts help. A vertical palette or a new
+    tool starts there.
+  - Duplicate / To front / Delete for any selection: `ui/panels/ElementActions.tsx`, shown once
+    by `PropertiesPanel` under the selected kinds' sections.
   - e2e tests find sidebar inputs by their field label (`helpers.field/select`), so
     renaming a label means updating tests; moving a field does not.
 - **Intentional visual change**: `tests/render-regression.test.ts` will fail; check the

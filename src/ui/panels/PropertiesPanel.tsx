@@ -11,6 +11,7 @@ import { OverlapSettingsPanel } from './OverlapSettingsPanel';
 import { ShortcutsHelp } from './ShortcutsHelp';
 import { TextProps } from './TextProps';
 import { LineProps } from './LineProps';
+import { ElementActions } from './ElementActions';
 
 export function PropertiesPanel() {
   const { nodes, lines, texts, connections, overlaps } = useUi((s) => s.selection);
@@ -20,8 +21,9 @@ export function PropertiesPanel() {
         <>
           {nodes.length > 0 && <BubbleProps ids={nodes} />}
           {nodes.length > 0 && <NodeOverlaps ids={nodes} />}
-          {lines.length > 0 && <LineProps ids={lines} actions={nodes.length === 0} />}
-          {texts.length > 0 && <TextProps ids={texts} actions={nodes.length === 0 && lines.length === 0} />}
+          {lines.length > 0 && <LineProps ids={lines} />}
+          {texts.length > 0 && <TextProps ids={texts} />}
+          <ElementActions />
         </>
       ) : overlaps.length > 0 ? (
         <OverlapProps keys={overlaps} />

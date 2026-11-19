@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { useDoc, useDocument } from '../store/documentStore';
 import { useUi, type ToolId } from '../store/uiStore';
 import * as A from '../store/actions';
@@ -9,6 +9,7 @@ import { FileMenu } from './FileMenu';
 import { openExample } from '../io/fileActions';
 import { Icons } from './icons';
 import { PRESET_OPTIONS } from './options';
+import { TOOL_LIST } from './toolList';
 
 function ToolButton({
   tool,
@@ -34,6 +35,29 @@ function ToolButton({
   );
 }
 
+/** What the bubble tool places (circle / square). */
+function BubbleKindSelect({ value }: { value: SizableKind }) {
+  return (
+    <select
+      className="input narrow"
+      value={value}
+      title="Bubble shape"
+      aria-label="Bubble shape"
+      onChange={(e) => {
+        const ui = useUi.getState();
+        ui.setBubbleKind(e.target.value as SizableKind);
+        ui.setTool('bubble');
+      }}
+    >
+      {SIZABLE_SHAPES.map((s) => (
+        <option key={s.kind} value={s.kind}>
+          {s.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 /** Bubble tool icon per shape (TypeScript requires one for every sizable kind). */
 const BUBBLE_ICONS: Record<SizableKind, ReactNode> = { circle: Icons.bubble, rect: Icons.square };
 
@@ -48,29 +72,17 @@ export function Toolbar() {
   return (
     <header className="toolbar">
       <div className="group">
-        <ToolButton tool="select" label="Select" shortcut="V" icon={Icons.select} />
-        <ToolButton tool="bubble" label="Bubble" shortcut="B; B again switches shape" icon={BUBBLE_ICONS[bubbleKind]} />
-        <select
-          className="input narrow"
-          value={bubbleKind}
-          title="Bubble shape"
-          aria-label="Bubble shape"
-          onChange={(e) => {
-            const ui = useUi.getState();
-            ui.setBubbleKind(e.target.value as SizableKind);
-            ui.setTool('bubble');
-          }}
-        >
-          {SIZABLE_SHAPES.map((s) => (
-            <option key={s.kind} value={s.kind}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-        <ToolButton tool="connect" label="Connect" shortcut="C" icon={Icons.connect} />
-        <ToolButton tool="shape" label="Shape" shortcut="S" icon={Icons.shape} />
-        <ToolButton tool="pen" label="Pen" shortcut="P" icon={Icons.pen} />
-        <ToolButton tool="text" label="Text" shortcut="T" icon={Icons.text} />
+        {TOOL_LIST.map((t) => (
+          <Fragment key={t.id}>
+            <ToolButton
+              tool={t.id}
+              label={t.label}
+              shortcut={t.key.toUpperCase() + (t.hint ? `; ${t.hint}` : '')}
+              icon={t.id === 'bubble' ? BUBBLE_ICONS[bubbleKind] : Icons[t.icon]}
+            />
+            {t.id === 'bubble' && <BubbleKindSelect value={bubbleKind} />}
+          </Fragment>
+        ))}
       </div>
       <div className="group">
         <button
