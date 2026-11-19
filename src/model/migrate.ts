@@ -169,6 +169,7 @@ export function migrateProject(raw: unknown): Project {
     defaultCostPerSf: money(s.defaultCostPerSf) ?? 0,
     graphic: { ...DEFAULT_GRAPHIC, ...s.graphic },
     overlap: { ...DEFAULT_OVERLAP, ...s.overlap },
+    showLabels: s.showLabels !== false,
   };
   if (!SCALES.some((x) => x.id === settings.scale)) settings.scale = DEFAULT_SETTINGS.scale;
 

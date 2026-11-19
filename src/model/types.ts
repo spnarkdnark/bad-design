@@ -15,6 +15,8 @@ export interface DrawingSettings {
   scale: ScaleId;
   unitSystem: UnitSystem;
   grid: { visible: boolean; spacingFt: number };
+  /** bubble annotations (names, sizes, costs) drawn; off for clean presentation drawings */
+  showLabels: boolean;
   snap: { radiusIncrementFt: number };
   /** default gap for new shapes drawn against bubbles, feet */
   shapeGapFt: number;

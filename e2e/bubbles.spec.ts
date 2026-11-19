@@ -123,6 +123,23 @@ test('a bubble can have no name; double-click it to name it again', async ({ pag
   expect((await nodes(page))[0].name).toBe('');
 });
 
+test('the Labels box hides bubble annotations for this tab only', async ({ page, canvas }) => {
+  await canvas.bubble(400, 300);
+  const labels = page.locator('.toolbar label.checkbox:has-text("Labels") input');
+  await expect(labels).toBeChecked();
+  await labels.uncheck();
+  expect((await doc(page)).settings.showLabels).toBe(false);
+  // nothing to click: no in-place editor, not even for a nameless bubble
+  await canvas.dblclick(400, 297);
+  await expect(page.locator('.label-editor')).toHaveCount(0);
+  await page.locator('.tab-new').click();
+  await expect(labels).toBeChecked();
+  await page.locator('.tab').nth(0).click();
+  await expect(labels).not.toBeChecked();
+  await page.keyboard.press('Control+z');
+  await expect(labels).toBeChecked();
+});
+
 test('area edits in place on the selected bubble', async ({ page, canvas }) => {
   await canvas.bubble(400, 300);
   await canvas.click(1000, 700);

@@ -24,6 +24,13 @@ export function setGrid(patch: Partial<Project['settings']['grid']>) {
   });
 }
 
+/** Bubble annotations on or off for the whole drawing (text blocks and lines stay). */
+export function setShowLabels(show: boolean) {
+  commit((d) => {
+    d.settings.showLabels = show;
+  });
+}
+
 export function renameProject(name: string) {
   commit(
     (d) => {

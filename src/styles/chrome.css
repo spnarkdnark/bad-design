@@ -152,7 +152,8 @@
   border-left: 1px solid var(--line);
   flex: none;
 }
-.group:first-of-type {
+.group:first-of-type,
+.spacer + .group {
   border-left: none;
 }
 .tool {
@@ -190,7 +191,7 @@
   font-variant-numeric: tabular-nums;
 }
 /* keep the toolbar on one line: drop tool text labels on narrower screens */
-@media (max-width: 1480px) {
+@media (max-width: 1840px) {
   .tool span {
     display: none;
   }

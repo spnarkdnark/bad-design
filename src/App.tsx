@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { CanvasStage } from './canvas/CanvasStage';
-import { Toolbar } from './ui/Toolbar';
+import { Toolbar } from './ui/toolbar/Toolbar';
 import { TabBar } from './ui/TabBar';
 import { PropertiesPanel } from './ui/panels/PropertiesPanel';
 import { ScaleBar } from './ui/ScaleBar';

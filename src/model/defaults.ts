@@ -101,6 +101,7 @@ export const DEFAULT_SETTINGS: DrawingSettings = {
   scale: DEFAULT_SCALE,
   unitSystem: 'imperial',
   grid: { visible: true, spacingFt: 10 },
+  showLabels: true,
   snap: { radiusIncrementFt: RADIUS_SNAP_FT },
   shapeGapFt: 2,
   defaultStyle: DEFAULT_STYLE,

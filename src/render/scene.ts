@@ -111,6 +111,7 @@ function nodeScene(
     suppressOutline,
     ftPerPt,
     g.labelFont,
+    project.settings.showLabels,
     g.seed,
     measureEpoch(),
     blob?.ctrl,
@@ -166,7 +167,12 @@ function nodeScene(
       : [];
   }
 
-  const scene: NodeScene = { id: node.id, fill, outline, label: labelPrim(node, project, style) };
+  const scene: NodeScene = {
+    id: node.id,
+    fill,
+    outline,
+    label: project.settings.showLabels ? labelPrim(node, project, style) : null,
+  };
   nodeCache.set(node.id, { key, scene });
   if (nodeCache.size > 5000) nodeCache.clear();
   return scene;

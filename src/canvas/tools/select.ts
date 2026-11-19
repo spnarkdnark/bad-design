@@ -230,7 +230,8 @@ export const selectTool: Tool = {
       return;
     }
     // a nameless element has no name to click: double-click anywhere on it to name it
-    if (hit.kind === 'element' && hit.type === 'nodes' && !getDoc().nodes[hit.id].name.trim()) {
+    const doc = getDoc();
+    if (doc.settings.showLabels && hit.kind === 'element' && hit.type === 'nodes' && !doc.nodes[hit.id].name.trim()) {
       A.selectNodes([hit.id]);
       ui.setEditingLabel({ id: hit.id, part: 'name' });
       return;

@@ -84,7 +84,7 @@ src/canvas/   CanvasStage (stage + layers only), OverlayLayer (selection, handle
               overlayStore (marquee/stroke/snap hint), viewport.ts, hitTest,
               textLayout, LabelEditor, TextEditor, pointer, layers/GridLayer, theme.ts
               (overlay/grid colors read from the CSS tokens)
-src/ui/       TabBar, Toolbar, FileMenu, ScaleBar, ExportDialog, Toast, Splash (opening logo,
+src/ui/       TabBar, toolbar/ (Toolbar renders layout.ts: groups of controls from controls.tsx), FileMenu, ScaleBar, ExportDialog, Toast, Splash (opening logo,
               src/assets/logo.webp, on the drawing's paper + grid drawn where the canvas draws it,
               via canvas/layers/grid.ts, so the grid stays put while the app fades in), focus.ts,
               icons.tsx (icon set), options.ts (choice lists shared by several
@@ -165,6 +165,9 @@ sizePt, color, bold, italic, caps, align }` (paper points, like labels; per elem
 arrowEnd, fill, fillOpacity, sketch }` (per element; arrows only on open lines, fill only on
   closed; `sketch: false` keeps it crisp in a hand-drawn drawing). Drawn above bubbles and
   overlaps, below labels and text (`render/lineScene.ts`); the stroke stops inside arrowheads.
+- `settings.showLabels` (toolbar "Labels"; per drawing, saved, undoable, not a standard): off drops
+  every bubble label (name, size, cost) from the scene, so canvas, export and in-place label
+  editing all follow; text blocks and lines are unaffected.
 
 ## Elements (model/elements.ts)
 
@@ -387,6 +390,10 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
     decides which appear (selection vs. drawing). Moving a block = moving one line there.
   - Inputs come from `ui/controls/Controls.tsx`; a choice list used in two places goes in
     `ui/options.ts`; icons in `ui/icons.tsx`.
+  - Toolbar: every control is a self-contained component in `ui/toolbar/controls.tsx`
+    (`TOOLBAR_CONTROLS`, by id); `ui/toolbar/layout.ts` (`TOOLBAR_LAYOUT`) lists the groups and
+    their order ('spacer' pushes the rest right). Moving or regrouping a control = editing that
+    list; a new control = a component + an id there. Controls never depend on their neighbours.
   - Drawing tools as presented: `ui/toolList.ts` (order, label, shortcut key, icon) feeds the
     toolbar buttons, the keyboard shortcuts and the shortcuts help. A vertical palette or a new
     tool starts there.
@@ -399,12 +406,12 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 
 ## Testing notes
 
-- Unit tests (82): units, geometry, squares/rectangles, history, project file + v1 migration, CSV, styles,
+- Unit tests (84): units, geometry, squares/rectangles, history, project file + v1 migration, CSV, styles,
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
-  font outlines (no NaN), render regression.
-- e2e (40, one file per area): example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
-  connect, sizing, names (+ nameless), in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
+  font outlines (no NaN), labels on/off, render regression.
+- e2e (42, one file per area): example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
+  connect, sizing, names (+ nameless), Labels box, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags
   continue outside the canvas.
