@@ -72,7 +72,7 @@ test('B.A.D. Example opens the example drawing at 1/16" and 100%, centered; agai
   canvas,
 }) => {
   void canvas;
-  await page.getByRole('button', { name: 'B.A.D. Example' }).click();
+  await page.getByRole('button', { name: 'B.A.D. Example', exact: true }).click();
   const d = await doc(page);
   expect(d.meta.name).toBe('B.A.D. Example');
   expect(d.settings.scale).toBe('1/16');
@@ -88,6 +88,6 @@ test('B.A.D. Example opens the example drawing at 1/16" and 100%, centered; agai
   const mid = (Math.min(...bubbleXs, ...xs) + Math.max(...bubbleXs)) / 2;
   expect(Math.abs(mid * k + view.panX - box.width / 2)).toBeLessThan(box.width * 0.2);
 
-  await page.getByRole('button', { name: 'B.A.D. Example' }).click();
+  await page.getByRole('button', { name: 'B.A.D. Example', exact: true }).click();
   expect(await page.locator('.tab').count()).toBe(2);
 });
