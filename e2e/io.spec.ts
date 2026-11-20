@@ -74,7 +74,7 @@ test('B.A.D. Example opens the example drawing at 1/16" and 100%, centered; agai
   void canvas;
   await page.getByRole('button', { name: 'B.A.D. Example' }).click();
   const d = await doc(page);
-  expect(d.meta.name).toBe('B.A.D. sample');
+  expect(d.meta.name).toBe('B.A.D. Example');
   expect(d.settings.scale).toBe('1/16');
   expect(d.nodeOrder.length).toBeGreaterThan(0);
   expect(await page.locator('.tab').count()).toBe(1); // the empty tab was reused
