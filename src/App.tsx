@@ -5,8 +5,6 @@ import { StandardsPanel } from './ui/panels/StandardsPanel';
 import { SelectionBar } from './ui/selection/SelectionBar';
 import { ToolPalette } from './ui/ToolPalette';
 import { Wing } from './ui/Wing';
-import { ControlGroups } from './ui/chrome/ControlGroups';
-import { ScaleBar } from './ui/ScaleBar';
 import { Toast } from './ui/Toast';
 import { Splash } from './ui/Splash';
 import { ExportDialog } from './ui/ExportDialog';
@@ -35,10 +33,6 @@ export function App() {
         </Wing>
         <div className="canvas-wrap">
           <CanvasStage />
-          <div className="viewbar">
-            <ScaleBar />
-            <ControlGroups region="view" />
-          </div>
         </div>
         <Wing id="controls" side="right" title="Standards" shortcut="D">
           <StandardsPanel />

@@ -126,7 +126,7 @@ test('a bubble can have no name; double-click it to name it again', async ({ pag
 
 test('the Labels box hides bubble annotations for this tab only', async ({ page, canvas }) => {
   await canvas.bubble(400, 300);
-  const labels = page.locator('.viewbar label.checkbox:has-text("Labels") input');
+  const labels = page.locator('.tabbar label.checkbox:has-text("Labels") input');
   await expect(labels).toBeChecked();
   await labels.uncheck();
   expect((await doc(page)).settings.showLabels).toBe(false);

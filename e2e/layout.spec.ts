@@ -1,4 +1,4 @@
-import { expect, field, openSection, reloadApp, test } from './helpers';
+import { checkbox, doc, expect, field, openSection, reloadApp, select, test } from './helpers';
 
 test('A and D fold the tools and the standards; their tabs and arrows bring them back; remembered', async ({
   page,
@@ -32,6 +32,39 @@ test('A and D fold the tools and the standards; their tabs and arrows bring them
   await field(page, 'Name').type('Atrium Den');
   await expect(tools).toHaveCount(1);
   await expect(standards).toHaveCount(1);
+});
+
+test('folding or unfolding a wing leaves the drawing where it is on screen', async ({ page, canvas }) => {
+  await canvas.bubble(400, 300);
+  // where the bubble's center is on screen
+  const onScreen = async () => {
+    const box = (await page.locator('.canvas').boundingBox())!;
+    return page.evaluate(
+      ({ left, top }) => {
+        const bd = (window as any).__bd;
+        const p = bd.doc.getState().history.present;
+        const n = p.nodes[p.nodeOrder[0]];
+        const v = bd.ui.getState().view;
+        const k = 12 * v.zoom; // 1/8"
+        return { x: Math.round(left + n.x * k + v.panX), y: Math.round(top + n.y * k + v.panY) };
+      },
+      { left: box.x, top: box.y },
+    );
+  };
+  const start = await onScreen();
+  for (const key of ['a', 'd', 'a', 'd']) {
+    await page.keyboard.press(key);
+    await expect.poll(onScreen).toEqual(start);
+  }
+});
+
+test('the drawing scale and grid are set in the Drawing section', async ({ page, canvas }) => {
+  void canvas;
+  await select(page, 'Scale').selectOption('1/4');
+  expect((await doc(page)).settings.scale).toBe('1/4');
+  await page.getByLabel('Grid spacing').selectOption('5');
+  await checkbox(page, 'Show').uncheck();
+  expect((await doc(page)).settings.grid).toEqual({ visible: false, spacingFt: 5 });
 });
 
 test('standards sections fold to their title and stay that way', async ({ page, canvas }) => {

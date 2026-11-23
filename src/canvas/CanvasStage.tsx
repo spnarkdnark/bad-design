@@ -91,7 +91,18 @@ export function CanvasStage() {
   // track the container size; on first mount center the drawing at 100%
   useEffect(() => {
     const el = containerRef.current!;
-    const ro = new ResizeObserver(() => useUi.getState().setStageSize(el.clientWidth, el.clientHeight));
+    // When a wing opens or folds, the canvas's left/top edge moves: shift the pan by the same
+    // amount so the drawing stays put on screen.
+    let edge = el.getBoundingClientRect();
+    const ro = new ResizeObserver(() => {
+      const r = el.getBoundingClientRect();
+      const ui = useUi.getState();
+      const dx = r.left - edge.left;
+      const dy = r.top - edge.top;
+      edge = r;
+      if (dx || dy) ui.setView({ panX: ui.view.panX - dx, panY: ui.view.panY - dy });
+      ui.setStageSize(el.clientWidth, el.clientHeight);
+    });
     ro.observe(el);
     const ui = useUi.getState();
     ui.setStageSize(el.clientWidth, el.clientHeight);

@@ -163,10 +163,6 @@
 .control-groups select.input {
   width: auto;
 }
-.zoom-label {
-  min-width: 52px;
-  font-variant-numeric: tabular-nums;
-}
 
 /* the selection bar (ui/selection/): one row, never wraps; empty when nothing is selected */
 .selbar {
@@ -291,6 +287,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
+.inline-checks .input {
+  width: auto;
 }
 .bar-slider {
   display: flex;

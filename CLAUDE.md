@@ -90,7 +90,7 @@ src/ui/       TabBar (+ app-wide controls at its right end), chrome/ (app-wide c
               placed by layout.ts, drawn by ControlGroups), Wing (collapsible side panel),
               ToolPalette + toolIcons (left wing), selection/ (the selection bar: SelectionBar
               + BubbleBar/TextBar/LineBar/ConnectionBar/overlaps, Popover menus, SizeFields,
-              CostFields, ElementActions, Toggle), FileMenu, ScaleBar, ExportDialog, Toast, Splash (opening logo,
+              CostFields, ElementActions, Toggle), FileMenu, ExportDialog, Toast, Splash (opening logo,
               src/assets/logo.webp, on the drawing's paper + grid drawn where the canvas draws it,
               via canvas/layers/grid.ts, so the grid stays put while the app fades in), focus.ts,
               options.ts (choice lists shared by several controls), controls/ (Controls.tsx
@@ -106,7 +106,7 @@ src/io/       fileActions (New/Open/Save/Save As/Import CSV; openExample = the t
               download, export/ (svg.ts is the single exporter; png/pdf build on it)
 src/styles/   index.css imports, in cascade order: tokens (ALL colors, sizes, type,
               shadows, z-index), base (reset, shell, utilities), controls, chrome
-              (tabs + app-wide controls + selection bar), canvas (overlays on the drawing, view strip), sidebar (wings, tool palette, standards sections), overlays
+              (tabs + app-wide controls + selection bar), canvas (overlays on the drawing), sidebar (wings, tool palette, standards sections), overlays
               (menus, dialogs, toast)
 src/hooks/    useKeyboardShortcuts
 tests/        Vitest unit tests (render-regression.test.ts guards scene output)
@@ -170,7 +170,7 @@ sizePt, color, bold, italic, caps, align }` (paper points, like labels; per elem
 arrowEnd, fill, fillOpacity, sketch }` (per element; arrows only on open lines, fill only on
   closed; `sketch: false` keeps it crisp in a hand-drawn drawing). Drawn above bubbles and
   overlaps, below labels and text (`render/lineScene.ts`); the stroke stops inside arrowheads.
-- `settings.showLabels` (view strip "Labels"; per drawing, saved, undoable, not a standard): off drops
+- `settings.showLabels` (tab row "Labels"; per drawing, saved, undoable, not a standard): off drops
   every bubble label (name, size, cost) from the scene, so canvas, export and in-place label
   editing all follow; text blocks and lines are unaffected.
 
@@ -393,8 +393,9 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
     sizes (the canvas overlay picks them up through `canvas/theme.ts`).
   - New rules go in the file for their area; keep one definition per selector.
   - Layout regions (`App.tsx`): TabBar (tabs + app-wide controls) / SelectionBar / workspace =
-    left Wing (ToolPalette) + canvas-wrap (canvas + `.viewbar`: scale bar and view controls) +
-    right Wing (StandardsPanel). Sizes in tokens (`--tabbar-h`, `--selbar-h`, `--tools-w`,
+    left Wing (ToolPalette) + canvas-wrap (the canvas) + right Wing (StandardsPanel). The drawing
+    never moves when a wing opens or folds: `CanvasStage` shifts the pan by however far the
+    canvas's left/top edge moved. Zoom has no on-screen controls (wheel, F, Ctrl+0, Ctrl+±). Sizes in tokens (`--tabbar-h`, `--selbar-h`, `--tools-w`,
     `--sidebar-w`, `--wing-tab-w`, `--tool-tile-h`).
   - Wings (`ui/Wing.tsx`): fold toward the screen edge from an arrow on the inner edge; folded,
     a slim titled tab unfolds them; A / D toggle; open state in `store/panelStore` (localStorage,
@@ -409,9 +410,10 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
     `defaultOpen`); `StandardsPanel` lists them. Moving a block = moving one line there.
   - Inputs come from `ui/controls/Controls.tsx`; a choice list used in two places goes in
     `ui/options.ts`; icons in `ui/icons.tsx`.
-  - App-wide controls (undo, file, example, scale, grid, labels, zoom): each a self-contained
-    component in `ui/chrome/controls.tsx` (`APP_CONTROLS`, by id); `ui/chrome/layout.ts`
-    (`CONTROL_LAYOUT`) says which region (tab row, view strip) and group each sits in. Moving or
+  - App-wide controls (undo, labels, example, file): each a self-contained component in
+    `ui/chrome/controls.tsx` (`APP_CONTROLS`, by id); `ui/chrome/layout.ts` (`CONTROL_LAYOUT`)
+    says which region (the tab row today) and group each sits in. The drawing's scale and grid
+    are fields in the Drawing section (`ui/panels/DrawingPanel.tsx`). Moving or
     regrouping one = editing that list; a new one = a component + an id there.
   - Drawing tools as presented: `ui/toolList.ts` (order, label, shortcut key, icon from
     `ui/toolIcons.tsx`, bubble shape) feeds the palette tiles, the keyboard shortcuts and the
@@ -431,7 +433,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
   font outlines (no NaN), labels on/off, render regression.
-- e2e (45, one file per area): layout (wings + A/D, sections, selection bar), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
+- e2e (47, one file per area): layout (wings + A/D, drawing stays put, scale/grid fields, sections, selection bar), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
   connect, sizing, names (+ nameless), Labels box, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags

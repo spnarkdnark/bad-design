@@ -34,52 +34,6 @@
   text-align: center;
 }
 
-/* bottom left of the drawing: the scale bar and the view controls (ui/chrome/layout.ts "view") */
-.viewbar {
-  position: absolute;
-  left: 14px;
-  bottom: 12px;
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  pointer-events: none;
-}
-.control-groups.view {
-  pointer-events: auto;
-  padding: 4px 0;
-  background: var(--overlay);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-}
-.control-groups.view .group {
-  padding: 0 6px;
-}
-.scalebar {
-  background: var(--overlay);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 6px 8px 6px 4px;
-  pointer-events: none;
-  font-size: var(--text-xs);
-}
-.scalebar text {
-  fill: var(--text);
-  font-family: var(--font);
-}
-.scalebar-seg {
-  stroke: var(--scalebar-ink);
-}
-.scalebar-seg.dark {
-  fill: var(--scalebar-ink);
-}
-.scalebar-seg.light {
-  fill: var(--panel);
-}
-.scalebar-label {
-  color: var(--muted);
-  padding-left: 4px;
-}
-
 .label-editor {
   position: absolute;
   z-index: var(--z-canvas-editor);

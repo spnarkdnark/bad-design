@@ -4,9 +4,11 @@ import * as A from '../../store/actions';
 import { totalArea } from '../../model/selectors';
 import { isSizable } from '../../model/geometry';
 import { findOverlaps } from '../../model/overlaps';
-import { formatArea, formatFeetInches, formatMoney, parseLength } from '../../model/units';
+import { formatArea, formatFeetInches, formatMoney, parseLength, SCALES } from '../../model/units';
+import { GRID_SPACINGS_FT } from '../../model/defaults';
+import type { ScaleId } from '../../model/types';
 import { totalCost } from '../../model/costs';
-import { Field, NumberField, ReadOnly, Section, SelectField, TextField } from '../controls/Controls';
+import { Checkbox, Field, NumberField, ReadOnly, Section, SelectField, TextField } from '../controls/Controls';
 
 const SNAP_OPTIONS = [
   { value: String(1 / 12), label: '1"' },
@@ -18,11 +20,38 @@ const SNAP_OPTIONS = [
 export function DrawingPanel() {
   const doc = useDoc();
   const nodes = Object.values(doc.nodes);
+  const grid = doc.settings.grid;
   const snap = SNAP_OPTIONS.find((o) => Math.abs(parseFloat(o.value) - doc.settings.snap.radiusIncrementFt) < 1e-6);
   return (
     <Section id="drawing" title="Drawing">
       <Field label="Name">
         <TextField value={doc.meta.name} onChange={A.renameProject} />
+      </Field>
+      <Field label="Scale" hint="Drawing scale">
+        <SelectField<ScaleId>
+          value={doc.settings.scale}
+          options={SCALES.map((s) => ({ value: s.id, label: s.label }))}
+          onChange={A.setScale}
+        />
+      </Field>
+      <Field label="Grid">
+        <span className="inline-checks">
+          <Checkbox label="Show" checked={grid.visible} onChange={(visible) => A.setGrid({ visible })} />
+          <select
+            className="input"
+            value={grid.spacingFt}
+            disabled={!grid.visible}
+            title="Grid spacing"
+            aria-label="Grid spacing"
+            onChange={(e) => A.setGrid({ spacingFt: parseFloat(e.target.value) })}
+          >
+            {GRID_SPACINGS_FT.map((g) => (
+              <option key={g} value={g}>
+                {g}'
+              </option>
+            ))}
+          </select>
+        </span>
       </Field>
       <Field label="Size snap" hint="Resize step for a circle's radius or half a square's side (wheel and handle)">
         <SelectField
