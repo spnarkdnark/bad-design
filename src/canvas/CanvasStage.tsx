@@ -205,7 +205,7 @@ export function CanvasStage() {
             : 'Drag to draw a shape freehand, or click to place points. Edges near a bubble snap to it. Double-click in a gap between bubbles to fill it.'}
         </div>
       )}
-      {!hasElements(doc) && (
+      {!hasElements(doc) && tool !== 'bubble' && (
         <div className="canvas-hint">
           Press <kbd>B</kbd> and click to place a bubble, or import a CSV.
         </div>

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Id, LabelPart, LineStyle, Point, SizableKind, TextStyle } from '../model/types';
-import { DEFAULT_LINE_STYLE, DEFAULT_TEXT_STYLE } from '../model/defaults';
+import { DEFAULT_LINE_STYLE, DEFAULT_RADIUS_FT, DEFAULT_TEXT_STYLE, MIN_SIZE_FT } from '../model/defaults';
 import { noElements, type ElementIds } from '../model/elements';
 
 /** Which canvas tool is active (implementations live in canvas/tools/). */
@@ -33,6 +33,9 @@ interface UiState {
   /** what the bubble tool places */
   bubbleKind: SizableKind;
   setBubbleKind: (k: SizableKind) => void;
+  /** size (half-extent, feet) the bubble tool places; the wheel changes it before a click. Session only. */
+  placeSize: number;
+  setPlaceSize: (ft: number) => void;
   selection: Selection;
   connectFrom: Id | null;
   view: View;
@@ -88,6 +91,8 @@ export const useUi = create<UiState>((set) => ({
   tool: 'select',
   bubbleKind: 'circle',
   setBubbleKind: (bubbleKind) => set({ bubbleKind }),
+  placeSize: DEFAULT_RADIUS_FT,
+  setPlaceSize: (placeSize) => set({ placeSize: Math.max(MIN_SIZE_FT, placeSize) }),
   selection: emptySelection(),
   connectFrom: null,
   view: { zoom: 1, panX: 0, panY: 0 },

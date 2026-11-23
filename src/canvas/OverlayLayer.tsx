@@ -2,8 +2,18 @@
 import { Circle, Label, Layer, Line, Rect, Tag, Text } from 'react-konva';
 import type { BubbleNode, Point, Project } from '../model/types';
 import { blobGeometry } from '../model/blob';
-import { boundaryPoint, connectionSegment, nodeOutline, resizeHandle, shapeSize } from '../model/geometry';
-import { orderedNodes } from '../model/selectors';
+import {
+  boundaryPoint,
+  connectionSegment,
+  isSizable,
+  nodeOutline,
+  resizeHandle,
+  shapeSize,
+  sizableArea,
+} from '../model/geometry';
+import { formatArea } from '../model/units';
+import { placementNode } from './tools/bubble';
+import { dimensionText, orderedNodes } from '../model/selectors';
 import { textBounds, textWidthHandle } from '../model/text';
 import { linePoints } from '../model/linework';
 import type { Scene } from '../render/scene';
@@ -27,6 +37,10 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
   const shapeDraft = useUi((s) => s.shapeDraft);
   const { marquee, pointerWorld, stroke, snapHint, pointSnap } = useOverlay();
   const lineDraft = useUi((s) => s.lineDraft);
+  // the bubble tool's shape, following the cursor (re-rendered when its kind or size changes)
+  useUi((s) => s.bubbleKind);
+  useUi((s) => s.placeSize);
+  const placing = tool === 'bubble' && pointerWorld ? placementNode(pointerWorld) : null;
   // (the target comes from the live document; draw only what this render's doc has)
   const editTarget = lineEditTarget();
   const editLine = editTarget && doc.lines[editTarget] ? editTarget : null;
@@ -193,6 +207,8 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
         />
       )}
 
+      {placing && <PlacementPreview node={placing} doc={doc} k={k} />}
+
       {fromNode && pointerWorld && (
         <Line
           points={flat([boundaryPoint(fromNode, pointerWorld, doc), pointerWorld])}
@@ -294,5 +310,33 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
         </Label>
       )}
     </Layer>
+  );
+}
+
+/**
+ * The shape the bubble tool is about to place, at the cursor: the drawing's default fill,
+ * a dashed outline and its size. Any sizable kind (drawn from its outline when not a circle).
+ */
+function PlacementPreview({ node, doc, k }: { node: BubbleNode; doc: Project; k: number }) {
+  const theme = canvasTheme();
+  const fill = doc.settings.defaultStyle.fill;
+  const look = { fill, opacity: 0.55, stroke: theme.strokePreview, strokeWidth: 1.25 / k, dash: [6 / k, 4 / k] };
+  const outline = nodeOutline(node, doc);
+  const size = shapeSize(node.shape);
+  const text = [dimensionText(node.shape, true), isSizable(node.shape) ? formatArea(sizableArea(node.shape)) : null]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <>
+      {outline ? (
+        <Line points={flat(outline)} closed {...look} />
+      ) : (
+        <Circle x={node.x} y={node.y} radius={size} {...look} />
+      )}
+      <Label x={node.x} y={node.y + size + 8 / k} scaleX={1 / k} scaleY={1 / k}>
+        <Tag fill={theme.readoutBg} cornerRadius={3} pointerDirection="up" pointerWidth={0} pointerHeight={0} />
+        <Text text={text} fill={theme.readoutText} fontSize={11} padding={4} fontFamily="system-ui, sans-serif" />
+      </Label>
+    </>
   );
 }

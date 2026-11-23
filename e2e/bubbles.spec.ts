@@ -28,6 +28,40 @@ test('drag moves, resize handle snaps to 6", wheel steps 6"', async ({ page, can
   await expect.poll(async () => (await nodes(page))[0].shape.radiusFt).toBe(13.5);
 });
 
+test('the bubble tool shows its shape at the cursor; the wheel sizes it before placing', async ({ page, canvas }) => {
+  const placeSize = () => page.evaluate(() => (window as any).__bd.ui.getState().placeSize);
+  await page.keyboard.press('b');
+  await page.mouse.move(canvas.x + 400, canvas.y + 300);
+  expect(await placeSize()).toBe(10);
+  const zoom = (await ui(page)).view.zoom;
+  // two notches up: 6" steps (the size snap), not a zoom
+  await page.mouse.wheel(0, -100);
+  await page.mouse.wheel(0, -100);
+  await expect.poll(placeSize).toBe(11);
+  expect((await ui(page)).view.zoom).toBe(zoom);
+  // Shift: 1" steps
+  await page.keyboard.down('Shift');
+  await page.mouse.wheel(0, 100);
+  await page.keyboard.up('Shift');
+  await expect.poll(placeSize).toBeCloseTo(11 - 1 / 12, 6);
+  await page.mouse.wheel(0, -100); // back onto the 6" grid
+  await expect.poll(placeSize).toBe(11);
+  await canvas.click(400, 300);
+  expect((await nodes(page))[0].shape).toEqual({ kind: 'circle', radiusFt: 11 });
+  // the square tool places at the same size (half its side), until the wheel changes it
+  await page.keyboard.press('q');
+  await canvas.click(800, 300);
+  expect((await nodes(page))[1].shape).toEqual({ kind: 'rect', widthFt: 22, heightFt: 22 });
+  // Ctrl+wheel still zooms with the tool active
+  await page.keyboard.press('b');
+  await page.mouse.move(canvas.x + 600, canvas.y + 600);
+  await page.keyboard.down('Control');
+  await page.mouse.wheel(0, -100);
+  await page.keyboard.up('Control');
+  await expect.poll(async () => (await ui(page)).view.zoom).toBeGreaterThan(zoom);
+  expect(await placeSize()).toBe(11);
+});
+
 test('wheel over empty canvas zooms', async ({ page, canvas }) => {
   await page.mouse.move(canvas.x + 200, canvas.y + 200);
   await page.mouse.wheel(0, -300);

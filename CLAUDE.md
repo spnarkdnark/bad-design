@@ -260,7 +260,11 @@ italic = slant), as the browser does on screen.
 ## Interaction summary
 
 - Tools (left wing palette, `ui/toolList.ts`): V select, B bubble / Q square (one tool,
-  `uiStore.bubbleKind`, shown as two tiles; click to place), C connect (click A then B, or drag A→B;
+  `uiStore.bubbleKind`, shown as two tiles). The shape to place follows the cursor as a dashed
+  preview with its size (`tools/bubble.placementNode`, drawn by `OverlayLayer.PlacementPreview`
+  from the generic outline, so any new sizable kind gets it); the wheel steps its size
+  (`uiStore.placeSize`, half-extent, session only; size snap, Shift 1", Ctrl+wheel zooms) and a
+  click places it, C connect (click A then B, or drag A→B;
   Esc exits), S shape (drag freehand or click points; Enter/double-click/first point
   closes; double-click a gap between bubbles to fill the pocket), T text (click to place,
   drag to set the wrapping width, click a block to edit it; back to select afterwards), P pen
@@ -297,7 +301,7 @@ italic = slant), as the browser does on screen.
 - Ctrl+C/X/V use native clipboard events (JSON text, works across tabs); paste goes
   to the cursor. Ctrl+Shift+V pastes the copied element's look onto the selection.
   Pasting tab/comma-separated rows with a header imports bubbles.
-- Wheel: zoom at cursor. Wheel over a selected bubble resizes it by the radius snap
+- Wheel: zoom at cursor; with the bubble tool, sizes the shape about to be placed. Wheel over a selected bubble resizes it by the radius snap
   (default 6"; Shift = 1"); Ctrl/⌘+wheel (and trackpad pinch) always zooms.
 - Pan: Space+drag or middle mouse. Marquee: drag on empty canvas (Shift adds).
 - Resize handle (circle: right edge; rectangle: bottom-right corner, proportional) snaps the
@@ -367,7 +371,8 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   `cleanShape` in `model/migrate.ts`, `dimensionText` in `selectors.ts`, a row in
   `SHAPE_LABELS` in `model/defaults.ts` (typed `Record<SizableKind, …>`, so TypeScript asks
   for it), a palette row in `ui/toolList.ts` (+ an icon in `ui/toolIcons.tsx`) if it gets a tile, `newShape` / `convertShape`,
-  its fields in `ui/selection/SizeFields.tsx`, and CSV names in `io/csvImport.ts`.
+  its fields in `ui/selection/SizeFields.tsx` (the placement preview and wheel sizing follow
+  from `newShape` / `nodeOutline`), and CSV names in `io/csvImport.ts`.
   Sketch mode keeps corners via `primitives.subdivide`; smooth outlines use `resample`.
 - **New element kind** (e.g. linework): its type in `types.ts` (+ `Project[kind]`, an
   order array, `factory.createProject`, `migrate.ts` cleaning, like `cleanText`), a row in
@@ -436,7 +441,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
   font outlines (no NaN), labels on/off, render regression.
-- e2e (47, one file per area): layout (wings + A/D, drawing stays put, scale/grid fields, sections, selection bar), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
+- e2e (48, one file per area): layout (wings + A/D, drawing stays put, scale/grid fields, sections, selection bar), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, placement preview + wheel sizing, drag/resize/wheel, selection + undo,
   connect, sizing, names (+ nameless), Labels box, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags
