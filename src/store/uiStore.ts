@@ -36,6 +36,9 @@ interface UiState {
   /** size (half-extent, feet) the bubble tool places; the wheel changes it before a click. Session only. */
   placeSize: number;
   setPlaceSize: (ft: number) => void;
+  /** set by Tab: the selection bar's Area field takes focus when it shows, then clears it (ui/selection/SizeFields) */
+  areaFocus: boolean;
+  setAreaFocus: (v: boolean) => void;
   selection: Selection;
   connectFrom: Id | null;
   view: View;
@@ -91,6 +94,8 @@ export const useUi = create<UiState>((set) => ({
   tool: 'select',
   bubbleKind: 'circle',
   setBubbleKind: (bubbleKind) => set({ bubbleKind }),
+  areaFocus: false,
+  setAreaFocus: (areaFocus) => set({ areaFocus }),
   placeSize: DEFAULT_RADIUS_FT,
   setPlaceSize: (placeSize) => set({ placeSize: Math.max(MIN_SIZE_FT, placeSize) }),
   selection: emptySelection(),

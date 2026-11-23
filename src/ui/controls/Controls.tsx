@@ -57,11 +57,22 @@ export function NumberField(props: {
   min?: number;
   max?: number;
   width?: number;
+  /** while true, the field takes focus (selecting its text) and calls `onFocused` (keyboard shortcuts) */
+  focusNow?: boolean;
+  onFocused?: () => void;
+  label?: string;
 }) {
-  const { value, format, parse, onCommit, step, min = -Infinity, max = Infinity } = props;
+  const { value, format, parse, onCommit, step, min = -Infinity, max = Infinity, focusNow, onFocused } = props;
   const shown = value === null ? '' : format(value);
   const [text, setText] = useState(shown);
   const editing = useRef(false);
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!focusNow || !input.current) return;
+    input.current.focus();
+    input.current.select();
+    onFocused?.();
+  }, [focusNow, onFocused]);
   useEffect(() => {
     if (!editing.current) setText(shown);
   }, [shown]);
@@ -76,7 +87,9 @@ export function NumberField(props: {
 
   return (
     <input
+      ref={input}
       className="input"
+      aria-label={props.label}
       style={props.width ? { width: props.width } : undefined}
       value={text}
       placeholder={value === null ? MIXED : undefined}

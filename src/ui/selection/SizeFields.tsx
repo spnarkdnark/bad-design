@@ -5,6 +5,7 @@
  */
 import type { BubbleNode, Id, Project, SizableKind } from '../../model/types';
 import * as A from '../../store/actions';
+import { useUi } from '../../store/uiStore';
 import { totalArea } from '../../model/selectors';
 import { isSizable, shapeSize, sizableArea } from '../../model/geometry';
 import { MIN_SIZE_FT, SIZABLE_SHAPES } from '../../model/defaults';
@@ -17,9 +18,15 @@ function LengthField(props: { value: number | null; step: number; min: number; o
   return <NumberField {...props} format={formatFeetInches} parse={(s) => parseLength(s)} width={84} />;
 }
 
-/** Area: typed for circles and rectangles (the size follows); a freeform shape's follows its outline. */
+/**
+ * Area: typed for circles and rectangles (the size follows); a freeform shape's follows its
+ * outline. Tab with sizable bubbles selected focuses it (hooks/useKeyboardShortcuts).
+ */
+const clearAreaFocus = () => useUi.getState().setAreaFocus(false);
+
 export function AreaField({ doc, nodes }: { doc: Project; nodes: BubbleNode[] }) {
   const ids: Id[] = nodes.map((n) => n.id);
+  const areaFocus = useUi((s) => s.areaFocus);
   if (!nodes.every((n) => isSizable(n.shape)))
     return (
       <Field label={nodes.length > 1 ? 'Total area' : 'Area'}>
@@ -35,6 +42,9 @@ export function AreaField({ doc, nodes }: { doc: Project; nodes: BubbleNode[] })
         step={10}
         min={Math.ceil(Math.PI * MIN_SIZE_FT * MIN_SIZE_FT)}
         width={96}
+        label="Area"
+        focusNow={areaFocus}
+        onFocused={clearAreaFocus}
         onCommit={(v) => A.setArea(ids, v)}
       />
     </Field>

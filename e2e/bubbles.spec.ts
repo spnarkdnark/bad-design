@@ -124,6 +124,45 @@ test('size by radius, diameter or area', async ({ page, canvas }) => {
   await expect(field(page, 'Area')).toHaveValue('707 sf');
 });
 
+test('Tab types an area for the selected bubbles (circles and squares)', async ({ page, canvas }) => {
+  const area = (n: any) =>
+    n.shape.kind === 'circle' ? Math.PI * n.shape.radiusFt ** 2 : n.shape.widthFt * n.shape.heightFt;
+  await canvas.bubble(400, 300);
+  await page.keyboard.press('Tab');
+  await expect(field(page, 'Area')).toBeFocused();
+  await page.keyboard.type('1,200 sf');
+  await page.keyboard.press('Enter');
+  expect(area((await nodes(page))[0])).toBeCloseTo(1200, 6);
+  // the shortcuts work again once the area is in
+  await expect(field(page, 'Area')).not.toBeFocused();
+
+  await page.keyboard.press('q');
+  await canvas.click(900, 300);
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('400');
+  await page.keyboard.press('Enter');
+  expect((await nodes(page))[1].shape).toEqual({ kind: 'rect', widthFt: 20, heightFt: 20 });
+
+  // with text selected too, Tab switches the bar to the bubbles first
+  await page.keyboard.press('t');
+  await canvas.click(600, 600);
+  await page.keyboard.type('Note');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+a');
+  await page.locator('.kind-chip:has-text("Text")').click();
+  await page.keyboard.press('Tab');
+  await expect(field(page, 'Area')).toBeFocused();
+  await page.keyboard.type('900');
+  await page.keyboard.press('Enter');
+  for (const n of await nodes(page)) expect(area(n)).toBeCloseTo(900, 6);
+
+  // text alone: Tab does nothing
+  await page.keyboard.press('Escape');
+  await canvas.click(610, 607);
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.selbar .field-label:text-is("Area")')).toHaveCount(0);
+});
+
 test('names edit in place only on the selected bubble', async ({ page, canvas }) => {
   await canvas.bubble(400, 300);
   await canvas.click(1000, 700);

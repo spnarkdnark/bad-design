@@ -5,6 +5,7 @@ import { usePanels } from '../store/panelStore';
 import * as A from '../store/actions';
 import { NUDGE_BIG_FT, NUDGE_FT } from '../model/defaults';
 import { countElements } from '../model/elements';
+import { isSizable } from '../model/geometry';
 import { armPasteStyle } from '../io/clipboardActions';
 import { isTextEntry } from '../ui/focus';
 import { activateTool, toolForKey } from '../ui/toolList';
@@ -119,6 +120,16 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}) {
       }
 
       switch (e.key) {
+        case 'Tab': {
+          // type an area for the selected bubbles (any sizable shape)
+          const doc = useDocument.getState().history.present;
+          const sel = ui.selection.nodes.map((id) => doc.nodes[id]).filter(Boolean);
+          if (sel.length && sel.every((n) => isSizable(n.shape))) {
+            e.preventDefault();
+            ui.setAreaFocus(true);
+          }
+          return;
+        }
         case 'Enter':
           // type into the one selected text block
           if (ui.selection.texts.length === 1 && countElements(A.selectedElements()) === 1) {

@@ -3,7 +3,7 @@
  * empty when nothing is. One part per element kind; with several kinds selected, chips pick
  * which kind's settings show. Drawing-wide settings and standards live in the right wing.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useUi } from '../../store/uiStore';
 import { ELEMENT_KINDS, type ElementKind } from '../../model/elements';
 import { BubbleBar } from './BubbleBar';
@@ -18,6 +18,15 @@ const KIND_LABEL: Record<ElementKind, string> = { nodes: 'Bubbles', lines: 'Line
 export function SelectionBar() {
   const sel = useUi((s) => s.selection);
   const [pick, setPick] = useState<ElementKind | null>(null);
+  // Tab (type an area) is about the bubbles, whichever kind the chips show
+  const areaFocus = useUi((s) => s.areaFocus);
+  useEffect(() => {
+    if (areaFocus) setPick('nodes');
+  }, [areaFocus]);
+  // nothing will claim it (no bubbles shown): drop the request
+  useEffect(() => {
+    if (areaFocus && sel.nodes.length === 0) useUi.getState().setAreaFocus(false);
+  }, [areaFocus, sel.nodes.length]);
   const kinds = ELEMENT_KINDS.filter((k) => sel[k].length > 0);
   const kind = pick && kinds.includes(pick) ? pick : kinds[0];
 
