@@ -3,9 +3,21 @@
  * toward the screen edge; the tool palette; the standards' collapsible sections and the
  * panel-specific pieces (ui/panels/*).
  */
+.wing-slot {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 3; /* above the canvas, which runs underneath */
+  display: flex;
+}
+.wing-slot.left {
+  left: 0;
+}
+.wing-slot.right {
+  right: 0;
+}
 .wing {
   position: relative;
-  z-index: 3; /* its collapse arrow overhangs the drawing */
   display: flex;
   flex: none;
   background: var(--panel);

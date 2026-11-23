@@ -3,19 +3,21 @@ import type { Project, ScaleId } from '../../model/types';
 import { pxPerFt } from '../../model/units';
 import { getDoc } from '../documentStore';
 import { commit, ui } from './shared';
+import { visibleArea } from './view';
 
 /** Change scale while keeping the view center fixed on the same world point. */
 export function setScale(scale: ScaleId) {
   const doc = getDoc();
-  const { view, stageSize } = ui();
+  const { view } = ui();
+  const a = visibleArea();
   const kOld = pxPerFt(doc.settings.scale, view.zoom);
-  const cx = (stageSize.width / 2 - view.panX) / kOld;
-  const cy = (stageSize.height / 2 - view.panY) / kOld;
+  const cx = (a.cx - view.panX) / kOld;
+  const cy = (a.cy - view.panY) / kOld;
   commit((d) => {
     d.settings.scale = scale;
   });
   const kNew = pxPerFt(scale, view.zoom);
-  ui().setView({ panX: stageSize.width / 2 - cx * kNew, panY: stageSize.height / 2 - cy * kNew });
+  ui().setView({ panX: a.cx - cx * kNew, panY: a.cy - cy * kNew });
 }
 
 export function setGrid(patch: Partial<Project['settings']['grid']>) {

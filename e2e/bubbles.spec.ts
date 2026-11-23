@@ -19,8 +19,8 @@ test('drag moves, resize handle snaps to 6", wheel steps 6"', async ({ page, can
   const moved = (await nodes(page))[0];
   expect(moved.x - before.x).toBeCloseTo(5, 1); // 60 px / 12 px per ft
   // handle sits on the right edge of the selected bubble (center now at 460)
-  await canvas.drag([580, 300], [607, 300]);
-  expect((await nodes(page))[0].shape.radiusFt).toBe(12.5); // 147 px -> 12.25 ft -> snapped
+  await canvas.drag([580, 300], [609, 300]);
+  expect((await nodes(page))[0].shape.radiusFt).toBe(12.5); // 149 px -> 12.4 ft -> snapped
   await page.mouse.move(canvas.x + 460, canvas.y + 300);
   for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -100);
   await expect.poll(async () => (await nodes(page))[0].shape.radiusFt).toBe(14);
@@ -39,7 +39,7 @@ test('selection: marquee, shift-click, select all, duplicate, nudge, delete, und
   await canvas.bubble(550, 250);
   await canvas.bubble(850, 250);
   await canvas.click(1000, 700);
-  await canvas.drag([60, 80], [700, 450]);
+  await canvas.drag([180, 80], [700, 450]); // starts just right of the tools wing
   expect((await ui(page)).selection.nodes).toHaveLength(2);
   await canvas.click(250, 250);
   await page.keyboard.down('Shift');

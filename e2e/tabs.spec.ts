@@ -36,10 +36,12 @@ test('new drawings start at 1/16"; opening the site shows the drawing at 100%, c
   await reloadApp(page);
   const { view } = await ui(page);
   expect(view.zoom).toBe(1);
-  // the bubble is in the middle of the canvas
+  // the bubble is in the middle of the canvas between the wings (they float over its edges)
   const n = (await doc(page)).nodes[(await doc(page)).nodeOrder[0]];
   const box = (await page.locator('.canvas').boundingBox())!;
+  const left = (await page.locator('.wing-slot.left').boundingBox())!.width;
+  const right = (await page.locator('.wing-slot.right').boundingBox())!.width;
   const k = 96 * (1 / 16); // px per ft at 1/16" and 100%
-  expect(n.x * k + view.panX).toBeCloseTo(box.width / 2, 0);
+  expect(n.x * k + view.panX).toBeCloseTo((left + box.width - right) / 2, 0);
   expect(n.y * k + view.panY).toBeCloseTo(box.height / 2, 0);
 });

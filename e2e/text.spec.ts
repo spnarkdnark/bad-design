@@ -89,7 +89,7 @@ test('text moves, nudges, deletes and selects by marquee together with bubbles',
   expect((await texts(page))[0].x - moved.x).toBeCloseTo(1, 5);
 
   // marquee over the bubble and the text selects both; move them together
-  await canvas.drag([100, 150], [650, 450]);
+  await canvas.drag([180, 150], [650, 450]);
   const sel = (await ui(page)).selection;
   expect(sel.nodes).toHaveLength(1);
   expect(sel.texts).toHaveLength(1);

@@ -13,7 +13,8 @@ test('A and D fold the tools and the standards; their tabs and arrows bring them
   await expect(page.locator('.wing-tab.left')).toHaveText(/Tools/);
   await page.keyboard.press('d');
   await expect(standards).toHaveCount(0);
-  await expect.poll(width).toBeGreaterThan(w0 + 300);
+  // the wings float over the canvas: it never resizes
+  expect(await width()).toBe(w0);
   // the folded tab reopens it; the arrow on the inner edge folds it again
   await page.locator('.wing-tab.left').click();
   await expect(tools).toHaveCount(1);

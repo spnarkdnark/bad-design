@@ -37,6 +37,9 @@ interface UiState {
   connectFrom: Id | null;
   view: View;
   stageSize: { width: number; height: number };
+  /** screen px of the canvas covered by the wings at its left and right (they float over it) */
+  insets: { left: number; right: number };
+  setInset: (side: 'left' | 'right', px: number) => void;
   spaceDown: boolean;
   /** live dimension readout while resizing, anchored in world feet */
   readout: { text: string; at: Point } | null;
@@ -89,6 +92,8 @@ export const useUi = create<UiState>((set) => ({
   connectFrom: null,
   view: { zoom: 1, panX: 0, panY: 0 },
   stageSize: { width: 800, height: 600 },
+  insets: { left: 0, right: 0 },
+  setInset: (side, px) => set((s) => (s.insets[side] === px ? s : { insets: { ...s.insets, [side]: px } })),
   spaceDown: false,
   readout: null,
   exportOpen: false,

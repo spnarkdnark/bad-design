@@ -28,15 +28,17 @@ export function App() {
       <TabBar />
       <SelectionBar />
       <main className="workspace">
+        {/* the canvas fills the workspace; the wings float over its edges (before it, so they
+            have reported what they cover by the time it first centers the drawing) */}
         <Wing id="tools" side="left" title="Tools" shortcut="A">
           <ToolPalette />
+        </Wing>
+        <Wing id="controls" side="right" title="Standards" shortcut="D">
+          <StandardsPanel />
         </Wing>
         <div className="canvas-wrap">
           <CanvasStage />
         </div>
-        <Wing id="controls" side="right" title="Standards" shortcut="D">
-          <StandardsPanel />
-        </Wing>
       </main>
       <ExportDialog />
       <Toast />

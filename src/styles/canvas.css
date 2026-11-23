@@ -1,8 +1,8 @@
 /* The drawing area and what floats over it: hints, tool tips, scale bar, in-place label editor. */
+/* fills the workspace; the wings float over its edges, so folding them never resizes it */
 .canvas-wrap {
-  position: relative;
-  flex: 1;
-  min-width: 0;
+  position: absolute;
+  inset: 0;
 }
 .canvas {
   position: absolute;

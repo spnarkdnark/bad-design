@@ -27,7 +27,8 @@ react-konva canvas, Zustand + Immer state. No UI framework; plain CSS with token
 - The opening splash covers the app until any key, click, wheel or touch (not mouse
   moves); the click that dismisses it is swallowed, keys pass through. e2e: the `canvas`
   fixture dismisses it; after a reload use `helpers.reloadApp`, never bare `page.reload()`.
-- The e2e viewport is 1600×900 (the canvas sits between the two wings).
+- The e2e viewport is 1600×900. The canvas runs under both wings: the tools wing covers its
+  first 168 px and the standards wing its last 300, so tests click between x ≈ 180 and 1290.
 - New drawings start at 1/16" (`units.DEFAULT_SCALE`); opening the site shows the active tab
   at 100%, centered on its content (`CanvasStage` mount). The e2e `canvas` fixture pins its
   drawing to 1/8" (12 px per ft at 100%), which all the tests' pixel math assumes; the
@@ -393,11 +394,13 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
     sizes (the canvas overlay picks them up through `canvas/theme.ts`).
   - New rules go in the file for their area; keep one definition per selector.
   - Layout regions (`App.tsx`): TabBar (tabs + app-wide controls) / SelectionBar / workspace =
-    left Wing (ToolPalette) + canvas-wrap (the canvas) + right Wing (StandardsPanel). The drawing
-    never moves when a wing opens or folds: `CanvasStage` shifts the pan by however far the
-    canvas's left/top edge moved. Zoom has no on-screen controls (wheel, F, Ctrl+0, Ctrl+±). Sizes in tokens (`--tabbar-h`, `--selbar-h`, `--tools-w`,
+    canvas-wrap (the canvas, filling the whole workspace) with the left Wing (ToolPalette) and right
+    Wing (StandardsPanel) floating over its edges. The canvas never resizes or moves when a wing
+    opens or folds, so the drawing stays perfectly still. Each wing reports the width it covers
+    (`uiStore.insets`); centering, zoom to fit, new-tab views and the scale change's fixed point
+    use the visible part (`actions/view.visibleArea`), never the raw stage size. Zoom has no on-screen controls (wheel, F, Ctrl+0, Ctrl+±). Sizes in tokens (`--tabbar-h`, `--selbar-h`, `--tools-w`,
     `--sidebar-w`, `--wing-tab-w`, `--tool-tile-h`).
-  - Wings (`ui/Wing.tsx`): fold toward the screen edge from an arrow on the inner edge; folded,
+  - Wings (`ui/Wing.tsx`, in a `.wing-slot` absolutely placed over the canvas): fold toward the screen edge from an arrow on the inner edge; folded,
     a slim titled tab unfolds them; A / D toggle; open state in `store/panelStore` (localStorage,
     never in documents or undo).
   - Selection bar (`ui/selection/`): what's selected, one row that never wraps (it scrolls

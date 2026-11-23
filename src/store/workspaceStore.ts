@@ -58,8 +58,8 @@ function activate(t: TabState) {
 
 /** A centered starting view for a new tab. */
 function freshView(): View {
-  const { width, height } = useUi.getState().stageSize;
-  return { zoom: 1, panX: width / 2, panY: height / 2 };
+  const { stageSize, insets } = useUi.getState();
+  return { zoom: 1, panX: (insets.left + stageSize.width - insets.right) / 2, panY: stageSize.height / 2 };
 }
 
 /** "Untitled 2", "Untitled 3"... skipping names already open. */

@@ -139,7 +139,7 @@ test('sidebar styles lines; marquee, copy/paste and export include them', async 
 
   // marquee from empty canvas over both, then copy and paste
   await page.keyboard.press('v');
-  await canvas.drag([150, 150], [760, 420]);
+  await canvas.drag([180, 150], [760, 420]);
   expect((await ui(page)).selection.lines).toHaveLength(2);
   await page.keyboard.press('Control+c');
   await page.mouse.move(canvas.x + 500, canvas.y + 500);
