@@ -248,7 +248,12 @@ writes the same primitives, so screen and export always match. On screen, `drawP
 each prim list once into Path2D batches (consecutive strokes with an identical look merge;
 fills never do), cached in a WeakMap by list identity, so keep scene lists stable while
 their element is unchanged (the per-node cache does) or every frame recompiles. Hand-drawn
-styles emit hundreds of prims per bubble (pencil: ~600), which is why this matters. Sketch mode swaps exact
+styles emit hundreds of prims per bubble (pencil: ~600), which is why this matters. Panning doesn't redraw at all:
+`canvas/sceneCache.ts` keeps the rendered drawing as a bitmap a margin larger than the screen and
+slides it while only the pan changes (zoomed in, the pencil fill's thousands of translucent strokes
+cost tens of ms per frame to rasterize). It builds once the drawing is unchanged for two frames, so
+drags, typing and zooming still draw directly; anything that changes the scene's look must be in
+its key (`CanvasStage`: scene, zoom, the label/text being edited). Sketch mode swaps exact
 geometry for seeded hand-drawn ops (`render/sketch.ts`, amounts in paper points); use
 `primitives.openStrokePrims` for "exact if clean, sketched otherwise" lines. Per-node
 results are cached by a JSON key of everything visual (identity is not enough: blobs
@@ -459,7 +464,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   standards + category matching + firm defaults + category cycling, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
   font outlines (no NaN), labels on/off, render regression.
-- e2e (53, one file per area): layout (wings + A/D, drawing stays put, scale/grid fields, sections, selection bar, error notices), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, placement preview + wheel sizing, placement bar (Tab → area → category, right-click cycles category), drag/resize/wheel, selection + undo,
+- e2e (54, one file per area): layout (wings + A/D, drawing stays put, cached pan image matches a fresh draw, scale/grid fields, sections, selection bar, error notices), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, placement preview + wheel sizing, placement bar (Tab → area → category, right-click cycles category), drag/resize/wheel, selection + undo,
   connect, sizing, right-click recategorize, Tab to type an area, names (+ nameless), Labels box, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags

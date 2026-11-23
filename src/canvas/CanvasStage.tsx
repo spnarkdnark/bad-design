@@ -1,5 +1,5 @@
 /** The drawing surface: Konva stage, grid, the rendered scene, overlays and the in-place label editor. */
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Layer, Shape, Stage } from 'react-konva';
 import type { Paper } from '../model/types';
 import { pxPerFt } from '../model/units';
@@ -19,6 +19,7 @@ import { TextEditor } from './TextEditor';
 import { OverlayLayer } from './OverlayLayer';
 import { useCanvasInput } from './input/useCanvasInput';
 import { setLatestScene } from './query';
+import { createSceneCache } from './sceneCache';
 
 function paperStyle(paper: Paper): React.CSSProperties {
   const url = paperTileUrl(paper);
@@ -69,6 +70,7 @@ export function CanvasStage() {
   const textStyle = useUi((s) => s.textStyle);
   const fontEpoch = useUi((s) => s.fontEpoch);
   const input = useCanvasInput(containerRef);
+  const [sceneCache] = useState(createSceneCache);
 
   const k = pxPerFt(doc.settings.scale, view.zoom);
   // fontEpoch: rebuild once a web font loads so labels are re-measured
@@ -145,7 +147,11 @@ export function CanvasStage() {
         <Layer listening={false}>
           <Shape
             listening={false}
-            sceneFunc={(c) => drawScene(c._context as CanvasRenderingContext2D, scene, k, editingLabel, editingText)}
+            sceneFunc={(c) =>
+              sceneCache.draw(c._context as CanvasRenderingContext2D, [scene, k, editingLabel, editingText], (ctx) =>
+                drawScene(ctx, scene, k, editingLabel, editingText),
+              )
+            }
           />
         </Layer>
         <OverlayLayer doc={doc} scene={scene} k={k} />

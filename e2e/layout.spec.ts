@@ -116,3 +116,50 @@ test('a part that fails to draw shows a notice instead of blanking the app', asy
   await expect(page.locator('.tool-tile')).toHaveCount(7);
   await expect(page.locator('.tab')).toHaveCount(1);
 });
+
+test('panning slides a cached image of the drawing that matches drawing it afresh', async ({ page, canvas }) => {
+  void canvas;
+  await page.getByRole('button', { name: 'B.A.D. Example', exact: true }).click();
+  await page.evaluate(() => (window as any).__bd.ui.getState().setView({ zoom: 3 }));
+  // snapshots stay in the page (they are megabytes); only the share of differing values comes back
+  const snap = (name: string) =>
+    page.evaluate((name) => {
+      const w = window as any;
+      w.__snaps = w.__snaps ?? {};
+      w.__snaps[name] = [...document.querySelectorAll<HTMLCanvasElement>('.canvas canvas')].map(
+        (c) => c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data,
+      );
+    }, name);
+  const differing = (a: string, b: string) =>
+    page.evaluate(
+      ([a, b]) => {
+        const s = (window as any).__snaps;
+        let n = 0;
+        let total = 0;
+        s[a].forEach((layer: Uint8ClampedArray, j: number) => {
+          total += layer.length;
+          for (let i = 0; i < layer.length; i++) if (Math.abs(layer[i] - s[b][j][i]) > 8) n++;
+        });
+        return n / total;
+      },
+      [a, b],
+    );
+  await snap('before');
+  // pan (Space + drag): the cached image slides
+  await page.keyboard.down('Space');
+  await page.mouse.move(700, 400);
+  await page.mouse.down();
+  for (let i = 1; i <= 6; i++) await page.mouse.move(700 + i * 15, 400 + i * 5);
+  await page.mouse.up();
+  await page.keyboard.up('Space');
+  await page.waitForTimeout(100);
+  await snap('cached');
+  // a zoom away and back draws the same view directly
+  await page.evaluate(() => (window as any).__bd.ui.getState().setView({ zoom: 3.001 }));
+  await page.waitForTimeout(50);
+  await page.evaluate(() => (window as any).__bd.ui.getState().setView({ zoom: 3 }));
+  await page.waitForTimeout(100);
+  await snap('direct');
+  expect(await differing('before', 'cached')).toBeGreaterThan(0.01); // it moved
+  expect(await differing('cached', 'direct')).toBeLessThan(0.005); // and looks the same (anti-aliasing aside)
+});
