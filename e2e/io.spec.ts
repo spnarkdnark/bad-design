@@ -1,5 +1,5 @@
 import { statSync } from 'node:fs';
-import { doc, expect, fakeFileDialogs, importSampleCsv, noFileDialogs, nodes, test } from './helpers';
+import { doc, expect, fakeFileDialogs, graphicStyle, importSampleCsv, noFileDialogs, nodes, test } from './helpers';
 
 // `canvas: _app` requests the fixture that opens a fresh app; the tests themselves drive the menus
 test('CSV import, then export PDF, PNG and SVG with sketch style on (download fallback)', async ({
@@ -9,7 +9,7 @@ test('CSV import, then export PDF, PNG and SVG with sketch style on (download fa
   await noFileDialogs(page);
   await importSampleCsv(page);
   expect(await nodes(page)).toHaveLength(11);
-  await page.locator('.toolbar label:has-text("Style") select').selectOption('watercolor');
+  await (await graphicStyle(page)).selectOption('watercolor');
   for (const fmt of ['PDF', 'PNG', 'SVG']) {
     await page.getByRole('button', { name: 'Export', exact: true }).click();
     await page.locator(`.dialog .seg:has-text("${fmt}")`).click();

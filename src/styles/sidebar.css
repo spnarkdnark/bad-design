@@ -1,11 +1,141 @@
-/* The properties sidebar (ui/panels/*): sections and the panel-specific pieces. */
-.sidebar {
-  width: var(--sidebar-w);
+/*
+ * The side wings (ui/Wing.tsx): tools on the left, standards on the right, each folding
+ * toward the screen edge; the tool palette; the standards' collapsible sections and the
+ * panel-specific pieces (ui/panels/*).
+ */
+.wing {
+  position: relative;
+  z-index: 3; /* its collapse arrow overhangs the drawing */
+  display: flex;
   flex: none;
   background: var(--panel);
+}
+.wing.left {
+  width: var(--tools-w);
+  border-right: 1px solid var(--line);
+}
+.wing.right {
+  width: var(--sidebar-w);
   border-left: 1px solid var(--line);
+}
+.wing-body {
+  flex: 1;
+  min-width: 0;
   overflow-y: auto;
-  padding: 4px 0 24px;
+}
+.wing-collapse {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 48px;
+  transform: translateY(-50%);
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.wing.left .wing-collapse {
+  right: -16px;
+  border-left: none;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.wing.right .wing-collapse {
+  left: -16px;
+  border-right: none;
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+.wing-collapse:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+/* a folded wing: a slim tab with its title */
+.wing-tab {
+  flex: none;
+  width: var(--wing-tab-w);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border: none;
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+}
+.wing-tab.left {
+  border-right: 1px solid var(--line);
+}
+.wing-tab.right {
+  border-left: 1px solid var(--line);
+}
+.wing-tab:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.wing-tab-arrow {
+  font-size: 16px;
+  line-height: 1;
+}
+.wing-tab-label {
+  writing-mode: vertical-rl;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.wing-tab.left .wing-tab-label {
+  transform: rotate(180deg);
+}
+
+/* tool palette */
+.tool-palette {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 10px;
+}
+.tool-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: var(--tool-tile-h);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.tool-tile:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.tool-tile.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+.tool-tile-label {
+  font-size: var(--text-sm);
+}
+.tool-tile-key {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 0 3px;
+  border-bottom-width: 1px;
+  font-size: 9px;
+  opacity: 0.7;
+}
+
+/* standards wing */
+.standards {
+  padding: 0 0 24px;
 }
 .section {
   padding: 12px var(--panel-pad-x);
@@ -14,11 +144,39 @@
   flex-direction: column;
   gap: 8px;
 }
+.section.closed {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
 .section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 22px;
+  min-height: 24px;
+}
+.section-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+}
+.section-toggle:hover h3,
+.section-toggle:hover .section-chev {
+  color: var(--text);
+}
+.section-chev {
+  font-size: 10px;
+  transition: transform 0.15s;
+}
+.section.open .section-chev {
+  transform: rotate(90deg);
 }
 .section h3 {
   margin: 0;

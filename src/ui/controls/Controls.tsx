@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { isHexColor } from '../../model/color';
 import { MIXED } from './mixed';
+import { usePanels } from '../../store/panelStore';
 
 export interface OverrideMark {
   /** true = overridden on all, null = on some */
@@ -128,9 +129,30 @@ export function TextField({
   );
 }
 
-export function ColorField({ value, onChange }: { value: string | null; onChange: (v: string) => void }) {
+/** Swatch plus hex input; `swatchOnly` for tight rows (the selection bar). */
+export function ColorField({
+  value,
+  onChange,
+  swatchOnly,
+  label,
+}: {
+  value: string | null;
+  onChange: (v: string) => void;
+  swatchOnly?: boolean;
+  label?: string;
+}) {
   const [hex, setHex] = useState(value ?? '');
   useEffect(() => setHex(value ?? ''), [value]);
+  if (swatchOnly)
+    return (
+      <input
+        type="color"
+        className={`swatch ${value === null ? 'mixed' : ''}`}
+        aria-label={label}
+        value={value ?? '#cccccc'}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    );
   return (
     <span className="color-field">
       <input type="color" className="swatch" value={value ?? '#cccccc'} onChange={(e) => onChange(e.target.value)} />
@@ -220,14 +242,41 @@ export function Slider({
   );
 }
 
-export function Section({ title, children, actions }: { title: string; children: ReactNode; actions?: ReactNode }) {
+/**
+ * A titled block of the standards wing. Click the title to collapse it to just its title bar;
+ * open/closed is remembered per `id` (store/panelStore).
+ */
+export function Section({
+  id,
+  title,
+  children,
+  actions,
+  defaultOpen = true,
+}: {
+  id: string;
+  title: string;
+  children: ReactNode;
+  actions?: ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const open = usePanels((s) => s.sections[id] ?? defaultOpen);
   return (
-    <section className="section">
+    <section className={`section ${open ? 'open' : 'closed'}`} data-section={id}>
       <header className="section-head">
-        <h3>{title}</h3>
-        {actions}
+        <button
+          type="button"
+          className="section-toggle"
+          aria-expanded={open}
+          onClick={() => usePanels.getState().setSection(id, !open)}
+        >
+          <span className="section-chev" aria-hidden>
+            ▸
+          </span>
+          <h3>{title}</h3>
+        </button>
+        {open && actions}
       </header>
-      {children}
+      {open && children}
     </section>
   );
 }

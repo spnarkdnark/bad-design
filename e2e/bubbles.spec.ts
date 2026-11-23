@@ -1,4 +1,4 @@
-import { doc, expect, field, nodes, select, test, ui } from './helpers';
+import { doc, expect, field, nodes, openMenu, select, test, ui } from './helpers';
 
 test('a 10 ft bubble is 120 px across its radius at 1/8" and 100%', async ({ page, canvas }) => {
   await canvas.bubble(400, 300);
@@ -82,6 +82,7 @@ test('size by radius, diameter or area', async ({ page, canvas }) => {
   await canvas.bubble(400, 300);
   await field(page, 'Area').fill('1,200 sf');
   await field(page, 'Area').press('Enter');
+  await openMenu(page, 'Size');
   await expect(field(page, 'Radius')).toHaveValue(`19'-7"`);
   expect((await nodes(page))[0].shape.radiusFt).toBeCloseTo(Math.sqrt(1200 / Math.PI), 6);
   await field(page, 'Diameter').fill(`30'`);
@@ -125,7 +126,7 @@ test('a bubble can have no name; double-click it to name it again', async ({ pag
 
 test('the Labels box hides bubble annotations for this tab only', async ({ page, canvas }) => {
   await canvas.bubble(400, 300);
-  const labels = page.locator('.toolbar label.checkbox:has-text("Labels") input');
+  const labels = page.locator('.viewbar label.checkbox:has-text("Labels") input');
   await expect(labels).toBeChecked();
   await labels.uncheck();
   expect((await doc(page)).settings.showLabels).toBe(false);
@@ -174,7 +175,7 @@ test('drag from one bubble to another connects them', async ({ page, canvas }) =
 });
 
 test('squares: place, corner hit, corner resize, width/height, convert keeping area', async ({ page, canvas }) => {
-  await page.getByLabel('Bubble shape').selectOption('rect');
+  await page.keyboard.press('q'); // the Square tool
   await canvas.click(400, 300);
   let [n] = await nodes(page);
   expect(n.shape).toEqual({ kind: 'rect', widthFt: 20, heightFt: 20 });
@@ -187,6 +188,7 @@ test('squares: place, corner hit, corner resize, width/height, convert keeping a
   [n] = await nodes(page);
   expect(n.shape).toEqual({ kind: 'rect', widthFt: 30, heightFt: 30 });
   // width and height can differ
+  await openMenu(page, 'Size');
   await field(page, 'Height').fill('12');
   await field(page, 'Height').press('Enter');
   [n] = await nodes(page);
@@ -195,8 +197,10 @@ test('squares: place, corner hit, corner resize, width/height, convert keeping a
   await select(page, 'Shape').selectOption('circle');
   [n] = await nodes(page);
   expect(Math.PI * n.shape.radiusFt ** 2).toBeCloseTo(360, 6);
-  // B, then B again, switches what the bubble tool places
+  // Bubble (B) and Square (Q) are separate tiles in the tool palette
   await page.keyboard.press('b');
-  await page.keyboard.press('b');
-  await expect(page.getByLabel('Bubble shape')).toHaveValue('circle');
+  await expect(page.locator('.tool-tile.active')).toHaveText(/Bubble/);
+  await page.locator('.tool-tile:has-text("Square")').click();
+  expect((await ui(page)).bubbleKind).toBe('rect');
+  await expect(page.locator('.tool-tile.active')).toHaveText(/Square/);
 });

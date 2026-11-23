@@ -10,6 +10,7 @@ export async function ui(page: Page) {
     return {
       selection: s.selection,
       tool: s.tool,
+      bubbleKind: s.bubbleKind,
       view: s.view,
       editingLabel: s.editingLabel,
       editingText: s.editingText,
@@ -91,19 +92,43 @@ export const test = base.extend<{ canvas: Canvas }>({
   },
 });
 
-/** Sidebar input whose field label is exactly `label`. */
+/*
+ * Settings inputs by their field label: the selection bar (and its open menus) comes first in
+ * the page, then the standards wing. Menus and collapsed sections only exist while open: use
+ * `openMenu` / `openSection` first.
+ */
+
+/** Input whose field label is exactly `label`. */
 export function field(page: Page, label: string) {
-  return page.locator(`.sidebar .field:has(.field-label:text-is("${label}")) input`).first();
+  return page.locator(`.field:has(> .field-label:text-is("${label}")) input`).first();
 }
 
-/** Sidebar checkbox by its own text (checkbox names also include their row's label). */
+/** Checkbox by its own text (checkbox names also include their row's label). */
 export function checkbox(page: Page, text: string) {
-  return page.locator(`.sidebar label.checkbox:has-text("${text}") input`).first();
+  return page.locator(`.field label.checkbox:has-text("${text}") input`).first();
 }
 
-/** Sidebar dropdown whose field label is exactly `label`. */
+/** Dropdown whose field label is exactly `label`. */
 export function select(page: Page, label: string) {
-  return page.locator(`.sidebar .field:has(.field-label:text-is("${label}")) select`).first();
+  return page.locator(`.field:has(> .field-label:text-is("${label}")) select`).first();
+}
+
+/** Open one of the selection bar's menus (Size, Label, More, Overlaps…) by its button text. */
+export async function openMenu(page: Page, label: string) {
+  const btn = page.locator(`.selbar .bar-pop-btn:has-text("${label}")`);
+  if ((await btn.getAttribute('aria-expanded')) !== 'true') await btn.click();
+}
+
+/** The graphic style picker (Graphic standards → Style), opening its section first. */
+export async function graphicStyle(page: Page) {
+  await openSection(page, 'Graphic standards');
+  return page.locator('.standards .field:has(> .field-label:text-is("Style")) select');
+}
+
+/** Expand a section of the standards wing by its title (no-op when already open). */
+export async function openSection(page: Page, title: string) {
+  const t = page.locator(`.section-toggle:has(h3:text-is("${title}"))`);
+  if ((await t.getAttribute('aria-expanded')) !== 'true') await t.click();
 }
 
 export async function importSampleCsv(page: Page) {

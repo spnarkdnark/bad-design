@@ -48,6 +48,7 @@ export function CategoryPanel() {
 
   return (
     <Section
+      id="categories"
       title="Category standards"
       actions={
         <>
@@ -114,7 +115,7 @@ export function CategoryPanel() {
               {open === id && (
                 <div className="category-style">
                   <FirmRateField categoryId={id} value={c.costPerSf ?? 0} />
-                  <StyleFields src={sourceFor(id, c.style)} compact />
+                  <StyleFields src={sourceFor(id, c.style)} />
                 </div>
               )}
             </li>
@@ -149,7 +150,7 @@ export function CategoryPanel() {
           {open === '__default' && (
             <div className="category-style">
               <FirmRateField categoryId={null} value={doc.settings.defaultCostPerSf} />
-              <StyleFields src={sourceFor(null, doc.settings.defaultStyle)} compact />
+              <StyleFields src={sourceFor(null, doc.settings.defaultStyle)} />
             </div>
           )}
         </li>

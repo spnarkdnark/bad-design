@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ControlGroups } from './chrome/ControlGroups';
 import { useDoc } from '../store/documentStore';
 import { useUi } from '../store/uiStore';
 import {
@@ -106,6 +107,7 @@ export function TabBar() {
           +
         </button>
       </div>
+      <ControlGroups region="tabbar" />
     </nav>
   );
 }

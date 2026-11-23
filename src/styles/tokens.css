@@ -68,8 +68,11 @@
 
   /* layout */
   --tabbar-h: 40px;
-  --toolbar-h: 50px;
-  --sidebar-w: 288px;
+  --selbar-h: 46px; /* selection bar under the tabs */
+  --tools-w: 168px; /* left wing: tool palette */
+  --sidebar-w: 300px; /* right wing: standards */
+  --wing-tab-w: 26px; /* a collapsed wing */
+  --tool-tile-h: 72px;
   --panel-pad-x: 16px;
   --field-label-w: 84px;
 

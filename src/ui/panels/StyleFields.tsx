@@ -1,15 +1,6 @@
 import type { LabelCost, LabelSecondary, StrokeStyle, StyleKey, StyleProps } from '../../model/types';
 import { formatPt, parsePt } from '../../model/units';
-import {
-  Checkbox,
-  ColorField,
-  Field,
-  NumberField,
-  Section,
-  SelectField,
-  Slider,
-  type OverrideMark,
-} from '../controls/Controls';
+import { Checkbox, ColorField, Field, NumberField, SelectField, Slider, type OverrideMark } from '../controls/Controls';
 
 export interface StyleSource {
   /** shared value across the edited items, or null when mixed */
@@ -21,12 +12,12 @@ export interface StyleSource {
   override?: (k: StyleKey) => OverrideMark;
 }
 
-/** Every visual property of a bubble. Used for elements, categories and the default style. */
-export function StyleFields({ src, compact }: { src: StyleSource; compact?: boolean }) {
+/** Every visual property of a bubble, in titled groups: a category's or the default style (standards wing). */
+export function StyleFields({ src }: { src: StyleSource }) {
   const o = src.override;
   const stroke = src.get('stroke');
   const auto = stroke === null ? (src.strokeColor === null ? null : true) : false;
-  const Wrap = compact ? CompactGroup : Section;
+  const Wrap = CompactGroup;
 
   return (
     <>

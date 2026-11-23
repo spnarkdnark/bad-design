@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Id, LabelPart, LineStyle, Point, SizableKind, TextStyle } from '../model/types';
-import { DEFAULT_LINE_STYLE, DEFAULT_TEXT_STYLE, SIZABLE_SHAPES } from '../model/defaults';
+import { DEFAULT_LINE_STYLE, DEFAULT_TEXT_STYLE } from '../model/defaults';
 import { noElements, type ElementIds } from '../model/elements';
 
 /** Which canvas tool is active (implementations live in canvas/tools/). */
@@ -74,12 +74,6 @@ interface UiState {
   setReadout: (r: UiState['readout']) => void;
   setExportOpen: (v: boolean) => void;
   showToast: (message: string, action?: { label: string; run: () => void }) => void;
-}
-
-/** The bubble shape after `k` in the picker (B pressed again with the bubble tool active). */
-export function nextBubbleKind(k: SizableKind): SizableKind {
-  const i = SIZABLE_SHAPES.findIndex((s) => s.kind === k);
-  return SIZABLE_SHAPES[(i + 1) % SIZABLE_SHAPES.length].kind;
 }
 
 export const emptySelection = (): Selection => ({ ...noElements(), connections: [], overlaps: [] });

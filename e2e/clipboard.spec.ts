@@ -1,4 +1,4 @@
-import { doc, expect, nodes, select, test } from './helpers';
+import { doc, expect, nodes, openMenu, select, test } from './helpers';
 
 test('copy/paste at the cursor, paste style, and pasting table rows', async ({ page, canvas }) => {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -16,7 +16,8 @@ test('copy/paste at the cursor, paste style, and pasting table rows', async ({ p
   expect(Object.keys((await doc(page)).connections)).toHaveLength(2);
 
   await canvas.click(300, 300);
-  await page.locator('.sidebar .field:has-text("Opacity") input[type=range]').first().fill('0.3');
+  await openMenu(page, 'More');
+  await page.locator('.bar-pop .field:has-text("Opacity") input[type=range]').fill('0.3');
   await page.keyboard.press('Control+c');
   await canvas.click(600, 300);
   await page.keyboard.press('Control+Shift+v');

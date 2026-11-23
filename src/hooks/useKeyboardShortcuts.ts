@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 import { useDocument } from '../store/documentStore';
-import { nextBubbleKind, useUi } from '../store/uiStore';
+import { useUi } from '../store/uiStore';
+import { usePanels } from '../store/panelStore';
 import * as A from '../store/actions';
 import { NUDGE_BIG_FT, NUDGE_FT } from '../model/defaults';
 import { countElements } from '../model/elements';
 import { armPasteStyle } from '../io/clipboardActions';
 import { isTextEntry } from '../ui/focus';
-import { toolForKey } from '../ui/toolList';
+import { activateTool, toolForKey } from '../ui/toolList';
 
 export interface ShortcutHandlers {
   save?: () => void;
@@ -155,17 +156,18 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}) {
         }
       }
       switch (key) {
-        case 'b':
-          // B again switches what the bubble tool places
-          if (ui.tool === 'bubble') ui.setBubbleKind(nextBubbleKind(ui.bubbleKind));
-          else ui.setTool('bubble');
+        case 'a':
+          usePanels.getState().toggleWing('tools');
+          return;
+        case 'd':
+          usePanels.getState().toggleWing('controls');
           return;
         case 'f':
           A.zoomToFit();
           return;
       }
       const tool = toolForKey(key);
-      if (tool) ui.setTool(tool);
+      if (tool) activateTool(tool);
     };
     const onUp = (e: KeyboardEvent) => {
       if (e.key === ' ') useUi.getState().setSpaceDown(false);

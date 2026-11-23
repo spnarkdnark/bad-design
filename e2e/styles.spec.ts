@@ -1,4 +1,4 @@
-import { doc, expect, field, nodes, select, test, reloadApp } from './helpers';
+import { doc, expect, field, graphicStyle, nodes, openMenu, openSection, select, test, reloadApp } from './helpers';
 
 test('category style flows to bubbles; overrides show a reset dot', async ({ page, canvas }) => {
   await canvas.bubble(400, 300);
@@ -14,9 +14,10 @@ test('category style flows to bubbles; overrides show a reset dot', async ({ pag
   expect(cat.style.strokeWeightPt).toBe(3);
   await canvas.click(400, 300);
   await expect(field(page, 'Weight')).toHaveValue('3 pt');
-  await page.locator('.sidebar .field:has-text("Opacity") input[type=range]').first().fill('0.4');
-  await expect(page.locator('.override-dot')).toHaveCount(1);
-  await page.locator('.override-dot').click();
+  await openMenu(page, 'More');
+  await page.locator('.bar-pop .field:has-text("Opacity") input[type=range]').fill('0.4');
+  await expect(page.locator('.selbar .override-dot')).toHaveCount(1);
+  await page.locator('.selbar .override-dot').click();
   expect((await nodes(page))[0].style).toEqual({});
 });
 
@@ -61,7 +62,7 @@ test('category styles are shared standards across tabs, and undo elsewhere canno
 test('the graphic style is a shared standard across tabs', async ({ page, canvas }) => {
   await canvas.bubble(400, 300); // something in tab 1's undo history
   const graphic = async () => (await doc(page)).settings.graphic;
-  const preset = page.locator('label[title="Graphic style"] select');
+  const preset = await graphicStyle(page);
   await preset.selectOption('pencil');
   await page.locator('.tab-new').click();
   expect((await graphic()).preset).toBe('pencil');
@@ -78,7 +79,7 @@ test('the graphic style is a shared standard across tabs', async ({ page, canvas
 
 test('the B.A.D. Standard style sets the sketch look and merged overlaps', async ({ page, canvas }) => {
   void canvas; // dismisses the splash
-  await page.locator('label[title="Graphic style"] select').selectOption('bad-standard');
+  await (await graphicStyle(page)).selectOption('bad-standard');
   const d = await doc(page);
   expect(d.settings.graphic).toMatchObject({ preset: 'bad-standard', passes: 2, fillStyle: 'pencil', paper: 'none' });
   expect(d.settings.overlap).toEqual({ mode: 'merge', weightPt: 7, color: 'largest', innerArcs: 'hidden' });
@@ -88,12 +89,13 @@ test('overlap defaults are shared across tabs; Reset restores the firm defaults'
   await canvas.bubble(400, 300);
   await canvas.click(1000, 700);
   const settings = async () => (await doc(page)).settings;
+  await openSection(page, 'Overlap standards');
   const treatment = select(page, 'Treatment');
   await treatment.selectOption('lens');
   await page.locator('.tab-new').click();
   expect((await settings()).overlap.mode).toBe('lens');
   // change some standards, then reset them from the category panel
-  await page.locator('label[title="Graphic style"] select').selectOption('pencil');
+  await (await graphicStyle(page)).selectOption('pencil');
   page.once('dialog', (d) => d.accept());
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
   expect((await settings()).overlap.mode).toBe('merge');

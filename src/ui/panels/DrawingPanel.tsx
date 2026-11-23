@@ -1,4 +1,4 @@
-/** Drawing-wide settings and totals (shown when nothing is selected). */
+/** Drawing-wide settings and totals (top of the standards wing). */
 import { useDoc } from '../../store/documentStore';
 import * as A from '../../store/actions';
 import { totalArea } from '../../model/selectors';
@@ -20,7 +20,7 @@ export function DrawingPanel() {
   const nodes = Object.values(doc.nodes);
   const snap = SNAP_OPTIONS.find((o) => Math.abs(parseFloat(o.value) - doc.settings.snap.radiusIncrementFt) < 1e-6);
   return (
-    <Section title="Drawing">
+    <Section id="drawing" title="Drawing">
       <Field label="Name">
         <TextField value={doc.meta.name} onChange={A.renameProject} />
       </Field>

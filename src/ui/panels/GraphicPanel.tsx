@@ -10,7 +10,9 @@ export function GraphicPanel() {
   const g = useDoc().settings.graphic;
   return (
     <Section
+      id="graphic"
       title="Graphic standards"
+      defaultOpen={false}
       actions={
         <button className="btn ghost small" title="Same settings, different random strokes" onClick={A.redrawHand}>
           New hand
@@ -18,7 +20,7 @@ export function GraphicPanel() {
       }
     >
       <p className="tip flush">Shared by every tab, like the category standards.</p>
-      <Field label="Preset">
+      <Field label="Style" hint="Graphic style">
         <SelectField value={g.preset} options={PRESET_OPTIONS} onChange={(v) => v !== 'custom' && A.applyPreset(v)} />
       </Field>
       <Field label="Line wobble" hint="Circles drawn slightly out of round, like a hand would">

@@ -1,8 +1,11 @@
 import { useEffect } from 'react';
 import { CanvasStage } from './canvas/CanvasStage';
-import { Toolbar } from './ui/toolbar/Toolbar';
 import { TabBar } from './ui/TabBar';
-import { PropertiesPanel } from './ui/panels/PropertiesPanel';
+import { StandardsPanel } from './ui/panels/StandardsPanel';
+import { SelectionBar } from './ui/selection/SelectionBar';
+import { ToolPalette } from './ui/ToolPalette';
+import { Wing } from './ui/Wing';
+import { ControlGroups } from './ui/chrome/ControlGroups';
 import { ScaleBar } from './ui/ScaleBar';
 import { Toast } from './ui/Toast';
 import { Splash } from './ui/Splash';
@@ -25,13 +28,21 @@ export function App() {
   return (
     <div className="app">
       <TabBar />
-      <Toolbar />
+      <SelectionBar />
       <main className="workspace">
+        <Wing id="tools" side="left" title="Tools" shortcut="A">
+          <ToolPalette />
+        </Wing>
         <div className="canvas-wrap">
           <CanvasStage />
-          <ScaleBar />
+          <div className="viewbar">
+            <ScaleBar />
+            <ControlGroups region="view" />
+          </div>
         </div>
-        <PropertiesPanel />
+        <Wing id="controls" side="right" title="Standards" shortcut="D">
+          <StandardsPanel />
+        </Wing>
       </main>
       <ExportDialog />
       <Toast />

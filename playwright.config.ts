@@ -6,11 +6,11 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:5199',
-    viewport: { width: 1400, height: 900 },
+    viewport: { width: 1600, height: 900 },
     trace: 'off',
     acceptDownloads: true,
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1400, height: 900 } } }],
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1600, height: 900 } } }],
   webServer: {
     command: 'npm run dev -- --port 5199 --strictPort',
     url: 'http://localhost:5199',

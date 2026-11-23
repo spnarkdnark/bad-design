@@ -27,6 +27,7 @@ react-konva canvas, Zustand + Immer state. No UI framework; plain CSS with token
 - The opening splash covers the app until any key, click, wheel or touch (not mouse
   moves); the click that dismisses it is swallowed, keys pass through. e2e: the `canvas`
   fixture dismisses it; after a reload use `helpers.reloadApp`, never bare `page.reload()`.
+- The e2e viewport is 1600×900 (the canvas sits between the two wings).
 - New drawings start at 1/16" (`units.DEFAULT_SCALE`); opening the site shows the active tab
   at 100%, centered on its content (`CanvasStage` mount). The e2e `canvas` fixture pins its
   drawing to 1/8" (12 px per ft at 100%), which all the tests' pixel math assumes; the
@@ -65,7 +66,8 @@ src/model/    pure TS: types, units, geometry (all shape-kind switches), color,
               name: the one rule for files, paste, CSV, reset), polygon,
               blob/ (geometry.ts resolve+sample, build.ts from input, edit.ts points)
 src/store/    history.ts (pure undo stack), documentStore (active tab's undoable
-              Project), uiStore (selection/tool/view, NOT undoable), workspaceStore
+              Project), uiStore (selection/tool/view, NOT undoable), panelStore (which wings and
+              sections are open; per browser, localStorage), workspaceStore
               (tabs + standards sync), standardsStore, actions/ (all document ops,
               one file per area: nodes, size (circles/rectangles), blobs (freeform),
               costs, labels (in-place label edits), texts (text blocks), lines (pen lines), elements
@@ -84,16 +86,19 @@ src/canvas/   CanvasStage (stage + layers only), OverlayLayer (selection, handle
               overlayStore (marquee/stroke/snap hint), viewport.ts, hitTest,
               textLayout, LabelEditor, TextEditor, pointer, layers/GridLayer, theme.ts
               (overlay/grid colors read from the CSS tokens)
-src/ui/       TabBar, toolbar/ (Toolbar renders layout.ts: groups of controls from controls.tsx), FileMenu, ScaleBar, ExportDialog, Toast, Splash (opening logo,
+src/ui/       TabBar (+ app-wide controls at its right end), chrome/ (app-wide controls: controls.tsx,
+              placed by layout.ts, drawn by ControlGroups), Wing (collapsible side panel),
+              ToolPalette + toolIcons (left wing), selection/ (the selection bar: SelectionBar
+              + BubbleBar/TextBar/LineBar/ConnectionBar/overlaps, Popover menus, SizeFields,
+              CostFields, ElementActions, Toggle), FileMenu, ScaleBar, ExportDialog, Toast, Splash (opening logo,
               src/assets/logo.webp, on the drawing's paper + grid drawn where the canvas draws it,
               via canvas/layers/grid.ts, so the grid stays put while the app fades in), focus.ts,
-              icons.tsx (icon set), options.ts (choice lists shared by several
-              controls), controls/ (Controls.tsx inputs; mixed.ts = common()/MIXED
-              for multi-selection), panels/ (PropertiesPanel composes: BubbleProps
-              + SizeFields + CostFields + StyleFields, LineProps, TextProps, ConnectionProps, OverlapProps,
-              DrawingPanel, CostPanel, GraphicPanel,
-              OverlapSettingsPanel, ShortcutsHelp, CategoryPanel)
-src/io/       fileActions (New/Open/Save/Save As/Import CSV; openExample = the toolbar's
+              options.ts (choice lists shared by several controls), controls/ (Controls.tsx
+              inputs + the collapsible Section; mixed.ts = common()/MIXED for multi-selection),
+              panels/ (right wing: StandardsPanel composes DrawingPanel, CategoryPanel (+ StyleFields),
+              CostPanel, GraphicPanel, OverlapSettingsPanel; ShortcutsHelp = shortcuts + tips, NOT
+              shown for now, kept for a future help panel)
+src/io/       fileActions (New/Open/Save/Save As/Import CSV; openExample = the tab row's
               "B.A.D. Example": src/assets/example.bubbles.json, its standards applied, 100%
               centered; to revise, replace that file), projectFile (JSON),
               fileSystem (system save/open dialogs, download fallback),
@@ -101,12 +106,12 @@ src/io/       fileActions (New/Open/Save/Save As/Import CSV; openExample = the t
               download, export/ (svg.ts is the single exporter; png/pdf build on it)
 src/styles/   index.css imports, in cascade order: tokens (ALL colors, sizes, type,
               shadows, z-index), base (reset, shell, utilities), controls, chrome
-              (tabs + toolbar), canvas (overlays on the drawing), sidebar, overlays
+              (tabs + app-wide controls + selection bar), canvas (overlays on the drawing, view strip), sidebar (wings, tool palette, standards sections), overlays
               (menus, dialogs, toast)
 src/hooks/    useKeyboardShortcuts
 tests/        Vitest unit tests (render-regression.test.ts guards scene output)
 e2e/          Playwright, one spec per feature area (helpers.ts: fixtures, readers,
-              field()/select() for sidebar inputs by label)
+              field()/select()/checkbox() for inputs by label, openMenu/openSection)
 ```
 
 ## Data model (src/model/types.ts)
@@ -165,7 +170,7 @@ sizePt, color, bold, italic, caps, align }` (paper points, like labels; per elem
 arrowEnd, fill, fillOpacity, sketch }` (per element; arrows only on open lines, fill only on
   closed; `sketch: false` keeps it crisp in a hand-drawn drawing). Drawn above bubbles and
   overlaps, below labels and text (`render/lineScene.ts`); the stroke stops inside arrowheads.
-- `settings.showLabels` (toolbar "Labels"; per drawing, saved, undoable, not a standard): off drops
+- `settings.showLabels` (view strip "Labels"; per drawing, saved, undoable, not a standard): off drops
   every bubble label (name, size, cost) from the scene, so canvas, export and in-place label
   editing all follow; text blocks and lines are unaffected.
 
@@ -253,8 +258,8 @@ italic = slant), as the browser does on screen.
 
 ## Interaction summary
 
-- Tools: V select, B bubble (click to place; the toolbar picker or B again switches circle /
-  square), C connect (click A then B, or drag A→B;
+- Tools (left wing palette, `ui/toolList.ts`): V select, B bubble / Q square (one tool,
+  `uiStore.bubbleKind`, shown as two tiles; click to place), C connect (click A then B, or drag A→B;
   Esc exits), S shape (drag freehand or click points; Enter/double-click/first point
   closes; double-click a gap between bubbles to fill the pocket), T text (click to place,
   drag to set the wrapping width, click a block to edit it; back to select afterwards), P pen
@@ -298,12 +303,13 @@ italic = slant), as the browser does on screen.
   half-extent to `settings.snap.radiusIncrementFt` (stored name kept for old files; the UI
   calls it "Size snap"); Shift = free. Minimum half-extent: `MIN_SIZE_FT`.
 - Costs: firm default per category in Category standards (expand a category); this
-  drawing's rates, the breakdown and the total in the Costs panel (nothing selected);
-  an element's own rate in its Cost section (dot = own; click to reset).
-- Sidebar (sizing actions in `store/actions/size.ts`): Shape (convert, keeps area); a
-  circle by radius, diameter or area; a rectangle by width, height (unlocks rectangles)
-  or area. Area is exact (unsnapped) and keeps proportions; multi-select applies to each.
-- Shortcuts: Del, ⌘/Ctrl+D, ⌘/Ctrl+A, arrows (1', Shift 10'), Enter (edit selected text), ⌘/Ctrl+Z / Shift+Z / Y,
+  drawing's rates, the breakdown and the total in the Costs section of the standards wing;
+  an element's own rate in the selection bar's Cost / sf (dot = own; click to reset).
+- Selection bar sizing (actions in `store/actions/size.ts`): Area inline; the Size menu has
+  Shape (convert, keeps area), a circle's radius / diameter, a rectangle's width / height
+  (unlocks rectangles), a shape's gap. Area is exact (unsnapped) and keeps proportions;
+  multi-select applies to each.
+- Shortcuts: A / D fold or unfold the tools / standards wing, Del, ⌘/Ctrl+D, ⌘/Ctrl+A, arrows (1', Shift 10'), Enter (edit selected text), ⌘/Ctrl+Z / Shift+Z / Y,
   ⌘/Ctrl+S save (⌘/Ctrl+Shift+S save as), ⌘/Ctrl+O open, F zoom to fit, ⌘/Ctrl+0 100% (true paper size). Keep
   `ui/panels/ShortcutsHelp.tsx` in sync.
 
@@ -345,20 +351,22 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
 
 - **New style property** (e.g. label italic): add it to `StyleProps` + `DEFAULT_STYLE`
   (migration picks it up automatically via the default keys), a field in
-  `ui/panels/StyleFields.tsx`, and use the resolved value in `render/scene.ts` (and
+  `ui/panels/StyleFields.tsx` (categories) and in `ui/selection/BubbleBar.tsx` (inline or in a
+  menu), and use the resolved value in `render/scene.ts` (and
   `canvas/textLayout.ts` for labels). Categories, overrides, reset dots, standards and
   paste-style all work without further changes.
 - **New drawing setting**: field in `DrawingSettings` + `DEFAULT_SETTINGS`; check that
   `migrateProject` fills it for old files (nested objects need an explicit merge there);
-  an action in `store/actions/settings.ts`; a control in the relevant panel.
+  an action in `store/actions/settings.ts`; a control in the relevant standards section (or an
+  app-wide control in `ui/chrome/`).
 - **New shape kind** (hexagon, ellipse, rounded rectangle): extend the `Shape` union (and
   `SizableKind` if the bubble tool should place it); TypeScript then flags every switch
   in `model/geometry.ts` to complete: `nodeOutline` (a polygon; drawing, hit-testing,
   marquee and connections come from it), area/size/handle cases, `labelWidthFt`. Then
   `cleanShape` in `model/migrate.ts`, `dimensionText` in `selectors.ts`, a row in
-  `SHAPE_LABELS` in `model/defaults.ts` and `BUBBLE_ICONS` in `ui/Toolbar.tsx` (both
-  typed `Record<SizableKind, …>`, so TypeScript asks for them), `newShape` / `convertShape`,
-  its fields in `ui/panels/SizeFields.tsx`, and CSV names in `io/csvImport.ts`.
+  `SHAPE_LABELS` in `model/defaults.ts` (typed `Record<SizableKind, …>`, so TypeScript asks
+  for it), a palette row in `ui/toolList.ts` (+ an icon in `ui/toolIcons.tsx`) if it gets a tile, `newShape` / `convertShape`,
+  its fields in `ui/selection/SizeFields.tsx`, and CSV names in `io/csvImport.ts`.
   Sketch mode keeps corners via `primitives.subdivide`; smooth outlines use `resample`.
 - **New element kind** (e.g. linework): its type in `types.ts` (+ `Project[kind]`, an
   order array, `factory.createProject`, `migrate.ts` cleaning, like `cleanText`), a row in
@@ -367,16 +375,16 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   zoom to fit and copy/paste/duplicate work (a kind with no dependents is a `SimpleKind`;
   `model/clip.ts` copies those generically). For Ctrl+Shift+V add a `clipXStyle` +
   `clipboardActions.pasteStyle` branch. Add its scene entry + canvas draw + SVG group, an action
-  file, a tool, a sidebar section in `PropertiesPanel`, overlay selection drawing, and a reader in `e2e/helpers.ts`
+  file, a tool, a part of the selection bar (`ui/selection/XBar.tsx` + a line in `SelectionBar`), overlay selection drawing, and a reader in `e2e/helpers.ts`
   (like `lines()`). Pen lines (`PenLine`) are the latest worked example.
 - Overlay drawing reads selection from the live stores but draws from the `doc` prop, which
   can be a render behind: check an id exists in `doc` before drawing it.
 - **New canvas tool**: implement `Tool` in `canvas/tools/<name>.ts` (return a `Gesture`
   from `down` for drags), register it in `tools/index.ts` and `ToolId` in uiStore, and add
-  a row to `ui/toolList.ts` (toolbar button, shortcut and help follow).
+  a row to `ui/toolList.ts` (palette tile, shortcut and help follow; an icon in `ui/toolIcons.tsx`).
 - **New per-element number that rolls up** (like cost): follow `model/costs.ts`: resolve
   in one function, total/breakdown there, a `labelX` style property for the label line
-  (a `LabelPart` + a row in `actions/labels.ts` to edit it in place), sidebar fields.
+  (a `LabelPart` + a row in `actions/labels.ts` to edit it in place), selection bar fields.
 - **New document data** (anything saved in files): add to `types.ts`, `factory.ts`,
   `migrate.ts`; if old files can't be read as-is, bump `SCHEMA_VERSION` with an upgrade
   step. Copy/paste/duplicate (`model/clip.ts`) may need to carry it.
@@ -384,23 +392,36 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   - Restyle via `styles/tokens.css`; component rules use tokens, never raw colors or
     sizes (the canvas overlay picks them up through `canvas/theme.ts`).
   - New rules go in the file for their area; keep one definition per selector.
-  - Layout regions: `App.tsx` (TabBar, Toolbar, workspace = canvas-wrap + sidebar);
-    sizes in tokens (`--sidebar-w`, `--toolbar-h`, `--tabbar-h`).
-  - Sidebar: each block is a `Section` component in `ui/panels/`; `PropertiesPanel`
-    decides which appear (selection vs. drawing). Moving a block = moving one line there.
+  - Layout regions (`App.tsx`): TabBar (tabs + app-wide controls) / SelectionBar / workspace =
+    left Wing (ToolPalette) + canvas-wrap (canvas + `.viewbar`: scale bar and view controls) +
+    right Wing (StandardsPanel). Sizes in tokens (`--tabbar-h`, `--selbar-h`, `--tools-w`,
+    `--sidebar-w`, `--wing-tab-w`, `--tool-tile-h`).
+  - Wings (`ui/Wing.tsx`): fold toward the screen edge from an arrow on the inner edge; folded,
+    a slim titled tab unfolds them; A / D toggle; open state in `store/panelStore` (localStorage,
+    never in documents or undo).
+  - Selection bar (`ui/selection/`): what's selected, one row that never wraps (it scrolls
+    sideways if it must); empty when nothing is selected. One component per kind; everyday
+    settings inline, the rest in `Popover` menus (Size, Label, More, Overlaps); with several
+    kinds selected, chips pick the kind. Inline fields are `.selbar > .field` (label beside the
+    control); inside menus they are ordinary grid `.field`s. A new element kind = a `XBar` and
+    a line in `SelectionBar`.
+  - Standards wing: each block is a collapsible `Section` (`id` = its remembered open state,
+    `defaultOpen`); `StandardsPanel` lists them. Moving a block = moving one line there.
   - Inputs come from `ui/controls/Controls.tsx`; a choice list used in two places goes in
     `ui/options.ts`; icons in `ui/icons.tsx`.
-  - Toolbar: every control is a self-contained component in `ui/toolbar/controls.tsx`
-    (`TOOLBAR_CONTROLS`, by id); `ui/toolbar/layout.ts` (`TOOLBAR_LAYOUT`) lists the groups and
-    their order ('spacer' pushes the rest right). Moving or regrouping a control = editing that
-    list; a new control = a component + an id there. Controls never depend on their neighbours.
-  - Drawing tools as presented: `ui/toolList.ts` (order, label, shortcut key, icon) feeds the
-    toolbar buttons, the keyboard shortcuts and the shortcuts help. A vertical palette or a new
-    tool starts there.
-  - Duplicate / To front / Delete for any selection: `ui/panels/ElementActions.tsx`, shown once
-    by `PropertiesPanel` under the selected kinds' sections.
-  - e2e tests find sidebar inputs by their field label (`helpers.field/select`), so
-    renaming a label means updating tests; moving a field does not.
+  - App-wide controls (undo, file, example, scale, grid, labels, zoom): each a self-contained
+    component in `ui/chrome/controls.tsx` (`APP_CONTROLS`, by id); `ui/chrome/layout.ts`
+    (`CONTROL_LAYOUT`) says which region (tab row, view strip) and group each sits in. Moving or
+    regrouping one = editing that list; a new one = a component + an id there.
+  - Drawing tools as presented: `ui/toolList.ts` (order, label, shortcut key, icon from
+    `ui/toolIcons.tsx`, bubble shape) feeds the palette tiles, the keyboard shortcuts and the
+    shortcuts help.
+  - Duplicate / To front / Delete for any selection: `ui/selection/ElementActions.tsx`, at the
+    right end of the selection bar.
+  - e2e tests find inputs by their field label (`helpers.field/select/checkbox`; the selection
+    bar comes first in the page), so renaming a label means updating tests; moving a field does
+    not. Menus and folded sections only exist while open: `helpers.openMenu` / `openSection`
+    (`graphicStyle` for the style picker).
 - **Intentional visual change**: `tests/render-regression.test.ts` will fail; check the
   app/export, then replace the expected hash.
 
@@ -410,7 +431,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
   font outlines (no NaN), labels on/off, render regression.
-- e2e (42, one file per area): example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
+- e2e (45, one file per area): layout (wings + A/D, sections, selection bar), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, drag/resize/wheel, selection + undo,
   connect, sizing, names (+ nameless), Labels box, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags

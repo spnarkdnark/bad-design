@@ -104,7 +104,10 @@ test('text moves, nudges, deletes and selects by marquee together with bubbles',
   expect(await texts(page)).toHaveLength(0);
 });
 
-test('sidebar styles text; the width handle sets wrapping; new text keeps the last look', async ({ page, canvas }) => {
+test('the selection bar styles text; the width handle sets wrapping; new text keeps the last look', async ({
+  page,
+  canvas,
+}) => {
   await page.keyboard.press('t');
   await canvas.click(250, 200);
   await page.keyboard.type('Program diagram for the north house');
@@ -113,7 +116,7 @@ test('sidebar styles text; the width handle sets wrapping; new text keeps the la
   await select(page, 'Font').selectOption('times');
   await field(page, 'Size').fill('18');
   await field(page, 'Size').press('Enter');
-  await page.getByLabel('Bold').check();
+  await page.getByRole('button', { name: 'Bold', exact: true }).click();
   await page.getByRole('button', { name: 'Center' }).click();
   let t = (await texts(page))[0];
   expect(t.style).toMatchObject({ font: 'times', sizePt: 18, bold: true, align: 'center' });

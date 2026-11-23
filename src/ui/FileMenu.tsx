@@ -49,7 +49,7 @@ export function Menu({ label, items, primary }: { label: string; items: MenuItem
 
 export function FileMenu() {
   return (
-    <div className="group">
+    <>
       <Menu
         label="File"
         items={[
@@ -63,6 +63,6 @@ export function FileMenu() {
       <button className="btn primary" onClick={() => useUi.getState().setExportOpen(true)}>
         Export
       </button>
-    </div>
+    </>
   );
 }

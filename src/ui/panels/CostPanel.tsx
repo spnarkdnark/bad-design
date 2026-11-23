@@ -14,7 +14,7 @@ export function CostPanel() {
   const area = rows.reduce((s, r) => s + r.area, 0);
   const total = rows.reduce((s, r) => s + r.cost, 0);
   return (
-    <Section title="Costs">
+    <Section id="costs" title="Costs" defaultOpen={false}>
       <p className="tip flush">
         Rates for this drawing. Each starts at the firm default (set in Category standards); a dot marks a rate this
         drawing sets itself.

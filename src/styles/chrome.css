@@ -1,4 +1,4 @@
-/* App chrome above the workspace: the tab strip (ui/TabBar.tsx) and the toolbar (ui/Toolbar.tsx). */
+/* App chrome above the drawing: the tab strip (ui/TabBar.tsx, ends with app-wide controls) and the selection bar. */
 
 /* tabs */
 .tabbar {
@@ -133,49 +133,26 @@
   outline-offset: -2px;
 }
 
-/* toolbar: one line of groups separated by thin rules */
-.toolbar {
+/* app-wide control groups (ui/chrome/): at the end of the tab row and in the view strip */
+.control-groups {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-  min-height: var(--toolbar-h);
-  flex-wrap: nowrap;
+  flex: none;
+}
+.control-groups.tabbar {
+  align-self: center;
+  padding-bottom: 2px;
 }
 .group {
   display: flex;
   align-items: center;
   gap: 4px;
   padding: 0 10px;
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--line-strong);
   flex: none;
 }
-.group:first-of-type,
-.spacer + .group {
+.group:first-child {
   border-left: none;
-}
-.tool {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: var(--control-h);
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: var(--radius);
-  background: none;
-  cursor: pointer;
-  color: var(--muted);
-}
-.tool:hover {
-  background: var(--hover);
-  color: var(--text);
-}
-.tool.active {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--accent-line);
 }
 .inline-field {
   display: flex;
@@ -183,22 +160,174 @@
   gap: 6px;
   color: var(--muted);
 }
-.toolbar select.input {
+.control-groups select.input {
   width: auto;
 }
 .zoom-label {
   min-width: 52px;
   font-variant-numeric: tabular-nums;
 }
-/* keep the toolbar on one line: drop tool text labels on narrower screens */
-@media (max-width: 1840px) {
-  .tool span {
-    display: none;
-  }
-  .tool {
-    padding: 0 8px;
-  }
-  .inline-field:not(.checkbox) > span {
-    display: none;
-  }
+
+/* the selection bar (ui/selection/): one row, never wraps; empty when nothing is selected */
+.selbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--selbar-h);
+  padding: 0 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+.selbar > .field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.selbar > .field .input {
+  width: auto;
+  max-width: 180px;
+}
+.selbar > .field .override-dot {
+  margin-left: 4px;
+}
+.bar-name .input {
+  width: 130px;
+  max-width: none;
+}
+.bar-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  flex: none;
+}
+.bar-note {
+  color: var(--muted);
+  max-width: 280px;
+}
+.bar-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 11px 0;
+  background: var(--line);
+  flex: none;
+}
+.bar-actions {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  flex: none;
+}
+.bar-pop-btn {
+  flex: none;
+  padding: 0 8px;
+  color: var(--muted);
+}
+.btn.icon {
+  display: grid;
+  place-items: center;
+  width: var(--control-h);
+  padding: 0;
+}
+.bar-pop-btn.open {
+  background: var(--hover);
+  color: var(--text);
+}
+.bar-pop {
+  position: fixed;
+  z-index: var(--z-menu);
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px var(--panel-pad-x);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-menu);
+  white-space: normal;
+}
+.pop-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+.toggle-row {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+.toggle {
+  min-width: var(--input-h);
+  height: var(--input-h);
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-input);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.toggle:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.toggle.on {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+.toggle.mixed {
+  border-style: dashed;
+  border-color: var(--line-strong);
+}
+.inline-checks {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bar-slider {
+  display: flex;
+  width: 140px;
+}
+.segmented-inline {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+.segmented-inline .seg {
+  height: var(--input-h);
+}
+.kind-chips {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--hover);
+  border-radius: var(--radius);
+  flex: none;
+}
+.kind-chip {
+  height: var(--control-h-sm);
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.kind-chip.active {
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--swatch-ring);
+}
+.count-inline {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  padding-left: 2px;
 }
