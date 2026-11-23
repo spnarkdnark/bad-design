@@ -5,6 +5,7 @@ import { StandardsPanel } from './ui/panels/StandardsPanel';
 import { SelectionBar } from './ui/selection/SelectionBar';
 import { ToolPalette } from './ui/ToolPalette';
 import { Wing } from './ui/Wing';
+import { ErrorBoundary } from './ui/ErrorBoundary';
 import { Toast } from './ui/Toast';
 import { Splash } from './ui/Splash';
 import { ExportDialog } from './ui/ExportDialog';
@@ -25,22 +26,34 @@ export function App() {
   useKeyboardShortcuts(shortcutHandlers);
   return (
     <div className="app">
-      <TabBar />
-      <SelectionBar />
+      <ErrorBoundary name="the tabs">
+        <TabBar />
+      </ErrorBoundary>
+      <ErrorBoundary name="the selection's settings">
+        <SelectionBar />
+      </ErrorBoundary>
       <main className="workspace">
         {/* the canvas fills the workspace; the wings float over its edges (before it, so they
             have reported what they cover by the time it first centers the drawing) */}
         <Wing id="tools" side="left" title="Tools" shortcut="A">
-          <ToolPalette />
+          <ErrorBoundary name="the tools">
+            <ToolPalette />
+          </ErrorBoundary>
         </Wing>
         <Wing id="controls" side="right" title="Standards" shortcut="D">
-          <StandardsPanel />
+          <ErrorBoundary name="the standards">
+            <StandardsPanel />
+          </ErrorBoundary>
         </Wing>
         <div className="canvas-wrap">
-          <CanvasStage />
+          <ErrorBoundary name="the drawing">
+            <CanvasStage />
+          </ErrorBoundary>
         </div>
       </main>
-      <ExportDialog />
+      <ErrorBoundary name="the export dialog">
+        <ExportDialog />
+      </ErrorBoundary>
       <Toast />
       <Splash />
     </div>

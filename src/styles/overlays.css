@@ -155,3 +155,21 @@
   color: var(--muted);
   font-size: var(--text-sm);
 }
+
+/* a part of the UI that failed to draw (ui/ErrorBoundary.tsx) */
+.error-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px;
+  padding: 12px var(--panel-pad-x);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-line);
+  border-radius: var(--radius);
+  color: var(--warning-text);
+  font-size: var(--text-sm);
+}
+.error-actions {
+  display: flex;
+  gap: 6px;
+}

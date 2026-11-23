@@ -244,7 +244,11 @@ shared library for all tabs
 
 `render/scene.ts#buildScene(project)` returns primitives in feet (circles, arcs, paths,
 labels). The canvas draws them in one Konva `Shape` (`drawCanvas.ts`); the SVG exporter
-writes the same primitives, so screen and export always match. Sketch mode swaps exact
+writes the same primitives, so screen and export always match. On screen, `drawPrims` compiles
+each prim list once into Path2D batches (consecutive strokes with an identical look merge;
+fills never do), cached in a WeakMap by list identity, so keep scene lists stable while
+their element is unchanged (the per-node cache does) or every frame recompiles. Hand-drawn
+styles emit hundreds of prims per bubble (pencil: ~600), which is why this matters. Sketch mode swaps exact
 geometry for seeded hand-drawn ops (`render/sketch.ts`, amounts in paper points); use
 `primitives.openStrokePrims` for "exact if clean, sketched otherwise" lines. Per-node
 results are cached by a JSON key of everything visual (identity is not enough: blobs
@@ -395,6 +399,8 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   `migrate.ts`; if old files can't be read as-is, bump `SCHEMA_VERSION` with an upgrade
   step. Copy/paste/duplicate (`model/clip.ts`) may need to carry it.
 - **UI / layout work**:
+  - Each region (tabs, selection bar, canvas, each wing, export dialog) sits in a
+    `ui/ErrorBoundary` so a render error shows a notice there instead of blanking the app.
   - Restyle via `styles/tokens.css`; component rules use tokens, never raw colors or
     sizes (the canvas overlay picks them up through `canvas/theme.ts`).
   - New rules go in the file for their area; keep one definition per selector.
@@ -441,7 +447,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
   font outlines (no NaN), labels on/off, render regression.
-- e2e (48, one file per area): layout (wings + A/D, drawing stays put, scale/grid fields, sections, selection bar), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, placement preview + wheel sizing, drag/resize/wheel, selection + undo,
+- e2e (49, one file per area): layout (wings + A/D, drawing stays put, scale/grid fields, sections, selection bar, error notices), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, placement preview + wheel sizing, drag/resize/wheel, selection + undo,
   connect, sizing, names (+ nameless), Labels box, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags

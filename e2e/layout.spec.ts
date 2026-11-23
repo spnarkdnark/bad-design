@@ -101,3 +101,18 @@ test('the selection bar is empty with nothing selected; chips pick a kind in a m
   await page.keyboard.press('Escape');
   await expect(bar).toHaveClass(/empty/);
 });
+
+test('a part that fails to draw shows a notice instead of blanking the app', async ({ page, canvas }) => {
+  await canvas.bubble(400, 300);
+  // a bubble listed in the drawing order but missing from the drawing (only a bug could do this)
+  await page.evaluate(() => {
+    const d = (window as any).__bd.doc.getState();
+    const p = d.history.present;
+    d.replace({ ...p, nodeOrder: [...p.nodeOrder, 'ghost'] }, true);
+  });
+  await expect(page.locator('.error-notice').first()).toBeVisible();
+  await expect(page.locator('.error-notice', { hasText: 'the drawing' })).toHaveCount(1);
+  // the rest still works
+  await expect(page.locator('.tool-tile')).toHaveCount(7);
+  await expect(page.locator('.tab')).toHaveCount(1);
+});
