@@ -1,7 +1,8 @@
 /**
  * Bubble tool: the shape to place (uiStore.bubbleKind, at uiStore.placeSize, in uiStore.placeCategory:
  * set in the placement bar, ui/selection/PlacementBar) follows the cursor as a preview in its
- * category's look (OverlayLayer); the wheel resizes it (input/wheel.ts), a click places it.
+ * category's look (OverlayLayer); the wheel resizes it (input/wheel.ts), right-click cycles its
+ * category (Shift: backwards), a click places it.
  * Shift keeps the tool active. Works for any sizable kind, through `newShape`.
  */
 import type { BubbleNode, Point } from '../../model/types';
@@ -34,6 +35,15 @@ export const bubbleTool: Tool = {
     A.addNode(e.world, { shape, categoryId });
     if (!e.shift) useUi.getState().setTool('select');
     return null;
+  },
+  // right-click: the next category (Shift: the previous), None between the last and the first
+  rightDown(e) {
+    const ui = useUi.getState();
+    const doc = getDoc();
+    const cycle: (string | null)[] = [null, ...doc.categoryOrder];
+    const i = Math.max(0, cycle.indexOf(placementNode(e.world).categoryId));
+    ui.setPlaceCategory(cycle[(i + (e.shift ? -1 : 1) + cycle.length) % cycle.length]);
+    overlay().set({ pointerWorld: e.world });
   },
   hover(e) {
     overlay().set({ pointerWorld: e.world });

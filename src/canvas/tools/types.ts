@@ -21,6 +21,8 @@ export interface Tool {
   /** Pointer moved with no gesture in progress. */
   hover?(e: CanvasEvent): void;
   doubleClick?(e: CanvasEvent): void;
+  /** Right button pressed on the canvas (the context menu is suppressed there). */
+  rightDown?(e: CanvasEvent): void;
   cursor(e: CanvasEvent): string;
 }
 

@@ -331,7 +331,12 @@ function PlacementPreview({ node, doc, k }: { node: BubbleNode; doc: Project; k:
   };
   const outline = nodeOutline(node, doc);
   const size = shapeSize(node.shape);
-  const text = [dimensionText(node.shape, true), isSizable(node.shape) ? formatArea(sizableArea(node.shape)) : null]
+  const category = node.categoryId ? doc.categories[node.categoryId]?.name : null;
+  const text = [
+    category,
+    dimensionText(node.shape, true),
+    isSizable(node.shape) ? formatArea(sizableArea(node.shape)) : null,
+  ]
     .filter(Boolean)
     .join(' · ');
   return (

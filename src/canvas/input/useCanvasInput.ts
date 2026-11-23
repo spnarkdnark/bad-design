@@ -33,6 +33,7 @@ export function useCanvasInput(container: RefObject<HTMLDivElement | null>) {
       return;
     }
     if (e.button === 0) gesture.current = activeTool().down(toEvent(e));
+    else if (e.button === 2) activeTool().rightDown?.(toEvent(e));
   };
 
   const onDoubleClick = (e: React.MouseEvent) => activeTool().doubleClick?.(toEvent(e));

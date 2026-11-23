@@ -97,6 +97,33 @@ test('with the bubble tool the bar sets up the next bubble: shape, category, are
   expect(a.style).toEqual({}); // styles come from the category, not copied onto the bubble
 });
 
+test('with the bubble tool, right-click cycles the category to place', async ({ page, canvas }) => {
+  const picked = () => page.evaluate(() => (window as any).__bd.ui.getState().placeCategory);
+  const order: string[] = (await doc(page)).categoryOrder;
+  await page.keyboard.press('b');
+  const right = async (shift = false) => {
+    if (shift) await page.keyboard.down('Shift');
+    await page.mouse.click(canvas.x + 500, canvas.y + 400, { button: 'right' });
+    if (shift) await page.keyboard.up('Shift');
+  };
+  expect(await picked()).toBeNull();
+  await right();
+  expect(await picked()).toBe(order[0]);
+  await right();
+  expect(await picked()).toBe(order[1]);
+  await expect(select(page, 'Category')).toHaveValue(order[1]);
+  // Shift goes back; past the first comes None, then the last
+  await right(true);
+  await right(true);
+  expect(await picked()).toBeNull();
+  await right(true);
+  expect(await picked()).toBe(order[order.length - 1]);
+  // a right-click places nothing; a left click places in that category
+  expect(await nodes(page)).toHaveLength(0);
+  await canvas.click(500, 400);
+  expect((await nodes(page))[0].categoryId).toBe(order[order.length - 1]);
+});
+
 test('wheel over empty canvas zooms', async ({ page, canvas }) => {
   await page.mouse.move(canvas.x + 200, canvas.y + 200);
   await page.mouse.wheel(0, -300);

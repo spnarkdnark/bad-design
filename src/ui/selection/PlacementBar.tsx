@@ -70,7 +70,7 @@ export function PlacementBar() {
       </Field>
       <ReadOnly value={dimensionText(shape, true) ?? ''} />
       <span className="bar-note">
-        Tab: type the area · Tab again: category · click to place · scroll to resize · Shift+click keeps placing
+        Tab: area · Tab again or right-click: category · click to place · scroll: size · Shift+click keeps placing
       </span>
     </>
   );
