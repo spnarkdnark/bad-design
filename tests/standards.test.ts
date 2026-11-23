@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createCategory, createNode, createProject } from '../src/model/factory';
 import { adoptProject, applyStandards, standardsOf, withFirmDefaults } from '../src/model/standards';
-import { categoryResolver, matchCategory } from '../src/model/categories';
+import { categoryResolver, matchCategory, cycleCategory } from '../src/model/categories';
 
 describe('category standards', () => {
   it('applying standards restyles categories and keeps orphaned looks', () => {
@@ -113,5 +113,19 @@ describe('category matching', () => {
     expect(out.categories[used.id]).toBeDefined();
     expect(out.categories[unused.id]).toBeUndefined();
     expect(out.settings.graphic.preset).toBe('clean');
+  });
+});
+
+describe('cycling categories (right-click)', () => {
+  it('steps through none and each category, both ways, wrapping', () => {
+    const order = ['a', 'b', 'c'];
+    expect(cycleCategory(order, null, 1)).toBe('a');
+    expect(cycleCategory(order, 'a', 1)).toBe('b');
+    expect(cycleCategory(order, 'c', 1)).toBeNull();
+    expect(cycleCategory(order, null, -1)).toBe('c');
+    expect(cycleCategory(order, 'a', -1)).toBeNull();
+    // a category no longer in the drawing restarts from none
+    expect(cycleCategory(order, 'gone', 1)).toBe('a');
+    expect(cycleCategory([], null, 1)).toBeNull();
   });
 });

@@ -3,6 +3,7 @@
  * routing presses to the active tool, window-level drag tracking (so drags
  * continue outside the canvas), double-clicks, the wheel and the cursor.
  */
+import { recategorizeAt } from '../tools/recategorize';
 import { useEffect, useRef, type RefObject } from 'react';
 import { useUi } from '../../store/uiStore';
 import { pointer } from '../pointer';
@@ -33,7 +34,8 @@ export function useCanvasInput(container: RefObject<HTMLDivElement | null>) {
       return;
     }
     if (e.button === 0) gesture.current = activeTool().down(toEvent(e));
-    else if (e.button === 2) activeTool().rightDown?.(toEvent(e));
+    // right-click: the tool's own use, else recategorize the element under the cursor
+    else if (e.button === 2) (activeTool().rightDown ?? recategorizeAt)(toEvent(e));
   };
 
   const onDoubleClick = (e: React.MouseEvent) => activeTool().doubleClick?.(toEvent(e));

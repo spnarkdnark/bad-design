@@ -35,3 +35,10 @@ export function categoryResolver(project: Project) {
   };
   return { resolve, added };
 }
+
+/** The category after `current` in the drawing's order (dir -1: before), with "none" (null) between the last and the first. */
+export function cycleCategory(order: Id[], current: Id | null, dir: 1 | -1): Id | null {
+  const cycle: (Id | null)[] = [null, ...order];
+  const i = Math.max(0, cycle.indexOf(current));
+  return cycle[(i + dir + cycle.length) % cycle.length];
+}

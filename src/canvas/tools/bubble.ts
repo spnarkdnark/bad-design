@@ -11,6 +11,7 @@ import { getDoc } from '../../store/documentStore';
 import * as A from '../../store/actions';
 import { newShape } from '../../model/geometry';
 import { overlay } from '../overlayStore';
+import { cycleCategory } from '../../model/categories';
 import type { Tool } from './types';
 
 /** The element the bubble tool would place at `at` (not in the document), in the placement bar's category. */
@@ -38,11 +39,8 @@ export const bubbleTool: Tool = {
   },
   // right-click: the next category (Shift: the previous), None between the last and the first
   rightDown(e) {
-    const ui = useUi.getState();
-    const doc = getDoc();
-    const cycle: (string | null)[] = [null, ...doc.categoryOrder];
-    const i = Math.max(0, cycle.indexOf(placementNode(e.world).categoryId));
-    ui.setPlaceCategory(cycle[(i + (e.shift ? -1 : 1) + cycle.length) % cycle.length]);
+    const current = placementNode(e.world).categoryId;
+    useUi.getState().setPlaceCategory(cycleCategory(getDoc().categoryOrder, current, e.shift ? -1 : 1));
     overlay().set({ pointerWorld: e.world });
   },
   hover(e) {

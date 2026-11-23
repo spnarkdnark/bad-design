@@ -124,6 +124,39 @@ test('with the bubble tool, right-click cycles the category to place', async ({ 
   expect((await nodes(page))[0].categoryId).toBe(order[order.length - 1]);
 });
 
+test('right-click recategorizes bubbles; on a selected one, the whole selection', async ({ page, canvas }) => {
+  const order: string[] = (await doc(page)).categoryOrder;
+  const cats = async () => (await nodes(page)).map((n: any) => n.categoryId);
+  const right = async (x: number, y: number, shift = false) => {
+    if (shift) await page.keyboard.down('Shift');
+    await page.mouse.click(canvas.x + x, canvas.y + y, { button: 'right' });
+    if (shift) await page.keyboard.up('Shift');
+  };
+  await canvas.bubble(300, 300);
+  await canvas.bubble(600, 300);
+  await canvas.bubble(900, 300);
+  await canvas.click(1000, 700); // nothing selected
+  await right(300, 300);
+  await right(300, 300);
+  expect(await cats()).toEqual([order[1], null, null]);
+  await right(300, 300, true);
+  expect(await cats()).toEqual([order[0], null, null]);
+  // the selection (2nd and 3rd) steps together, from the clicked one's category
+  await canvas.click(600, 300);
+  await page.keyboard.down('Shift');
+  await canvas.click(900, 300);
+  await page.keyboard.up('Shift');
+  await right(900, 300);
+  expect(await cats()).toEqual([order[0], order[0], order[0]]);
+  // quick clicks are one undo step; empty canvas does nothing
+  await right(900, 300);
+  await right(900, 300);
+  expect(await cats()).toEqual([order[0], order[2], order[2]]);
+  await right(1000, 700);
+  await page.keyboard.press('Control+z');
+  expect(await cats()).toEqual([order[0], null, null]);
+});
+
 test('wheel over empty canvas zooms', async ({ page, canvas }) => {
   await page.mouse.move(canvas.x + 200, canvas.y + 200);
   await page.mouse.wheel(0, -300);

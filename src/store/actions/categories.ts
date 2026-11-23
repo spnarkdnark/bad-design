@@ -5,6 +5,8 @@ import { withFirmDefaults } from '../../model/standards';
 import { keepRate } from '../../model/costs';
 import { getDoc } from '../documentStore';
 import { commit } from './shared';
+import { updateNodes } from './nodes';
+import { cycleCategory } from '../../model/categories';
 
 export function addCategory(name = 'New category'): Id {
   const c = createCategory(name, nextCategoryColor(getDoc()));
@@ -62,4 +64,15 @@ export function resetStandards() {
     d.categoryOrder = next.categoryOrder;
     d.settings = next.settings;
   });
+}
+
+/**
+ * Right-click recategorizing: `ids` all take the category after (dir -1: before) the one `from`
+ * has. Quick repeated clicks on the same elements are one undo step.
+ */
+export function cycleNodeCategory(ids: Id[], from: Id, dir: 1 | -1): Id | null {
+  const doc = getDoc();
+  const next = cycleCategory(doc.categoryOrder, doc.nodes[from]?.categoryId ?? null, dir);
+  updateNodes(ids, (n) => void (n.categoryId = next), `recategorize:${[...ids].sort().join(',')}`);
+  return next;
 }

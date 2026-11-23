@@ -14,7 +14,10 @@ export function ShortcutsHelp() {
     [TOOL_LIST.map((t) => t.key.toUpperCase()).join(' / '), TOOL_LIST.map((t) => t.label).join(' / ')],
     ['A / D', 'Hide or show the tools / the standards'],
     ['Tab', 'Bubble tool: type the area to place, Tab again for its category; selected bubbles: type their area'],
-    ['Right-click', 'Bubble tool: next category (Shift: previous)'],
+    [
+      'Right-click',
+      "A bubble: its next category, or the selection's (Shift: previous); bubble tool: the category to place",
+    ],
     ['Shape tool', 'Drag freehand or click points; double-click a gap to fill it'],
     [
       'Pen tool',
