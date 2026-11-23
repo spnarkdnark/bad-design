@@ -13,7 +13,7 @@ import {
 } from '../model/geometry';
 import { formatArea } from '../model/units';
 import { placementNode } from './tools/bubble';
-import { dimensionText, orderedNodes } from '../model/selectors';
+import { dimensionText, orderedNodes, resolveStyle } from '../model/selectors';
 import { textBounds, textWidthHandle } from '../model/text';
 import { linePoints } from '../model/linework';
 import type { Scene } from '../render/scene';
@@ -40,6 +40,7 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
   // the bubble tool's shape, following the cursor (re-rendered when its kind or size changes)
   useUi((s) => s.bubbleKind);
   useUi((s) => s.placeSize);
+  useUi((s) => s.placeCategory);
   const placing = tool === 'bubble' && pointerWorld ? placementNode(pointerWorld) : null;
   // (the target comes from the live document; draw only what this render's doc has)
   const editTarget = lineEditTarget();
@@ -314,13 +315,20 @@ export function OverlayLayer({ doc, scene, k }: { doc: Project; scene: Scene; k:
 }
 
 /**
- * The shape the bubble tool is about to place, at the cursor: the drawing's default fill,
- * a dashed outline and its size. Any sizable kind (drawn from its outline when not a circle).
+ * The shape the bubble tool is about to place, at the cursor: its category's fill and outline
+ * (dashed) and its size. Any sizable kind (drawn from its outline when not a circle).
  */
 function PlacementPreview({ node, doc, k }: { node: BubbleNode; doc: Project; k: number }) {
   const theme = canvasTheme();
-  const fill = doc.settings.defaultStyle.fill;
-  const look = { fill, opacity: 0.55, stroke: theme.strokePreview, strokeWidth: 1.25 / k, dash: [6 / k, 4 / k] };
+  // the look it will have: its category's (or the default) fill and outline
+  const style = resolveStyle(node, doc);
+  const look = {
+    fill: style.fill,
+    opacity: 0.4 + 0.4 * style.fillOpacity,
+    stroke: style.stroke,
+    strokeWidth: 1.5 / k,
+    dash: [6 / k, 4 / k],
+  };
   const outline = nodeOutline(node, doc);
   const size = shapeSize(node.shape);
   const text = [dimensionText(node.shape, true), isSizable(node.shape) ? formatArea(sizableArea(node.shape)) : null]

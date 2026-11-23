@@ -267,8 +267,11 @@ italic = slant), as the browser does on screen.
   `uiStore.bubbleKind`, shown as two tiles). The shape to place follows the cursor as a dashed
   preview with its size (`tools/bubble.placementNode`, drawn by `OverlayLayer.PlacementPreview`
   from the generic outline, so any new sizable kind gets it); the wheel steps its size
-  (`uiStore.placeSize`, half-extent, session only; size snap, Shift 1", Ctrl+wheel zooms) and a
-  click places it, C connect (click A then B, or drag A→B;
+  (`uiStore.placeSize`, half-extent, session only; size snap, Shift 1", Ctrl+wheel zooms; switching
+  circle/square keeps the area) and a click places it. While the tool is active the selection bar
+  is the placement bar (`ui/selection/PlacementBar.tsx`): shape toggle, Area, Category
+  (`uiStore.placeCategory`; new bubbles get it, so its look), dimensions. Keyboard flow: B, Tab
+  (focuses Area), type, Tab (Category), click to place; Shift+click keeps placing, C connect (click A then B, or drag A→B;
   Esc exits), S shape (drag freehand or click points; Enter/double-click/first point
   closes; double-click a gap between bubbles to fill the pocket), T text (click to place,
   drag to set the wrapping width, click a block to edit it; back to select afterwards), P pen
@@ -318,7 +321,7 @@ italic = slant), as the browser does on screen.
   Shape (convert, keeps area), a circle's radius / diameter, a rectangle's width / height
   (unlocks rectangles), a shape's gap. Area is exact (unsnapped) and keeps proportions;
   multi-select applies to each.
-- Shortcuts: Tab with sizable bubbles selected = type an area (focuses the selection bar's Area
+- Shortcuts: Tab with the bubble tool = type the area to place (placement bar); Tab with sizable bubbles selected = type an area (focuses the selection bar's Area
   field via `uiStore.areaFocus`, switching a mixed selection's bar to the bubbles; Enter sets it,
   any sizable kind through `actions.setArea`), A / D fold or unfold the tools / standards wing, Del, ⌘/Ctrl+D, ⌘/Ctrl+A, arrows (1', Shift 10'), Enter (edit selected text), ⌘/Ctrl+Z / Shift+Z / Y,
   ⌘/Ctrl+S save (⌘/Ctrl+Shift+S save as), ⌘/Ctrl+O open, F zoom to fit, ⌘/Ctrl+0 100% (true paper size). Keep
@@ -449,7 +452,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   standards + category matching + firm defaults, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
   font outlines (no NaN), labels on/off, render regression.
-- e2e (50, one file per area): layout (wings + A/D, drawing stays put, scale/grid fields, sections, selection bar, error notices), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, placement preview + wheel sizing, drag/resize/wheel, selection + undo,
+- e2e (51, one file per area): layout (wings + A/D, drawing stays put, scale/grid fields, sections, selection bar, error notices), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, placement preview + wheel sizing, placement bar (Tab → area → category), drag/resize/wheel, selection + undo,
   connect, sizing, Tab to type an area, names (+ nameless), Labels box, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags

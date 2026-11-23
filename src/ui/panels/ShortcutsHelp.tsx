@@ -13,7 +13,7 @@ export function ShortcutsHelp() {
   const rows: [string, string][] = [
     [TOOL_LIST.map((t) => t.key.toUpperCase()).join(' / '), TOOL_LIST.map((t) => t.label).join(' / ')],
     ['A / D', 'Hide or show the tools / the standards'],
-    ['Tab', 'Type an area for the selected bubbles (Enter sets it)'],
+    ['Tab', 'Bubble tool: type the area to place, Tab again for its category; selected bubbles: type their area'],
     ['Shape tool', 'Drag freehand or click points; double-click a gap to fill it'],
     [
       'Pen tool',

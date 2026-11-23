@@ -191,6 +191,11 @@
 .selbar > .field .override-dot {
   margin-left: 4px;
 }
+.bar-category {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .bar-name .input {
   width: 130px;
   max-width: none;

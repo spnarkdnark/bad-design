@@ -1,6 +1,6 @@
 /**
  * The bar under the tabs: the settings of what's selected (each element's own overrides), and
- * empty when nothing is. One part per element kind; with several kinds selected, chips pick
+ * empty when nothing is. While the bubble tool is active it sets up what gets placed instead. One part per element kind; with several kinds selected, chips pick
  * which kind's settings show. Drawing-wide settings and standards live in the right wing.
  */
 import { useEffect, useState } from 'react';
@@ -12,11 +12,13 @@ import { LineBar } from './LineBar';
 import { ConnectionBar } from './ConnectionBar';
 import { OverlapBar } from './overlaps';
 import { ElementActions } from './ElementActions';
+import { PlacementBar } from './PlacementBar';
 
 const KIND_LABEL: Record<ElementKind, string> = { nodes: 'Bubbles', lines: 'Lines', texts: 'Text' };
 
 export function SelectionBar() {
   const sel = useUi((s) => s.selection);
+  const tool = useUi((s) => s.tool);
   const [pick, setPick] = useState<ElementKind | null>(null);
   // Tab (type an area) is about the bubbles, whichever kind the chips show
   const areaFocus = useUi((s) => s.areaFocus);
@@ -25,13 +27,14 @@ export function SelectionBar() {
   }, [areaFocus]);
   // nothing will claim it (no bubbles shown): drop the request
   useEffect(() => {
-    if (areaFocus && sel.nodes.length === 0) useUi.getState().setAreaFocus(false);
-  }, [areaFocus, sel.nodes.length]);
+    if (areaFocus && sel.nodes.length === 0 && tool !== 'bubble') useUi.getState().setAreaFocus(false);
+  }, [areaFocus, sel.nodes.length, tool]);
   const kinds = ELEMENT_KINDS.filter((k) => sel[k].length > 0);
   const kind = pick && kinds.includes(pick) ? pick : kinds[0];
 
   let body = null;
-  if (kind) {
+  if (tool === 'bubble') body = <PlacementBar />;
+  else if (kind) {
     body = (
       <>
         {kinds.length > 1 && (

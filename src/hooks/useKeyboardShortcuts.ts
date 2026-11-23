@@ -124,7 +124,8 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers = {}) {
           // type an area for the selected bubbles (any sizable shape)
           const doc = useDocument.getState().history.present;
           const sel = ui.selection.nodes.map((id) => doc.nodes[id]).filter(Boolean);
-          if (sel.length && sel.every((n) => isSizable(n.shape))) {
+          // (or, with the bubble tool, the area of the next one placed)
+          if (ui.tool === 'bubble' || (sel.length && sel.every((n) => isSizable(n.shape)))) {
             e.preventDefault();
             ui.setAreaFocus(true);
           }

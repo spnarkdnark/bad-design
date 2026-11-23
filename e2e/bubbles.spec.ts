@@ -48,10 +48,12 @@ test('the bubble tool shows its shape at the cursor; the wheel sizes it before p
   await expect.poll(placeSize).toBe(11);
   await canvas.click(400, 300);
   expect((await nodes(page))[0].shape).toEqual({ kind: 'circle', radiusFt: 11 });
-  // the square tool places at the same size (half its side), until the wheel changes it
+  // the square tool places the same area, until the wheel changes it
   await page.keyboard.press('q');
   await canvas.click(800, 300);
-  expect((await nodes(page))[1].shape).toEqual({ kind: 'rect', widthFt: 22, heightFt: 22 });
+  const sq = (await nodes(page))[1].shape;
+  expect(sq.kind).toBe('rect');
+  expect(sq.widthFt * sq.heightFt).toBeCloseTo(Math.PI * 11 * 11, 6);
   // Ctrl+wheel still zooms with the tool active
   await page.keyboard.press('b');
   await page.mouse.move(canvas.x + 600, canvas.y + 600);
@@ -59,7 +61,40 @@ test('the bubble tool shows its shape at the cursor; the wheel sizes it before p
   await page.mouse.wheel(0, -100);
   await page.keyboard.up('Control');
   await expect.poll(async () => (await ui(page)).view.zoom).toBeGreaterThan(zoom);
-  expect(await placeSize()).toBe(11);
+  expect(await placeSize()).toBe(11); // back on the circle: the same area again
+});
+
+test('with the bubble tool the bar sets up the next bubble: shape, category, area', async ({ page, canvas }) => {
+  const catName = async (n: any) => (await doc(page)).categories[n.categoryId]?.name;
+  await page.keyboard.press('b');
+  await expect(page.locator('.selbar .bar-title')).toHaveText(/New circle/i);
+  // B, Tab, type the area, Tab to the category, pick one by keyboard
+  await page.keyboard.press('Tab');
+  await expect(field(page, 'Area')).toBeFocused();
+  await page.keyboard.type('600');
+  await page.keyboard.press('Tab');
+  await expect(select(page, 'Category')).toBeFocused();
+  await select(page, 'Category').selectOption({ label: 'Bedroom' });
+  // Shift+click keeps placing with the same setup
+  await page.keyboard.down('Shift');
+  await canvas.click(400, 300);
+  await page.keyboard.up('Shift');
+  let [a] = await nodes(page);
+  expect(await catName(a)).toBe('Bedroom');
+  expect(Math.PI * a.shape.radiusFt ** 2).toBeCloseTo(600, 6);
+  // the shape toggle; a plain click places and returns to select, showing the new bubble's settings
+  await page.locator('.selbar .seg:has-text("Square")').click();
+  await canvas.click(800, 300);
+  const b = (await nodes(page))[1];
+  expect(b.shape.kind).toBe('rect');
+  expect(b.shape.widthFt * b.shape.heightFt).toBeCloseTo(600, 6);
+  expect(await catName(b)).toBe('Bedroom');
+  await expect(page.locator('.selbar .bar-title')).toHaveText('Square');
+  // the setup is remembered for the next time the tool is picked
+  await page.keyboard.press('b');
+  await expect(select(page, 'Category')).toHaveValue(b.categoryId);
+  a = (await nodes(page))[0];
+  expect(a.style).toEqual({}); // styles come from the category, not copied onto the bubble
 });
 
 test('wheel over empty canvas zooms', async ({ page, canvas }) => {
@@ -249,6 +284,9 @@ test('drag from one bubble to another connects them', async ({ page, canvas }) =
 
 test('squares: place, corner hit, corner resize, width/height, convert keeping area', async ({ page, canvas }) => {
   await page.keyboard.press('q'); // the Square tool
+  await page.keyboard.press('Tab'); // type its area
+  await page.keyboard.type('400');
+  await page.keyboard.press('Enter');
   await canvas.click(400, 300);
   let [n] = await nodes(page);
   expect(n.shape).toEqual({ kind: 'rect', widthFt: 20, heightFt: 20 });

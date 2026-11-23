@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Id, LabelPart, LineStyle, Point, SizableKind, TextStyle } from '../model/types';
 import { DEFAULT_LINE_STYLE, DEFAULT_RADIUS_FT, DEFAULT_TEXT_STYLE, MIN_SIZE_FT } from '../model/defaults';
 import { noElements, type ElementIds } from '../model/elements';
+import { convertShape, newShape, shapeSize } from '../model/geometry';
 
 /** Which canvas tool is active (implementations live in canvas/tools/). */
 export type ToolId = 'select' | 'bubble' | 'connect' | 'shape' | 'text' | 'pen';
@@ -33,9 +34,13 @@ interface UiState {
   /** what the bubble tool places */
   bubbleKind: SizableKind;
   setBubbleKind: (k: SizableKind) => void;
-  /** size (half-extent, feet) the bubble tool places; the wheel changes it before a click. Session only. */
+  /** size (half-extent, feet) the bubble tool places; the wheel changes it before a click; switching
+   * the kind keeps its area. Session only. */
   placeSize: number;
   setPlaceSize: (ft: number) => void;
+  /** category new bubbles get (the placement bar); null = none. Session only. */
+  placeCategory: Id | null;
+  setPlaceCategory: (id: Id | null) => void;
   /** set by Tab: the selection bar's Area field takes focus when it shows, then clears it (ui/selection/SizeFields) */
   areaFocus: boolean;
   setAreaFocus: (v: boolean) => void;
@@ -93,9 +98,17 @@ export const MAX_ZOOM = 32;
 export const useUi = create<UiState>((set) => ({
   tool: 'select',
   bubbleKind: 'circle',
-  setBubbleKind: (bubbleKind) => set({ bubbleKind }),
+  // switching what gets placed keeps its area (a 600 sf circle becomes a 600 sf square)
+  setBubbleKind: (bubbleKind) =>
+    set((s) =>
+      s.bubbleKind === bubbleKind
+        ? s
+        : { bubbleKind, placeSize: shapeSize(convertShape(newShape(s.bubbleKind, s.placeSize), bubbleKind)) },
+    ),
   areaFocus: false,
   setAreaFocus: (areaFocus) => set({ areaFocus }),
+  placeCategory: null,
+  setPlaceCategory: (placeCategory) => set({ placeCategory }),
   placeSize: DEFAULT_RADIUS_FT,
   setPlaceSize: (placeSize) => set({ placeSize: Math.max(MIN_SIZE_FT, placeSize) }),
   selection: emptySelection(),
