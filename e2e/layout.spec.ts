@@ -164,7 +164,7 @@ test('panning slides a cached image of the drawing that matches drawing it afres
   expect(await differing('cached', 'direct')).toBeLessThan(0.005); // and looks the same (anti-aliasing aside)
 });
 
-test('a first visit shows how to open each wing after 10 s; each hint goes once its own wing is toggled', async ({
+test('a first visit shows how to open each wing after 10 s; each hint goes once its own wing is toggled, until the next visit', async ({
   page,
   canvas,
 }) => {
@@ -191,11 +191,11 @@ test('a first visit shows how to open each wing after 10 s; each hint goes once 
   await controlHint.click();
   await expect(controlHint).toHaveCount(0);
   await expect(page.locator('.wing-tab.right')).toHaveText(/Control/);
-  // gone for good
+  // every visit shows them again
   await page.reload();
   await page.keyboard.press('Shift');
   await page.clock.runFor(15_000);
   await expect(page.getByTestId('splash')).toHaveCount(0);
-  await expect(toolsHint).toHaveCount(0);
-  await expect(controlHint).toHaveCount(0);
+  await expect(toolsHint).toBeVisible();
+  await expect(controlHint).toBeVisible();
 });

@@ -74,17 +74,15 @@ export async function reloadApp(page: Page) {
   await page.waitForSelector('.canvas canvas');
   await page.waitForFunction(() => (window as any).__bd);
   await dismissSplash(page);
+  // the wing hints (they fade in 10 s on, over the canvas the tests click) start put away; the
+  // hints test reloads by hand to see them
+  await page.evaluate(() => (window as any).__bd.panels.setState({ hintsSeen: { tools: true, controls: true } }));
 }
 
 export const test = base.extend<{ canvas: Canvas }>({
   canvas: async ({ page }, use) => {
     await page.goto('/');
-    // a fresh browser, except the first-visit wing hints are already gone (they cover the canvas
-    // the tests click on; the hints test brings them back)
-    await page.evaluate(() => {
-      localStorage.clear();
-      localStorage.setItem('bad:panels:v1', JSON.stringify({ hintsSeen: { tools: true, controls: true } }));
-    });
+    await page.evaluate(() => localStorage.clear());
     await reloadApp(page);
     // the tests' pixel math is written at 1/8" (12 px per ft at 100%), whatever the default scale
     await page.evaluate(() => {

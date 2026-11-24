@@ -433,8 +433,8 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
     SVG `TabCurve`s) around the centered title, `--wing-tab-bump` proud; on a first visit a light gray hint
     beside each ("Click here or press "A" …", `--wing-hint-w` wide) fades in `HINT_DELAY_MS` (10 s) after the
     splash is clicked past (`uiStore.splashDone`) and swells on a loop, until that wing is toggled
-    (`panelStore.hintsSeen`, saved; the e2e `canvas` fixture starts with both seen, since they sit over the
-    canvas; the hints test uses `page.clock`); A / D toggle; open state in `store/panelStore` (localStorage,
+    (`panelStore.hintsSeen`, NOT saved: every visit shows them again; e2e `reloadApp` puts them away via
+    `__bd.panels`, since they sit over the canvas; the hints test reloads by hand and uses `page.clock`); A / D toggle; open state in `store/panelStore` (localStorage,
     never in documents or undo). They slide out from / back into the screen edge (`styles/wingSlide.css`, optional:
     delete its import in `styles/index.css` to turn it off; `Wing` keeps a folding wing mounted only
     while an animation runs, so without it wings snap as before).

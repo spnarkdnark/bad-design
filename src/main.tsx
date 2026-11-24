@@ -12,13 +12,15 @@ if (import.meta.env.DEV) {
     import('./store/documentStore'),
     import('./store/uiStore'),
     import('./store/workspaceStore'),
+    import('./store/panelStore'),
     import('./model/blob'),
     import('./model/text'),
-  ]).then(([d, u, w, b, t]) => {
+  ]).then(([d, u, w, p, b, t]) => {
     (window as unknown as { __bd: unknown }).__bd = {
       doc: d.useDocument,
       ui: u.useUi,
       ws: w.useWorkspace,
+      panels: p.usePanels,
       blobGeometry: b.blobGeometry,
       textWidthHandle: t.textWidthHandle,
     };
