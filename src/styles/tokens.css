@@ -72,8 +72,9 @@
   --tools-w: 168px; /* left wing: tool palette */
   --sidebar-w: 300px; /* right wing: standards */
   --wing-tab-w: 26px; /* a collapsed wing */
-  --wing-tab-bump: 8px; /* how far a collapsed wing's titled tab stands past it */
-  --wing-tab-curve: 10px; /* height of the curve into that bump (matches Wing.tsx#TabCurve) */
+  --wing-tab-bump: 12px; /* how far a collapsed wing's titled tab stands past it */
+  --wing-tab-curve: 12px; /* height of the curve into that bump (matches Wing.tsx#TabCurve) */
+  --wing-tab-text: 14px; /* the folded tab's title (Tools / Control) */
   --wing-hint-w: 130px; /* the first-visit hint beside each wing wraps to this width */
   --tool-tile-h: 72px;
   --panel-pad-x: 16px;

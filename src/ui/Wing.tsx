@@ -127,15 +127,21 @@ export function Wing({
   );
 }
 
+/** Must match --wing-tab-bump and --wing-tab-curve in styles/tokens.css. */
+const BUMP = 12;
+const CURVE = 12;
+
 /**
  * Where the strip's edge bends out to the titled part (drawn for the left wing's top; CSS mirrors
- * it for the bottom and the right wing). Sizes match --wing-tab-bump (8) and --wing-tab-curve (10).
+ * it for the bottom and the right wing).
  */
 function TabCurve({ className }: { className: string }) {
-  const edge = 'M0.5 0 C0.5 5 8.5 5 8.5 10';
+  const x = BUMP + 0.5;
+  const mid = CURVE / 2;
+  const edge = `M0.5 0 C0.5 ${mid} ${x} ${mid} ${x} ${CURVE}`;
   return (
-    <svg className={className} width="10" height="10" viewBox="0 0 10 10" aria-hidden>
-      <path className="fill" d={`M0 0 L0.5 0 C0.5 5 8.5 5 8.5 10 L0 10 Z`} />
+    <svg className={className} width={BUMP + 2} height={CURVE} viewBox={`0 0 ${BUMP + 2} ${CURVE}`} aria-hidden>
+      <path className="fill" d={`M0 0 L${edge.slice(1)} L0 ${CURVE} Z`} />
       <path className="line" d={edge} />
     </svg>
   );
