@@ -321,7 +321,7 @@ italic = slant), as the browser does on screen.
   to the cursor. Ctrl+Shift+V pastes the copied element's look onto the selection.
   Pasting tab/comma-separated rows with a header imports bubbles.
 - Wheel: zoom at cursor; with the bubble tool, sizes the shape about to be placed. Wheel over a selected bubble resizes it by the radius snap
-  (default 6"; Shift does not change the step); Ctrl/⌘+wheel (and trackpad pinch) always zooms.
+  (default 1'; Shift does not change the step); Ctrl/⌘+wheel (and trackpad pinch) always zooms.
 - Pan: Space+drag or middle mouse. Marquee: drag on empty canvas (Shift adds).
 - Resize handle (circle: right edge; rectangle: bottom-right corner, proportional) snaps the
   half-extent to `settings.snap.radiusIncrementFt` (stored name kept for old files; the UI

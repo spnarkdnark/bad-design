@@ -13,7 +13,7 @@
       "spacingFt": 10
     },
     "snap": {
-      "radiusIncrementFt": 0.5
+      "radiusIncrementFt": 1
     },
     "shapeGapFt": 2,
     "defaultStyle": {

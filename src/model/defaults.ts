@@ -72,7 +72,7 @@ export const SIZABLE_SHAPES = (Object.keys(SHAPE_LABELS) as SizableKind[]).map((
 export const DEFAULT_RADIUS_FT = 10;
 /** Smallest half-extent (radius / half-side) a bubble can be resized to. */
 export const MIN_SIZE_FT = 0.5;
-export const RADIUS_SNAP_FT = 0.5; // 6"
+export const RADIUS_SNAP_FT = 1; // 1'
 export const NUDGE_FT = 1;
 export const NUDGE_BIG_FT = 10;
 export const DUPLICATE_OFFSET_FT = 5;

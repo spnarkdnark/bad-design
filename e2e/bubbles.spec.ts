@@ -12,7 +12,7 @@ test('a 10 ft bubble is 120 px across its radius at 1/8" and 100%', async ({ pag
   expect((await ui(page)).selection.nodes).toEqual([]);
 });
 
-test('drag moves, resize handle snaps to 6", wheel steps 6"', async ({ page, canvas }) => {
+test("drag moves, resize handle snaps to 1', wheel steps 1'", async ({ page, canvas }) => {
   await canvas.bubble(400, 300);
   const before = (await nodes(page))[0];
   await canvas.drag([400, 300], [460, 300]);
@@ -20,12 +20,12 @@ test('drag moves, resize handle snaps to 6", wheel steps 6"', async ({ page, can
   expect(moved.x - before.x).toBeCloseTo(5, 1); // 60 px / 12 px per ft
   // handle sits on the right edge of the selected bubble (center now at 460)
   await canvas.drag([580, 300], [609, 300]);
-  expect((await nodes(page))[0].shape.radiusFt).toBe(12.5); // 149 px -> 12.4 ft -> snapped
+  expect((await nodes(page))[0].shape.radiusFt).toBe(12); // 149 px -> 12.4 ft -> snapped to 1'
   await page.mouse.move(canvas.x + 460, canvas.y + 300);
   for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -100);
-  await expect.poll(async () => (await nodes(page))[0].shape.radiusFt).toBe(14);
+  await expect.poll(async () => (await nodes(page))[0].shape.radiusFt).toBe(15);
   await page.mouse.wheel(0, 100);
-  await expect.poll(async () => (await nodes(page))[0].shape.radiusFt).toBe(13.5);
+  await expect.poll(async () => (await nodes(page))[0].shape.radiusFt).toBe(14);
 });
 
 test('the bubble tool shows its shape at the cursor; the wheel sizes it before placing', async ({ page, canvas }) => {
@@ -34,26 +34,26 @@ test('the bubble tool shows its shape at the cursor; the wheel sizes it before p
   await page.mouse.move(canvas.x + 400, canvas.y + 300);
   expect(await placeSize()).toBe(10);
   const zoom = (await ui(page)).view.zoom;
-  // two notches up: 6" steps (the size snap), not a zoom
+  // two notches up: 1' steps (the size snap), not a zoom
   await page.mouse.wheel(0, -100);
   await page.mouse.wheel(0, -100);
-  await expect.poll(placeSize).toBe(11);
+  await expect.poll(placeSize).toBe(12);
   expect((await ui(page)).view.zoom).toBe(zoom);
   // Shift (held to place several) doesn't change the step
   await page.keyboard.down('Shift');
   await page.mouse.wheel(0, 100);
   await page.keyboard.up('Shift');
-  await expect.poll(placeSize).toBe(10.5);
-  await page.mouse.wheel(0, -100);
   await expect.poll(placeSize).toBe(11);
+  await page.mouse.wheel(0, -100);
+  await expect.poll(placeSize).toBe(12);
   await canvas.click(400, 300);
-  expect((await nodes(page))[0].shape).toEqual({ kind: 'circle', radiusFt: 11 });
+  expect((await nodes(page))[0].shape).toEqual({ kind: 'circle', radiusFt: 12 });
   // the square tool places the same area, until the wheel changes it
   await page.keyboard.press('q');
   await canvas.click(800, 300);
   const sq = (await nodes(page))[1].shape;
   expect(sq.kind).toBe('rect');
-  expect(sq.widthFt * sq.heightFt).toBeCloseTo(Math.PI * 11 * 11, 6);
+  expect(sq.widthFt * sq.heightFt).toBeCloseTo(Math.PI * 12 * 12, 6);
   // Ctrl+wheel still zooms with the tool active
   await page.keyboard.press('b');
   await page.mouse.move(canvas.x + 600, canvas.y + 600);
@@ -61,7 +61,7 @@ test('the bubble tool shows its shape at the cursor; the wheel sizes it before p
   await page.mouse.wheel(0, -100);
   await page.keyboard.up('Control');
   await expect.poll(async () => (await ui(page)).view.zoom).toBeGreaterThan(zoom);
-  expect(await placeSize()).toBe(11); // back on the circle: the same area again
+  expect(await placeSize()).toBe(12); // back on the circle: the same area again
 });
 
 test('with the bubble tool the bar sets up the next bubble: shape, category, area', async ({ page, canvas }) => {
