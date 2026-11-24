@@ -24,7 +24,8 @@ export function createWheelHandler() {
 
     const ui = useUi.getState();
     const doc = getDoc();
-    const increment = e.shiftKey ? 1 / 12 : doc.settings.snap.radiusIncrementFt;
+    // always the size snap: Shift is free for Shift+click placing several bubbles
+    const increment = doc.settings.snap.radiusIncrementFt;
     /** One step up (1) or down (-1) per wheel notch; trackpad deltas add up to a notch first. */
     const notch = (): 1 | -1 | 0 => {
       if (Math.abs(delta) >= NOTCH) {

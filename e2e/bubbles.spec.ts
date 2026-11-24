@@ -39,12 +39,12 @@ test('the bubble tool shows its shape at the cursor; the wheel sizes it before p
   await page.mouse.wheel(0, -100);
   await expect.poll(placeSize).toBe(11);
   expect((await ui(page)).view.zoom).toBe(zoom);
-  // Shift: 1" steps
+  // Shift (held to place several) doesn't change the step
   await page.keyboard.down('Shift');
   await page.mouse.wheel(0, 100);
   await page.keyboard.up('Shift');
-  await expect.poll(placeSize).toBeCloseTo(11 - 1 / 12, 6);
-  await page.mouse.wheel(0, -100); // back onto the 6" grid
+  await expect.poll(placeSize).toBe(10.5);
+  await page.mouse.wheel(0, -100);
   await expect.poll(placeSize).toBe(11);
   await canvas.click(400, 300);
   expect((await nodes(page))[0].shape).toEqual({ kind: 'circle', radiusFt: 11 });

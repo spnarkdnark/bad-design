@@ -56,7 +56,7 @@ export function ShortcutsHelp() {
 /** How-to tips per selection, as the old sidebar showed them under each kind's settings. */
 export const TIPS = {
   bubble:
-    'A dot next to a setting means it overrides the category. Scroll over a selected bubble to resize it by the size snap (Shift: 1").',
+    'A dot next to a setting means it overrides the category. Scroll over a selected bubble to resize it by the size snap.',
   shape:
     'Drag a point to move it; near a bubble it snaps on (Alt: no snapping). Double-click a point to delete it, or the edge to add one.',
   text: 'Double-click a text block (or press Enter) to edit it. Drag the handle on its right edge to set how wide it wraps; double-click the handle to stop wrapping.',

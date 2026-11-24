@@ -272,7 +272,7 @@ italic = slant), as the browser does on screen.
   `uiStore.bubbleKind`, shown as two tiles). The shape to place follows the cursor as a dashed
   preview with its size (`tools/bubble.placementNode`, drawn by `OverlayLayer.PlacementPreview`
   from the generic outline, so any new sizable kind gets it); the wheel steps its size
-  (`uiStore.placeSize`, half-extent, session only; size snap, Shift 1", Ctrl+wheel zooms; switching
+  (`uiStore.placeSize`, half-extent, session only; size snap, Shift does not change it (it is for Shift+click placing), Ctrl+wheel zooms; switching
   circle/square keeps the area) and a click places it. While the tool is active the selection bar
   is the placement bar (`ui/selection/PlacementBar.tsx`): shape toggle, Area, Category
   (`uiStore.placeCategory`; new bubbles get it, so its look), dimensions. Keyboard flow: B, Tab
@@ -321,7 +321,7 @@ italic = slant), as the browser does on screen.
   to the cursor. Ctrl+Shift+V pastes the copied element's look onto the selection.
   Pasting tab/comma-separated rows with a header imports bubbles.
 - Wheel: zoom at cursor; with the bubble tool, sizes the shape about to be placed. Wheel over a selected bubble resizes it by the radius snap
-  (default 6"; Shift = 1"); Ctrl/⌘+wheel (and trackpad pinch) always zooms.
+  (default 6"; Shift does not change the step); Ctrl/⌘+wheel (and trackpad pinch) always zooms.
 - Pan: Space+drag or middle mouse. Marquee: drag on empty canvas (Shift adds).
 - Resize handle (circle: right edge; rectangle: bottom-right corner, proportional) snaps the
   half-extent to `settings.snap.radiusIncrementFt` (stored name kept for old files; the UI
