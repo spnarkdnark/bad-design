@@ -430,7 +430,9 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
     `--sidebar-w`, `--wing-tab-w`, `--tool-tile-h`).
   - Wings (`ui/Wing.tsx`, in a `.wing-slot` absolutely placed over the canvas): fold toward the screen edge from an arrow on the inner edge; folded,
     a slim titled tab unfolds them; A / D toggle; open state in `store/panelStore` (localStorage,
-    never in documents or undo).
+    never in documents or undo). They slide out from / back into the screen edge (`styles/wingSlide.css`, optional:
+    delete its import in `styles/index.css` to turn it off; `Wing` keeps a folding wing mounted only
+    while an animation runs, so without it wings snap as before).
   - Selection bar (`ui/selection/`): what's selected, one row that never wraps (it scrolls
     sideways if it must); empty when nothing is selected. One component per kind; everyday
     settings inline, the rest in `Popover` menus (Size, Label, More, Overlaps); with several

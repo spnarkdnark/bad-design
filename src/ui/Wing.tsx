@@ -4,8 +4,10 @@
  * to bring it back. It covers the canvas rather than resizing it, so folding never moves the
  * drawing; it reports how much it covers (`uiStore.insets`) so centering uses the visible part.
  * Open/closed is remembered (store/panelStore); A and D toggle them (hooks/useKeyboardShortcuts).
+ * Folding keeps the wing on screen while a CSS animation runs (styles/wingSlide.css, optional:
+ * with no animation it folds at once).
  */
-import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { usePanels, type WingId } from '../store/panelStore';
 import { useUi } from '../store/uiStore';
 
@@ -25,6 +27,27 @@ export function Wing({
   const open = usePanels((s) => s.wings[id]);
   const toggle = () => usePanels.getState().toggleWing(id);
   const slot = useRef<HTMLDivElement>(null);
+  const aside = useRef<HTMLElement>(null);
+
+  // `shown`: the wing is on screen (open, or still sliding shut); `slide`: toggled since mount,
+  // so the page doesn't animate its wings on load
+  const [shown, setShown] = useState(open);
+  const [slide, setSlide] = useState(false);
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    setSlide(true);
+    if (open) setShown(true);
+  }
+  const closing = !open && shown;
+  useEffect(() => {
+    if (!closing) return;
+    const st = aside.current && getComputedStyle(aside.current);
+    // no animation (styles/wingSlide.css removed, reduced motion): fold at once
+    if (!st || st.animationName === 'none' || parseFloat(st.animationDuration) === 0) return setShown(false);
+    const t = window.setTimeout(() => setShown(false), 1000); // in case animationend never comes
+    return () => window.clearTimeout(t);
+  }, [closing]);
 
   useLayoutEffect(() => {
     const el = slot.current!;
@@ -39,8 +62,15 @@ export function Wing({
   const arrow = (side === 'left') === open ? '‹' : '›';
   return (
     <div ref={slot} className={`wing-slot ${side}`}>
-      {open ? (
-        <aside className={`wing ${side}`} data-wing={id} aria-label={title}>
+      {shown ? (
+        <aside
+          ref={aside}
+          className={`wing ${side}${slide ? ' slide' : ''}${closing ? ' closing' : ''}`}
+          data-wing={closing ? undefined : id}
+          aria-label={title}
+          aria-hidden={closing || undefined}
+          onAnimationEnd={(e) => e.target === e.currentTarget && closing && setShown(false)}
+        >
           <div className="wing-body">{children}</div>
           <button
             type="button"
@@ -55,7 +85,7 @@ export function Wing({
       ) : (
         <button
           type="button"
-          className={`wing-tab ${side}`}
+          className={`wing-tab ${side}${slide ? ' slide' : ''}`}
           data-wing={id}
           title={`Show ${title.toLowerCase()} (${shortcut})`}
           onClick={toggle}

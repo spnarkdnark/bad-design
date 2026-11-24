@@ -9,3 +9,4 @@
 @import './canvas.css';
 @import './sidebar.css';
 @import './overlays.css';
+@import './wingSlide.css'; /* optional wing slide animation: delete this line to turn it off */

@@ -1,0 +1,63 @@
+/*
+ * Wing slide (A / D, the arrows and the folded tabs): a wing slides out from the screen edge
+ * when it opens and back into it when it folds; the folded tab slides in after it.
+ * OPTIONAL: to turn it off, delete the import of this file in index.css (or set
+ * --wing-slide to 0ms). ui/Wing.tsx keeps a folding wing on screen only while an animation
+ * runs, so without this file wings simply snap open and shut, as before.
+ */
+:root {
+  --wing-slide: 160ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --wing-slide: 0ms;
+  }
+}
+/* the right wing sliding past the window edge must not scroll the page */
+.workspace {
+  overflow: hidden;
+}
+/* .slide: only after a toggle, so the page doesn't animate its wings on load */
+.wing.left.slide {
+  animation: wing-in-left var(--wing-slide) ease-out;
+}
+.wing.right.slide {
+  animation: wing-in-right var(--wing-slide) ease-out;
+}
+.wing.left.slide.closing {
+  animation: wing-out-left var(--wing-slide) ease-in forwards;
+}
+.wing.right.slide.closing {
+  animation: wing-out-right var(--wing-slide) ease-in forwards;
+}
+.wing-tab.left.slide {
+  animation: wing-in-left var(--wing-slide) ease-out;
+}
+.wing-tab.right.slide {
+  animation: wing-in-right var(--wing-slide) ease-out;
+}
+/* the collapse arrow sticks out 16px past the wing's inner edge: slide it fully away too */
+@keyframes wing-in-left {
+  from {
+    transform: translateX(calc(-100% - 16px));
+  }
+}
+@keyframes wing-in-right {
+  from {
+    transform: translateX(calc(100% + 16px));
+  }
+}
+@keyframes wing-out-left {
+  to {
+    transform: translateX(calc(-100% - 16px));
+  }
+}
+@keyframes wing-out-right {
+  to {
+    transform: translateX(calc(100% + 16px));
+  }
+}
+/* a wing sliding shut can't be clicked */
+.wing.closing {
+  pointer-events: none;
+}
