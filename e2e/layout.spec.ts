@@ -164,17 +164,26 @@ test('panning slides a cached image of the drawing that matches drawing it afres
   expect(await differing('cached', 'direct')).toBeLessThan(0.005); // and looks the same (anti-aliasing aside)
 });
 
-test('a first visit shows how to open each wing; each hint goes once its own wing is toggled', async ({
+test('a first visit shows how to open each wing after 10 s; each hint goes once its own wing is toggled', async ({
   page,
   canvas,
 }) => {
   void canvas;
   await page.evaluate(() => localStorage.removeItem('bad:panels:v1'));
-  await reloadApp(page);
-  const toolsHint = page.getByRole('button', { name: 'Click here or press "A" to expand / collapse' });
-  const controlHint = page.getByRole('button', { name: 'Click here or press "D" to expand / collapse' });
-  await expect(toolsHint).toBeVisible();
-  await expect(controlHint).toBeVisible();
+  await page.clock.install();
+  await page.reload();
+  await page.waitForSelector('.canvas canvas');
+  const toolsHint = page.getByTestId('wing-hint-tools');
+  const controlHint = page.getByTestId('wing-hint-controls');
+  // nothing under the logo, nor in the first seconds after it
+  await page.clock.runFor(20_000);
+  await expect(toolsHint).toHaveCount(0);
+  await page.keyboard.press('Shift');
+  await page.clock.runFor(9_000);
+  await expect(toolsHint).toHaveCount(0);
+  await page.clock.runFor(2_000);
+  await expect(toolsHint).toHaveText('Click here or press "A" to expand / collapse');
+  await expect(controlHint).toHaveText('Click here or press "D" to expand / collapse');
   await page.keyboard.press('a');
   await expect(toolsHint).toHaveCount(0);
   await expect(controlHint).toBeVisible();
@@ -183,7 +192,10 @@ test('a first visit shows how to open each wing; each hint goes once its own win
   await expect(controlHint).toHaveCount(0);
   await expect(page.locator('.wing-tab.right')).toHaveText(/Control/);
   // gone for good
-  await reloadApp(page);
+  await page.reload();
+  await page.keyboard.press('Shift');
+  await page.clock.runFor(15_000);
+  await expect(page.getByTestId('splash')).toHaveCount(0);
   await expect(toolsHint).toHaveCount(0);
   await expect(controlHint).toHaveCount(0);
 });

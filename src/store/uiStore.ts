@@ -58,6 +58,9 @@ interface UiState {
   toast: { message: string; id: number; action?: { label: string; run: () => void } } | null;
   /** bumps when a web font finishes loading so the canvas re-measures labels */
   fontEpoch: number;
+  /** the opening logo has been clicked past (ui/Splash) */
+  splashDone: boolean;
+  setSplashDone: () => void;
   bumpFontEpoch: () => void;
   /** points clicked so far with the shape tool (world feet) */
   shapeDraft: Point[] | null;
@@ -122,6 +125,7 @@ export const useUi = create<UiState>((set) => ({
   exportOpen: false,
   toast: null,
   fontEpoch: 0,
+  splashDone: false,
   shapeDraft: null,
   editingLabel: null,
   setEditingLabel: (editingLabel) => set(editingLabel ? { editingLabel, editingText: null } : { editingLabel }),
@@ -135,6 +139,7 @@ export const useUi = create<UiState>((set) => ({
   setLineStyle: (lineStyle) => set({ lineStyle }),
   setShapeDraft: (shapeDraft) => set({ shapeDraft }),
   bumpFontEpoch: () => set((s) => ({ fontEpoch: s.fontEpoch + 1 })),
+  setSplashDone: () => set({ splashDone: true }),
 
   setTool: (tool) => set({ tool, connectFrom: null, shapeDraft: null, lineDraft: null }),
   // anything not given is deselected

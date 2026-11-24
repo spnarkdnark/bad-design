@@ -32,6 +32,7 @@ export function Splash() {
       };
     }
     if (phase === 'fading') {
+      useUi.getState().setSplashDone();
       const t = window.setTimeout(() => setPhase('gone'), FADE_MS);
       return () => window.clearTimeout(t);
     }

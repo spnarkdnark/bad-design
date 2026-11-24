@@ -73,6 +73,8 @@
   --sidebar-w: 300px; /* right wing: standards */
   --wing-tab-w: 26px; /* a collapsed wing */
   --wing-tab-bump: 8px; /* how far a collapsed wing's titled tab stands past it */
+  --wing-tab-curve: 10px; /* height of the curve into that bump (matches Wing.tsx#TabCurve) */
+  --wing-hint-w: 130px; /* the first-visit hint beside each wing wraps to this width */
   --tool-tile-h: 72px;
   --panel-pad-x: 16px;
   --field-label-w: 84px;

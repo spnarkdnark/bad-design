@@ -63,32 +63,34 @@
   background: var(--hover);
   color: var(--text);
 }
-/* a folded wing: a slim tab with its title */
+/*
+ * A folded wing: a slim strip whose inner edge bends out around its centered title and back,
+ * one continuous outline. The strip's two edge pieces (.wing-tab-edge) carry the line above and
+ * below; the titled part (.wing-tab-handle) is a bump past the strip with SVG curves
+ * (Wing.tsx#TabCurve) joining the two.
+ */
 .wing-tab {
   flex: none;
   width: var(--wing-tab-w);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
   padding: 0;
   border: none;
-  background: var(--panel);
+  background: none;
   color: var(--muted);
   cursor: pointer;
 }
-.wing-tab.left {
+.wing-tab-edge {
+  flex: 1;
+  background: var(--panel);
+}
+.wing-tab.left .wing-tab-edge {
   border-right: 1px solid var(--line);
 }
-.wing-tab.right {
+.wing-tab.right .wing-tab-edge {
   border-left: 1px solid var(--line);
 }
-.wing-tab:hover,
-.wing-tab:hover .wing-tab-handle {
-  background: var(--hover);
-  color: var(--text);
-}
-/* the titled part, centered, standing out past the strip toward the drawing */
 .wing-tab-handle {
   position: relative;
   display: flex;
@@ -96,43 +98,59 @@
   align-items: center;
   gap: 10px;
   width: calc(var(--wing-tab-w) + var(--wing-tab-bump));
-  padding: 14px 0;
-  border: 1px solid var(--line);
+  padding: 16px 0;
   background: var(--panel);
 }
 .wing-tab.left .wing-tab-handle {
-  margin-right: calc(-1 * var(--wing-tab-bump) - 1px);
-  padding-right: var(--wing-tab-bump);
-  border-left: none;
-  border-radius: 0 var(--radius) var(--radius) 0;
+  border-right: 1px solid var(--line);
 }
 .wing-tab.right .wing-tab-handle {
-  margin-left: calc(-1 * var(--wing-tab-bump) - 1px);
-  padding-left: var(--wing-tab-bump);
-  border-right: none;
-  border-radius: var(--radius) 0 0 var(--radius);
+  align-self: flex-end;
+  border-left: 1px solid var(--line);
 }
-/* first-visit hint beside each wing, clear of the collapse arrow / the tab's bump */
-.wing-hint {
+.wing-tab-curve {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 4px 6px;
-  border: none;
-  background: none;
-  color: var(--hint);
-  font-size: var(--text-sm);
-  white-space: nowrap;
-  cursor: pointer;
+  overflow: visible;
 }
-.wing-hint:hover {
-  color: var(--muted);
+.wing-tab-curve .fill {
+  fill: var(--panel);
 }
-.wing-hint.left {
-  left: calc(100% + 24px);
+.wing-tab-curve .line {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
 }
-.wing-hint.right {
-  right: calc(100% + 24px);
+/* drawn for the left wing's top: flipped for the bottom and for the right wing */
+.wing-tab.left .wing-tab-curve {
+  left: calc(var(--wing-tab-w) - 1px);
+}
+.wing-tab.right .wing-tab-curve {
+  right: calc(var(--wing-tab-w) - 1px);
+}
+.wing-tab-curve.top {
+  top: calc(-1 * var(--wing-tab-curve));
+}
+.wing-tab-curve.bottom {
+  bottom: calc(-1 * var(--wing-tab-curve));
+}
+.wing-tab.left .wing-tab-curve.bottom {
+  transform: scaleY(-1);
+}
+.wing-tab.right .wing-tab-curve.top {
+  transform: scaleX(-1);
+}
+.wing-tab.right .wing-tab-curve.bottom {
+  transform: scale(-1, -1);
+}
+.wing-tab:hover {
+  color: var(--text);
+}
+.wing-tab:hover .wing-tab-edge,
+.wing-tab:hover .wing-tab-handle {
+  background: var(--hover);
+}
+.wing-tab:hover .wing-tab-curve .fill {
+  fill: var(--hover);
 }
 .wing-tab-arrow {
   font-size: 16px;
@@ -147,6 +165,54 @@
 }
 .wing-tab.left .wing-tab-label {
   transform: rotate(180deg);
+}
+/*
+ * First-visit hint beside each wing (Wing.tsx: after HINT_DELAY_MS), clear of the collapse arrow /
+ * the tab's bump. It fades in, then gently swells on a loop to catch the eye.
+ */
+.wing-hint {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  width: var(--wing-hint-w);
+  padding: 4px 6px;
+  border: none;
+  background: none;
+  color: var(--hint);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  cursor: pointer;
+  animation:
+    wing-hint-in 700ms ease-out both,
+    wing-hint-swell 1.8s ease-in-out 700ms infinite;
+}
+.wing-hint:hover {
+  color: var(--muted);
+}
+.wing-hint.left {
+  left: calc(100% + 24px);
+  text-align: left;
+  transform-origin: left center;
+}
+.wing-hint.right {
+  right: calc(100% + 24px);
+  text-align: right;
+  transform-origin: right center;
+}
+@keyframes wing-hint-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes wing-hint-swell {
+  50% {
+    scale: 1.08;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wing-hint {
+    animation: wing-hint-in 700ms ease-out both;
+  }
 }
 
 /* tool palette */

@@ -11,6 +11,9 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import { usePanels, type WingId } from '../store/panelStore';
 import { useUi } from '../store/uiStore';
 
+/** How long after the splash a wing's "click here or press A / D" hint waits to appear. */
+export const HINT_DELAY_MS = 10_000;
+
 export function Wing({
   id,
   side,
@@ -25,7 +28,17 @@ export function Wing({
   children: ReactNode;
 }) {
   const open = usePanels((s) => s.wings[id]);
-  const hint = !usePanels((s) => s.hintsSeen[id]);
+  // first visit: a hint fades in beside the wing once the app has been open HINT_DELAY_MS without
+  // this wing being toggled; toggling it (any way) puts it away for good (store/panelStore)
+  const unseen = !usePanels((s) => s.hintsSeen[id]);
+  const splashDone = useUi((s) => s.splashDone);
+  const [due, setDue] = useState(false);
+  useEffect(() => {
+    if (!splashDone || !unseen) return;
+    const t = window.setTimeout(() => setDue(true), HINT_DELAY_MS);
+    return () => window.clearTimeout(t);
+  }, [splashDone, unseen]);
+  const hint = unseen && due;
   const toggle = () => usePanels.getState().toggleWing(id);
   const slot = useRef<HTMLDivElement>(null);
   const aside = useRef<HTMLElement>(null);
@@ -91,21 +104,39 @@ export function Wing({
           title={`Show ${title.toLowerCase()} (${shortcut})`}
           onClick={toggle}
         >
-          {/* the part with the title stands a little proud of the strip, centered on it */}
+          {/* one outline: the strip's edge curves out around the titled part and back */}
+          <span className="wing-tab-edge" />
           <span className="wing-tab-handle">
+            <TabCurve className="wing-tab-curve top" />
             <span className="wing-tab-arrow" aria-hidden>
               {arrow}
             </span>
             <span className="wing-tab-label">{title}</span>
+            <TabCurve className="wing-tab-curve bottom" />
           </span>
+          <span className="wing-tab-edge" />
         </button>
       )}
       {/* first visit: how to open / fold it, until this wing is first toggled (store/panelStore) */}
       {hint && (
-        <button type="button" className={`wing-hint ${side}`} onClick={toggle}>
+        <button type="button" className={`wing-hint ${side}`} data-testid={`wing-hint-${id}`} onClick={toggle}>
           Click here or press "{shortcut}" to expand / collapse
         </button>
       )}
     </div>
+  );
+}
+
+/**
+ * Where the strip's edge bends out to the titled part (drawn for the left wing's top; CSS mirrors
+ * it for the bottom and the right wing). Sizes match --wing-tab-bump (8) and --wing-tab-curve (10).
+ */
+function TabCurve({ className }: { className: string }) {
+  const edge = 'M0.5 0 C0.5 5 8.5 5 8.5 10';
+  return (
+    <svg className={className} width="10" height="10" viewBox="0 0 10 10" aria-hidden>
+      <path className="fill" d={`M0 0 L0.5 0 C0.5 5 8.5 5 8.5 10 L0 10 Z`} />
+      <path className="line" d={edge} />
+    </svg>
   );
 }
