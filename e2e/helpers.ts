@@ -79,7 +79,12 @@ export async function reloadApp(page: Page) {
 export const test = base.extend<{ canvas: Canvas }>({
   canvas: async ({ page }, use) => {
     await page.goto('/');
-    await page.evaluate(() => localStorage.clear());
+    // a fresh browser, except the first-visit wing hints are already gone (they cover the canvas
+    // the tests click on; the hints test brings them back)
+    await page.evaluate(() => {
+      localStorage.clear();
+      localStorage.setItem('bad:panels:v1', JSON.stringify({ hintsSeen: { tools: true, controls: true } }));
+    });
     await reloadApp(page);
     // the tests' pixel math is written at 1/8" (12 px per ft at 100%), whatever the default scale
     await page.evaluate(() => {

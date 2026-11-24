@@ -428,8 +428,10 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
     (`uiStore.insets`); centering, zoom to fit, new-tab views and the scale change's fixed point
     use the visible part (`actions/view.visibleArea`), never the raw stage size. Zoom has no on-screen controls (wheel, F, Ctrl+0, Ctrl+±). Sizes in tokens (`--tabbar-h`, `--selbar-h`, `--tools-w`,
     `--sidebar-w`, `--wing-tab-w`, `--tool-tile-h`).
-  - Wings (`ui/Wing.tsx`, in a `.wing-slot` absolutely placed over the canvas): fold toward the screen edge from an arrow on the inner edge; folded,
-    a slim titled tab unfolds them; A / D toggle; open state in `store/panelStore` (localStorage,
+  - Wings (`ui/Wing.tsx`, in a `.wing-slot` absolutely placed over the canvas; titled Tools and Control): fold toward the screen edge from an arrow on the inner edge; folded,
+    a slim strip whose centered titled tab stands `--wing-tab-bump` proud unfolds them; on a first visit a light gray
+    hint beside each ("Click here or press "A" …") stays until that wing is toggled (`panelStore.hintsSeen`, saved;
+    the e2e `canvas` fixture starts with both seen, since they sit over the canvas); A / D toggle; open state in `store/panelStore` (localStorage,
     never in documents or undo). They slide out from / back into the screen edge (`styles/wingSlide.css`, optional:
     delete its import in `styles/index.css` to turn it off; `Wing` keeps a folding wing mounted only
     while an animation runs, so without it wings snap as before).
@@ -466,7 +468,7 @@ Every feature: add/extend a unit test for pure logic, add an e2e test in the mat
   standards + category matching + firm defaults + category cycling, costs, clipboard, overlaps, sketch determinism, blobs,
   text (layout, elements registry, clips, files), pen lines (geometry, edits, clips, files),
   font outlines (no NaN), labels on/off, render regression.
-- e2e (54, one file per area): layout (wings + A/D, drawing stays put, cached pan image matches a fresh draw, scale/grid fields, sections, selection bar, error notices), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, placement preview + wheel sizing, placement bar (Tab → area → category, right-click cycles category), drag/resize/wheel, selection + undo,
+- e2e (55, one file per area): layout (wings + A/D, first-visit wing hints, drawing stays put, cached pan image matches a fresh draw, scale/grid fields, sections, selection bar, error notices), example button, splash, default scale + 100% on open, pen (draw/close/45°/freehand/snap/point edits/style/copy/export), bubbles (scale, placement preview + wheel sizing, placement bar (Tab → area → category, right-click cycles category), drag/resize/wheel, selection + undo,
   connect, sizing, right-click recategorize, Tab to type an area, names (+ nameless), Labels box, in-place area, squares), styles + category/graphic/overlap standards + reset, clipboard (+ paste adds categories), costs (+ CSV cost column), overlaps, shapes, text (place/edit/move/style/wrap/copy/export), tabs, io (exports + save dialogs + download fallback).
 - Canvas hit-testing is geometric (`canvas/query.ts`, `canvas/hitTest.ts`); Konva layers
   are `listening={false}`. Window-level move/up (input/useCanvasInput.ts) so drags

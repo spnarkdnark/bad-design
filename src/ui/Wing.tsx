@@ -25,6 +25,7 @@ export function Wing({
   children: ReactNode;
 }) {
   const open = usePanels((s) => s.wings[id]);
+  const hint = !usePanels((s) => s.hintsSeen[id]);
   const toggle = () => usePanels.getState().toggleWing(id);
   const slot = useRef<HTMLDivElement>(null);
   const aside = useRef<HTMLElement>(null);
@@ -90,10 +91,19 @@ export function Wing({
           title={`Show ${title.toLowerCase()} (${shortcut})`}
           onClick={toggle}
         >
-          <span className="wing-tab-arrow" aria-hidden>
-            {arrow}
+          {/* the part with the title stands a little proud of the strip, centered on it */}
+          <span className="wing-tab-handle">
+            <span className="wing-tab-arrow" aria-hidden>
+              {arrow}
+            </span>
+            <span className="wing-tab-label">{title}</span>
           </span>
-          <span className="wing-tab-label">{title}</span>
+        </button>
+      )}
+      {/* first visit: how to open / fold it, until this wing is first toggled (store/panelStore) */}
+      {hint && (
+        <button type="button" className={`wing-hint ${side}`} onClick={toggle}>
+          Click here or press "{shortcut}" to expand / collapse
         </button>
       )}
     </div>

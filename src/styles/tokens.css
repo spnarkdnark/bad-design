@@ -25,6 +25,7 @@
   --text: #1f2328;
   --text-strong: #000000;
   --muted: #74767a;
+  --hint: #a9abae; /* light gray first-visit hints */
   --on-dark: #ffffff;
   --on-dark-accent: #9cc2ff;
   --tip-bg: rgba(31, 35, 40, 0.88);
@@ -71,6 +72,7 @@
   --tools-w: 168px; /* left wing: tool palette */
   --sidebar-w: 300px; /* right wing: standards */
   --wing-tab-w: 26px; /* a collapsed wing */
+  --wing-tab-bump: 8px; /* how far a collapsed wing's titled tab stands past it */
   --tool-tile-h: 72px;
   --panel-pad-x: 16px;
   --field-label-w: 84px;

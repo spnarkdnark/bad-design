@@ -40,7 +40,7 @@ export function App() {
             <ToolPalette />
           </ErrorBoundary>
         </Wing>
-        <Wing id="controls" side="right" title="Standards" shortcut="D">
+        <Wing id="controls" side="right" title="Control" shortcut="D">
           <ErrorBoundary name="the standards">
             <StandardsPanel />
           </ErrorBoundary>

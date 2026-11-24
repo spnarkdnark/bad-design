@@ -163,3 +163,27 @@ test('panning slides a cached image of the drawing that matches drawing it afres
   expect(await differing('before', 'cached')).toBeGreaterThan(0.01); // it moved
   expect(await differing('cached', 'direct')).toBeLessThan(0.005); // and looks the same (anti-aliasing aside)
 });
+
+test('a first visit shows how to open each wing; each hint goes once its own wing is toggled', async ({
+  page,
+  canvas,
+}) => {
+  void canvas;
+  await page.evaluate(() => localStorage.removeItem('bad:panels:v1'));
+  await reloadApp(page);
+  const toolsHint = page.getByRole('button', { name: 'Click here or press "A" to expand / collapse' });
+  const controlHint = page.getByRole('button', { name: 'Click here or press "D" to expand / collapse' });
+  await expect(toolsHint).toBeVisible();
+  await expect(controlHint).toBeVisible();
+  await page.keyboard.press('a');
+  await expect(toolsHint).toHaveCount(0);
+  await expect(controlHint).toBeVisible();
+  // clicking the hint toggles its wing too
+  await controlHint.click();
+  await expect(controlHint).toHaveCount(0);
+  await expect(page.locator('.wing-tab.right')).toHaveText(/Control/);
+  // gone for good
+  await reloadApp(page);
+  await expect(toolsHint).toHaveCount(0);
+  await expect(controlHint).toHaveCount(0);
+});
